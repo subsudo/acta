@@ -1,0 +1,47 @@
+﻿<Window x:Class="XHub.Views.ModuleSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:XHub.Models"
+        Title="Module konfigurieren"
+        Width="520"
+        Height="420"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource Brush.WindowBg}"
+        Foreground="{DynamicResource Brush.PrimaryText}">
+    <Grid Margin="18">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Sichtbare Module und Reihenfolge für diese Liste" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12" />
+
+        <ListBox x:Name="ModulesListBox"
+                 Grid.Row="1"
+                 ItemsSource="{Binding Modules}"
+                 BorderThickness="1"
+                 BorderBrush="{DynamicResource Brush.Border}"
+                 Background="{DynamicResource Brush.PanelBg}">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type models:DetailModuleConfig}">
+                    <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay}" Content="{Binding Title}" Margin="4" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <StackPanel Grid.Column="1" Grid.Row="1" Margin="12,0,0,0">
+            <Button Content="Hoch" Width="100" Margin="0,0,0,8" Click="MoveUpButton_OnClick" />
+            <Button Content="Runter" Width="100" Click="MoveDownButton_OnClick" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Abbrechen" Width="110" Margin="0,0,8,0" Click="CancelButton_OnClick" />
+            <Button Content="Speichern" Width="110" Click="SaveButton_OnClick" />
+        </StackPanel>
+    </Grid>
+</Window>

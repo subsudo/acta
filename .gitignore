@@ -1,0 +1,38 @@
+# XHub / .NET / WPF build outputs
+**/bin/
+**/obj/
+**/TestResults/
+**/*.cache
+**/*.pdb
+**/*.user
+**/*.suo
+**/*.tmp
+**/*.wpftmp.csproj
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+
+# Local helper folders and one-off artifacts in repo root
+.claude/
+.dotnet-cli/
+build-check/
+backup-pre-schedule-*/
+publish-single-onefile-*/
+
+# Local scratch files
+_codex_test.txt
+*.log
+*.err
+
+# Runtime diagnostics or portable app output folders
+**/diagnostics/
+
+# Real local reference files that should stay out of git
+KW_11.docx
+XHub/Beispielakte.docx
+
+# Keep real project/test assets intentionally:
+# - XHub/MockServer
+# - existing handover/debug markdown files

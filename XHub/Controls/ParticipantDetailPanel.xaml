@@ -1,0 +1,540 @@
+﻿<UserControl x:Class="XHub.Controls.ParticipantDetailPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+    <UserControl.Resources>
+        <Style x:Key="OdooButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+            <Setter Property="BorderThickness" Value="0.45" />
+            <Setter Property="Padding" Value="16,5" />
+            <Setter Property="MinWidth" Value="{DynamicResource Ui.Size.DetailOdooButtonMinWidth}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.AccentHover}" />
+                                <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.AccentPressed}" />
+                                <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource Brush.AccentPressed}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Chrome" Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ScheduleCellBorderStyle" TargetType="Border">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Background" Value="{DynamicResource Brush.PanelBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.SecondaryText}" />
+            <Setter Property="BorderThickness" Value="0.45" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Padding" Value="3,3,3,4" />
+            <Setter Property="MinHeight" Value="42" />
+        </Style>
+
+        <Style x:Key="ScheduleHeaderBorderStyle" TargetType="Border">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Background" Value="#F5F6F8" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.SecondaryText}" />
+            <Setter Property="BorderThickness" Value="0.45" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Padding" Value="0,2" />
+        </Style>
+
+        <Style x:Key="ScheduleLunchBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="#F5F6F8" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.SecondaryText}" />
+            <Setter Property="BorderThickness" Value="0.3" />
+            <Setter Property="CornerRadius" Value="0" />
+        </Style>
+
+        <Style x:Key="CopyableHeaderTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="AcceptsReturn" Value="False" />
+            <Setter Property="AcceptsTab" Value="False" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="CaretBrush" Value="Transparent" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="ContextMenuService.IsEnabled" Value="True" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <StackPanel x:Name="EmptyState" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="&#xE77B;"
+                       FontFamily="Segoe MDL2 Assets"
+                       FontSize="36"
+                       Foreground="{DynamicResource Brush.Accent}"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,12" />
+            <TextBlock Text="Wähle einen Teilnehmenden aus"
+                       Foreground="{DynamicResource Brush.SecondaryText}"
+                       FontSize="{DynamicResource Ui.Font.Control}"
+                       HorizontalAlignment="Center"
+                       TextWrapping="Wrap" />
+        </StackPanel>
+
+        <ScrollViewer x:Name="ContentScrollViewer"
+                      Visibility="Collapsed"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel x:Name="ContentPanel">
+                <Grid x:Name="HeaderPanel" MinHeight="{DynamicResource Ui.Size.DetailHeaderMinHeight}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBox x:Name="InitialsTextBox" Style="{StaticResource CopyableHeaderTextBoxStyle}"
+                               Grid.Row="0"
+                               FontSize="{DynamicResource Ui.Font.DetailInitials}"
+                               Foreground="{DynamicResource Brush.Accent}"
+                               FontWeight="SemiBold" />
+                    <TextBox x:Name="DetailTitleTextBox" Style="{StaticResource CopyableHeaderTextBoxStyle}"
+                               Grid.Row="1"
+                               FontSize="{DynamicResource Ui.Font.DetailTitle}"
+                               FontWeight="Bold"
+                               Margin="0,2,0,0"
+                               TextWrapping="Wrap"
+                               MaxHeight="{DynamicResource Ui.Size.DetailTitleMaxHeight}" />
+                    <TextBlock x:Name="CounselorTextBlock"
+                               Grid.Row="2"
+                               FontSize="{DynamicResource Ui.Font.DetailMeta}"
+                               Foreground="{DynamicResource Brush.Accent}"
+                               Margin="0,8,0,0"
+                               VerticalAlignment="Top"
+                               TextWrapping="Wrap"
+                               Text="Beratungsperson:" />
+                </Grid>
+
+                <Grid x:Name="DetailsBodyGrid"
+                      Margin="0,18,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition x:Name="PhotoColumnDefinition" Width="Auto" />
+                        <ColumnDefinition x:Name="LinkColumnDefinition" Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition x:Name="TopRowDefinition" Height="Auto" />
+                        <RowDefinition x:Name="BottomRowDefinition" Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border x:Name="PhotoCardBorder"
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Margin="0,0,12,0"
+                            Height="{DynamicResource Ui.Size.DetailPhotoCardHeight}"
+                            CornerRadius="8"
+                            Background="{DynamicResource Brush.SoftSurface}"
+                            BorderBrush="{DynamicResource Brush.Border}"
+                            BorderThickness="1"
+                            Padding="12">
+                        <Grid>
+                            <Border x:Name="PhotoFrameBorder"
+                                    Width="{DynamicResource Ui.Size.DetailPhotoFrameWidth}"
+                                    Height="{DynamicResource Ui.Size.DetailPhotoFrameHeight}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    CornerRadius="0"
+                                    Background="{DynamicResource Brush.SoftSurface}"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="1"
+                                    SnapsToDevicePixels="True"
+                                    UseLayoutRounding="True"
+                                    ClipToBounds="False">
+                                <Border x:Name="PhotoSurfaceBorder"
+                                        Margin="0"
+                                        CornerRadius="3"
+                                        Background="#F5F6F8">
+                                    <Grid>
+                                        <Image x:Name="PhotoImage"
+                                               Stretch="UniformToFill"
+                                               Visibility="Collapsed" />
+                                        <Border x:Name="PhotoPlaceholderSurface"
+                                                Background="#F5F6F8"
+                                                CornerRadius="2"
+                                                Visibility="Visible">
+                                            <StackPanel x:Name="PhotoPlaceholderPanel"
+                                                        VerticalAlignment="Center"
+                                                        HorizontalAlignment="Center">
+                                                <Border Width="72"
+                                                        Height="72"
+                                                        CornerRadius="36"
+                                                        Background="{DynamicResource Brush.SoftSurface}"
+                                                        BorderBrush="{DynamicResource Brush.Border}"
+                                                        BorderThickness="1">
+                                                    <TextBlock Text="&#xE77B;"
+                                                               FontFamily="Segoe MDL2 Assets"
+                                                               FontSize="22"
+                                                               Foreground="{DynamicResource Brush.Accent}"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center" />
+                                                </Border>
+                                                <TextBlock x:Name="PhotoPlaceholderInitialsTextBlock"
+                                                           FontSize="{DynamicResource Ui.Font.DetailMeta}"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource Brush.Accent}"
+                                                           HorizontalAlignment="Center"
+                                                           Margin="0,10,0,0"
+                                                           Visibility="Collapsed" />
+                                                <TextBlock x:Name="PhotoHintTextBlock"
+                                                           Text="Kein Foto hinterlegt"
+                                                           FontSize="{DynamicResource Ui.Font.DetailMeta}"
+                                                           Foreground="{DynamicResource Brush.SubtleText}"
+                                                           HorizontalAlignment="Center"
+                                                           TextAlignment="Center"
+                                                           Margin="0,6,0,0" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="LinkCardBorder"
+                            MinHeight="62"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Padding="14"
+                            CornerRadius="10"
+                            Background="{DynamicResource Brush.SoftSurface}"
+                            BorderBrush="{DynamicResource Brush.Border}"
+                            BorderThickness="1">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Stretch">
+                            <Button x:Name="OdooButton"
+                                    Content="Odoo öffnen"
+                                    Style="{StaticResource OdooButtonStyle}"
+                                    HorizontalAlignment="Center"
+                                    Click="OdooButton_OnClick"
+                                    Visibility="Collapsed" />
+                            <TextBlock x:Name="OdooFallbackTextBlock"
+                                       HorizontalAlignment="Center"
+                                       TextAlignment="Center"
+                                       FontSize="{DynamicResource Ui.Font.DetailMeta}"
+                                       Foreground="{DynamicResource Brush.SecondaryText}"
+                                       Text="Kein Link"
+                                       Visibility="Collapsed" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Border x:Name="ScheduleCardBorder"
+                        Margin="0,16,0,0"
+                        Padding="0"
+                        CornerRadius="0"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="0"
+                        ClipToBounds="False"
+                        Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock x:Name="ScheduleMessageTextBlock"
+                                   Margin="0,0,0,0"
+                                   FontSize="{DynamicResource Ui.Font.DetailMeta}"
+                                   Foreground="{DynamicResource Brush.SecondaryText}"
+                                   TextWrapping="Wrap"
+                                   Visibility="Collapsed" />
+
+                        <Grid x:Name="ScheduleGrid" Margin="0" HorizontalAlignment="Center" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource ScheduleHeaderBorderStyle}" CornerRadius="4,0,0,0">
+                                <TextBlock Text="Mo" FontWeight="SemiBold" FontSize="9.5" Foreground="{DynamicResource Brush.SecondaryText}" HorizontalAlignment="Center" />
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource ScheduleHeaderBorderStyle}">
+                                <TextBlock Text="Di" FontWeight="SemiBold" FontSize="9.5" Foreground="{DynamicResource Brush.SecondaryText}" HorizontalAlignment="Center" />
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource ScheduleHeaderBorderStyle}">
+                                <TextBlock Text="Mi" FontWeight="SemiBold" FontSize="9.5" Foreground="{DynamicResource Brush.SecondaryText}" HorizontalAlignment="Center" />
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="3" Style="{StaticResource ScheduleHeaderBorderStyle}">
+                                <TextBlock Text="Do" FontWeight="SemiBold" FontSize="9.5" Foreground="{DynamicResource Brush.SecondaryText}" HorizontalAlignment="Center" />
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="4" Style="{StaticResource ScheduleHeaderBorderStyle}" CornerRadius="0,4,0,0">
+                                <TextBlock Text="Fr" FontWeight="SemiBold" FontSize="9.5" Foreground="{DynamicResource Brush.SecondaryText}" HorizontalAlignment="Center" />
+                            </Border>
+
+                            <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource ScheduleCellBorderStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock x:Name="ScheduleMoVmPrimaryTextBlock" Grid.Row="0" FontWeight="SemiBold" FontSize="10" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" TextAlignment="Center" />
+                                    <Grid Grid.Row="1" Margin="0,0,0,0" HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="ScheduleMoVmTeacherTextBlock" Grid.Column="0" FontSize="8" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Left" Margin="1,0,0,0" />
+                                        <TextBlock x:Name="ScheduleMoVmRoomTextBlock" Grid.Column="2" FontSize="7.6" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,2,0" />
+                                    </Grid>
+                                    <TextBlock x:Name="ScheduleMoVmAdditionalTextBlock" Grid.Row="2" Margin="0,0,0,0" FontSize="6.4" Foreground="{DynamicResource Brush.SubtleText}" TextWrapping="NoWrap" TextAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" />
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource ScheduleCellBorderStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock x:Name="ScheduleDiVmPrimaryTextBlock" Grid.Row="0" FontWeight="SemiBold" FontSize="10" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" TextAlignment="Center" />
+                                    <Grid Grid.Row="1" Margin="0,0,0,0" HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="ScheduleDiVmTeacherTextBlock" Grid.Column="0" FontSize="8" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Left" Margin="1,0,0,0" />
+                                        <TextBlock x:Name="ScheduleDiVmRoomTextBlock" Grid.Column="2" FontSize="7.6" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,2,0" />
+                                    </Grid>
+                                    <TextBlock x:Name="ScheduleDiVmAdditionalTextBlock" Grid.Row="2" Margin="0,0,0,0" FontSize="6.4" Foreground="{DynamicResource Brush.SubtleText}" TextWrapping="NoWrap" TextAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" />
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource ScheduleCellBorderStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock x:Name="ScheduleMiVmPrimaryTextBlock" Grid.Row="0" FontWeight="SemiBold" FontSize="10" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" TextAlignment="Center" />
+                                    <Grid Grid.Row="1" Margin="0,0,0,0" HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="ScheduleMiVmTeacherTextBlock" Grid.Column="0" FontSize="8" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Left" Margin="1,0,0,0" />
+                                        <TextBlock x:Name="ScheduleMiVmRoomTextBlock" Grid.Column="2" FontSize="7.6" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,2,0" />
+                                    </Grid>
+                                    <TextBlock x:Name="ScheduleMiVmAdditionalTextBlock" Grid.Row="2" Margin="0,0,0,0" FontSize="6.4" Foreground="{DynamicResource Brush.SubtleText}" TextWrapping="NoWrap" TextAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" />
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="1" Grid.Column="3" Style="{StaticResource ScheduleCellBorderStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock x:Name="ScheduleDoVmPrimaryTextBlock" Grid.Row="0" FontWeight="SemiBold" FontSize="10" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" TextAlignment="Center" />
+                                    <Grid Grid.Row="1" Margin="0,0,0,0" HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="ScheduleDoVmTeacherTextBlock" Grid.Column="0" FontSize="8" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Left" Margin="1,0,0,0" />
+                                        <TextBlock x:Name="ScheduleDoVmRoomTextBlock" Grid.Column="2" FontSize="7.6" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,2,0" />
+                                    </Grid>
+                                    <TextBlock x:Name="ScheduleDoVmAdditionalTextBlock" Grid.Row="2" Margin="0,0,0,0" FontSize="6.4" Foreground="{DynamicResource Brush.SubtleText}" TextWrapping="NoWrap" TextAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" />
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="1" Grid.Column="4" Style="{StaticResource ScheduleCellBorderStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock x:Name="ScheduleFrVmPrimaryTextBlock" Grid.Row="0" FontWeight="SemiBold" FontSize="10" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" TextAlignment="Center" />
+                                    <Grid Grid.Row="1" Margin="0,0,0,0" HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="ScheduleFrVmTeacherTextBlock" Grid.Column="0" FontSize="8" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Left" Margin="1,0,0,0" />
+                                        <TextBlock x:Name="ScheduleFrVmRoomTextBlock" Grid.Column="2" FontSize="7.6" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,2,0" />
+                                    </Grid>
+                                    <TextBlock x:Name="ScheduleFrVmAdditionalTextBlock" Grid.Row="2" Margin="0,0,0,0" FontSize="6.4" Foreground="{DynamicResource Brush.SubtleText}" TextWrapping="NoWrap" TextAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" />
+                                </Grid>
+                            </Border>
+
+                            <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" Style="{StaticResource ScheduleLunchBorderStyle}" Height="6" Margin="0" />
+
+                            <Border Grid.Row="3" Grid.Column="0" Style="{StaticResource ScheduleCellBorderStyle}" CornerRadius="0,0,0,4">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock x:Name="ScheduleMoNmPrimaryTextBlock" Grid.Row="0" FontWeight="SemiBold" FontSize="10" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" TextAlignment="Center" />
+                                    <Grid Grid.Row="1" Margin="0,0,0,0" HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="ScheduleMoNmTeacherTextBlock" Grid.Column="0" FontSize="8" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Left" Margin="1,0,0,0" />
+                                        <TextBlock x:Name="ScheduleMoNmRoomTextBlock" Grid.Column="2" FontSize="7.6" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,2,0" />
+                                    </Grid>
+                                    <TextBlock x:Name="ScheduleMoNmAdditionalTextBlock" Grid.Row="2" Margin="0,0,0,0" FontSize="6.4" Foreground="{DynamicResource Brush.SubtleText}" TextWrapping="NoWrap" TextAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" />
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="3" Grid.Column="1" Style="{StaticResource ScheduleCellBorderStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock x:Name="ScheduleDiNmPrimaryTextBlock" Grid.Row="0" FontWeight="SemiBold" FontSize="10" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" TextAlignment="Center" />
+                                    <Grid Grid.Row="1" Margin="0,0,0,0" HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="ScheduleDiNmTeacherTextBlock" Grid.Column="0" FontSize="8" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Left" Margin="1,0,0,0" />
+                                        <TextBlock x:Name="ScheduleDiNmRoomTextBlock" Grid.Column="2" FontSize="7.6" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,2,0" />
+                                    </Grid>
+                                    <TextBlock x:Name="ScheduleDiNmAdditionalTextBlock" Grid.Row="2" Margin="0,0,0,0" FontSize="6.4" Foreground="{DynamicResource Brush.SubtleText}" TextWrapping="NoWrap" TextAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" />
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="3" Grid.Column="2" Style="{StaticResource ScheduleCellBorderStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock x:Name="ScheduleMiNmPrimaryTextBlock" Grid.Row="0" FontWeight="SemiBold" FontSize="10" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" TextAlignment="Center" />
+                                    <Grid Grid.Row="1" Margin="0,0,0,0" HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="ScheduleMiNmTeacherTextBlock" Grid.Column="0" FontSize="8" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Left" Margin="1,0,0,0" />
+                                        <TextBlock x:Name="ScheduleMiNmRoomTextBlock" Grid.Column="2" FontSize="7.6" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,2,0" />
+                                    </Grid>
+                                    <TextBlock x:Name="ScheduleMiNmAdditionalTextBlock" Grid.Row="2" Margin="0,0,0,0" FontSize="6.4" Foreground="{DynamicResource Brush.SubtleText}" TextWrapping="NoWrap" TextAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" />
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="3" Grid.Column="3" Style="{StaticResource ScheduleCellBorderStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock x:Name="ScheduleDoNmPrimaryTextBlock" Grid.Row="0" FontWeight="SemiBold" FontSize="10" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" TextAlignment="Center" />
+                                    <Grid Grid.Row="1" Margin="0,0,0,0" HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="ScheduleDoNmTeacherTextBlock" Grid.Column="0" FontSize="8" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Left" Margin="1,0,0,0" />
+                                        <TextBlock x:Name="ScheduleDoNmRoomTextBlock" Grid.Column="2" FontSize="7.6" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,2,0" />
+                                    </Grid>
+                                    <TextBlock x:Name="ScheduleDoNmAdditionalTextBlock" Grid.Row="2" Margin="0,0,0,0" FontSize="6.4" Foreground="{DynamicResource Brush.SubtleText}" TextWrapping="NoWrap" TextAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" />
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="3" Grid.Column="4" Style="{StaticResource ScheduleCellBorderStyle}" CornerRadius="0,0,4,0">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock x:Name="ScheduleFrNmPrimaryTextBlock" Grid.Row="0" FontWeight="SemiBold" FontSize="10" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" TextAlignment="Center" />
+                                    <Grid Grid.Row="1" Margin="0,0,0,0" HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="ScheduleFrNmTeacherTextBlock" Grid.Column="0" FontSize="8" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Left" Margin="1,0,0,0" />
+                                        <TextBlock x:Name="ScheduleFrNmRoomTextBlock" Grid.Column="2" FontSize="7.6" Foreground="{DynamicResource Brush.SecondaryText}" TextWrapping="NoWrap" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,2,0" />
+                                    </Grid>
+                                    <TextBlock x:Name="ScheduleFrNmAdditionalTextBlock" Grid.Row="2" Margin="0,0,0,0" FontSize="6.4" Foreground="{DynamicResource Brush.SubtleText}" TextWrapping="NoWrap" TextAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
