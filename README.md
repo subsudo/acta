@@ -44,6 +44,6 @@ dotnet run
 
 ## Wichtige Hinweise
 - Historische Markdown-Dateien im Root und im Projektordner wurden bewusst nicht geloescht.
-- Einige davon enthalten aeltere Aussagen oder alte Pfade (`Verlaufsakten_App`). Fuer den aktuellen Stand gilt primaer die Doku in `docs/`.
+- Einige davon enthalten aeltere Aussagen oder historische Platzhalterpfade. Fuer den aktuellen Stand gilt primaer die Doku in `docs/`.
 - Die Stundenplan-Diagnose ist technisch noch vorhanden, aber aktuell nicht mehr als prominenter Haupt-Button in der Oberflaeche sichtbar.
 - Log-Dateien lassen sich direkt ueber die Einstellungen oeffnen, damit verteilte Tests einfacher rueckmeldbar bleiben.

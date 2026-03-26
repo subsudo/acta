@@ -104,4 +104,4 @@ Diagnose:
 - viel Produktlogik sitzt in `MainWindow.xaml.cs`
 - Stundenplan-Matching bleibt fragil, solange der echte Plan handgepflegt und uneinheitlich ist
 - Word COM bleibt grundsaetzlich ein stoeranfaelliger Randbereich
-- Repo-Root enthaelt viele Artefakte und historische Einzeldateien, die fuer Git sauber ausgesiebt werden muessen
+- Repo-Root ist inzwischen auf Quellcode, Doku, Mockups und bewusst behaltene historische Handovers reduziert; lokale Build- und Publish-Artefakte sollen weiterhin ausserhalb des versionierten Zustands bleiben

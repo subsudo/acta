@@ -75,7 +75,7 @@ Wichtig:
 
 Beispiel:
 
-- Dateiname: `Verlaufsakte_KoLu.docx`
+- Dateiname: `Verlaufsakte_AbCd.docx`
 - Kürzel: `KoLu`
 
 ### 2. Header-Metadaten-Service
@@ -177,7 +177,7 @@ Das aktuelle Modell in XHub ist:
   "Version": 2,
   "Entries": [
     {
-      "DocumentPath": "C:\\Path\\To\\Verlaufsakte_KoLu.docx",
+      "DocumentPath": "C:\\Path\\To\\Verlaufsakte_AbCd.docx",
       "LastWriteTimeUtc": "2026-03-10T09:12:30.0000000Z",
       "Length": 123456,
       "OdooUrl": "https://intern.futurx.ch/web#id=1435&action=565&model=op.student&view_type=form&cids=1&menu_id=396",
@@ -295,7 +295,7 @@ Das TN-Kürzel wird in XHub aus dem Dateinamen der Verlaufsakte gelesen.
 
 Beispiel:
 
-- `Verlaufsakte_KoLu.docx`
+- `Verlaufsakte_AbCd.docx`
 
 Regel:
 
@@ -508,7 +508,7 @@ Mindestens diese Fälle testen:
 5. Akte geändert, Cache muss neu invalidieren
 6. Akte unverändert, Cache muss sofort greifen
 7. Dateiname ohne gültiges Kürzel
-8. Dateiname mit gültigem Kürzel wie `Verlaufsakte_KoLu.docx`
+8. Dateiname mit gültigem Kürzel wie `Verlaufsakte_AbCd.docx`
 
 ## Kurzfazit
 

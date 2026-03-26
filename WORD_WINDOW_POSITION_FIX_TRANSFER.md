@@ -186,15 +186,15 @@ Wenn das Verhalten weiter verbessert werden soll, sind die naechsten sinnvollen 
 
 ## Relevante Dateien
 
-- `C:\Users\chris\Desktop\Verlaufsakten_App\VerlaufsakteApp\Models\UserPrefs.cs`
-- `C:\Users\chris\Desktop\Verlaufsakten_App\VerlaufsakteApp\Services\WordService.cs`
+- `<repo-root>/VerlaufsakteApp/Models/UserPrefs.cs`
+- `<repo-root>/VerlaufsakteApp/Services/WordService.cs`
 
 ## Build-Status
 
 Nach dem Einbau wurde erfolgreich gebaut:
 
 ```powershell
-$env:DOTNET_CLI_HOME='C:\Users\chris\Desktop\Verlaufsakten_App\.dotnet-cli'
+$env:DOTNET_CLI_HOME='<repo-root>\\.dotnet-cli'
 $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE='1'
 dotnet build .\VerlaufsakteApp\VerlaufsakteApp.csproj
 ```

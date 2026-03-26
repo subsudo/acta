@@ -38,9 +38,9 @@ Der Parser erkennt bereits brauchbar:
 
 Es gibt bereits einen Diagnose-Export:
 - Datei:
-  - `C:\Users\chris\AppData\Local\XHub\weekly-schedule-diagnostics.json`
+  - `%LOCALAPPDATA%\XHub\weekly-schedule-diagnostics.json`
 - Backup:
-  - `C:\Users\chris\AppData\Local\XHub\weekly-schedule-diagnostics.bak`
+  - `%LOCALAPPDATA%\XHub\weekly-schedule-diagnostics.bak`
 
 Die Diagnose enthaelt:
 - erkannte Slots
@@ -152,11 +152,11 @@ Farben werden technisch gelesen. Fachlich gelten derzeit:
 
 Relevante Dateien:
 
-- `C:\Users\chris\Desktop\XHub\XHub\Services\WeeklyScheduleService.cs`
-- `C:\Users\chris\Desktop\XHub\XHub\Models\WeeklyScheduleDiagnosticsDocument.cs`
-- `C:\Users\chris\Desktop\XHub\XHub\Controls\ParticipantDetailPanel.xaml`
-- `C:\Users\chris\Desktop\XHub\XHub\Controls\ParticipantDetailPanel.xaml.cs`
-- `C:\Users\chris\Desktop\XHub\XHub\MainWindow.xaml.cs`
+- `XHub/Services/WeeklyScheduleService.cs`
+- `XHub/Models/WeeklyScheduleDiagnosticsDocument.cs`
+- `XHub/Controls/ParticipantDetailPanel.xaml`
+- `XHub/Controls/ParticipantDetailPanel.xaml.cs`
+- `XHub/MainWindow.xaml.cs`
 
 Der Parser, Cache und Diagnosepfad existieren bereits.
 Es geht aktuell vor allem um:

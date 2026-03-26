@@ -100,11 +100,11 @@ Aktueller sichtbarer Versionsstand: `Acta v0.9.2`
 - Das ist aktuell der pragmatische Support-/Debug-Zugang fuer verteilte Tests
 
 ## Praktische Stolpersteine fuer Git/GitHub
-- Root ist aktuell mit Publish-Ordnern und Build-Artefakten gefuellt
-- `bin/` und `obj/` liegen im Projekt
-- mehrere alte One-file-Publish-Ordner duerfen nicht zur Quellwahrheit werden
+- Root ist auf Quellcode, Doku, Mockups und bewusst behaltene Handover-Dateien bereinigt
+- `bin/` und `obj/` liegen weiter lokal im Projekt und bleiben ueber `.gitignore` draussen
+- One-file-Publish-Ordner sollen lokal ausserhalb des versionierten Zustands bleiben
 - einige Root-Markdown-Dateien sind einmalige Handoffs, keine laufende Projektdoku
 
 ## Annahmen
 - die aktuelle Codebasis im Unterordner [XHub](../XHub) ist die massgebliche Quelle
-- Publish-Artefakte im Root sind historische Outputs, keine beabsichtigten Repo-Inhalte
+- Publish-Artefakte sind lokale Outputs und keine beabsichtigten Repo-Inhalte

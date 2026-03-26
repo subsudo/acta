@@ -25,6 +25,7 @@ publish-single-onefile-*/
 _codex_test.txt
 *.log
 *.err
+docs/code-review-findings.md
 
 # Runtime diagnostics or portable app output folders
 **/diagnostics/

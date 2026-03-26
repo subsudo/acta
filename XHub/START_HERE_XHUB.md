@@ -18,14 +18,14 @@ Nicht Hauptworkflow:
 - Anwesenheitslisten-Import
 
 ## Lies diese Dateien zuerst
-1. `C:\Users\chris\Desktop\Verlaufsakten_App\XHub\HANDOVER_XHUB.md`
-2. `C:\Users\chris\Desktop\Verlaufsakten_App\XHub\App.xaml.cs`
-3. `C:\Users\chris\Desktop\Verlaufsakten_App\XHub\Services\ParticipantIndexService.cs`
-4. `C:\Users\chris\Desktop\Verlaufsakten_App\XHub\Services\ParticipantSearchService.cs`
-5. `C:\Users\chris\Desktop\Verlaufsakten_App\XHub\Services\ListRepository.cs`
-6. `C:\Users\chris\Desktop\Verlaufsakten_App\XHub\Services\NavigatorWordService.cs`
-7. `C:\Users\chris\Desktop\Verlaufsakten_App\XHub\MainWindow.xaml`
-8. `C:\Users\chris\Desktop\Verlaufsakten_App\XHub\MainWindow.xaml.cs`
+1. `<repo-root>\XHub\HANDOVER_XHUB.md`
+2. `<repo-root>\XHub\App.xaml.cs`
+3. `<repo-root>\XHub\Services\ParticipantIndexService.cs`
+4. `<repo-root>\XHub\Services\ParticipantSearchService.cs`
+5. `<repo-root>\XHub\Services\ListRepository.cs`
+6. `<repo-root>\XHub\Services\NavigatorWordService.cs`
+7. `<repo-root>\XHub\MainWindow.xaml`
+8. `<repo-root>\XHub\MainWindow.xaml.cs`
 
 ## Wichtige Architekturentscheidungen
 - lokale Persistenz in `%LOCALAPPDATA%\XHub`
@@ -62,12 +62,12 @@ Nicht Hauptworkflow:
 
 ## Lokaler Build
 ```powershell
-dotnet build C:\Users\chris\Desktop\Verlaufsakten_App\XHub\XHub.csproj
+dotnet build <repo-root>\XHub\XHub.csproj
 ```
 
 ## Lokaler Start
 ```powershell
-dotnet run --project C:\Users\chris\Desktop\Verlaufsakten_App\XHub\XHub.csproj
+dotnet run --project <repo-root>\XHub\XHub.csproj
 ```
 
 ## Wichtig fuer Folgearbeit

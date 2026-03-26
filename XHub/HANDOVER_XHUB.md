@@ -25,7 +25,7 @@ V1-Ziel:
 
 ## 2) Projektstruktur
 Projektordner:
-- `C:\Users\chris\Desktop\Verlaufsakten_App\XHub`
+- `<repo-root>\XHub`
 
 Wichtige Dateien:
 - `XHub.csproj`
@@ -420,7 +420,7 @@ Diese Entscheidungen sind bewusst gefallen und sollten nicht versehentlich rueck
 ## 19) Syntaktischer / technischer Status
 Letzter erfolgreicher Build:
 ```powershell
-dotnet build C:\Users\chris\Desktop\Verlaufsakten_App\XHub\XHub.csproj
+dotnet build <repo-root>\XHub\XHub.csproj
 ```
 
 Ergebnis zum Zeitpunkt dieses Handovers:
@@ -429,7 +429,7 @@ Ergebnis zum Zeitpunkt dieses Handovers:
 
 Lokaler Start:
 ```powershell
-dotnet run --project C:\Users\chris\Desktop\Verlaufsakten_App\XHub\XHub.csproj
+dotnet run --project <repo-root>\XHub\XHub.csproj
 ```
 
 Es wurde noch **keine** portable/single-file EXE fuer XHub gebaut.
