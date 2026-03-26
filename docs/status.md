@@ -1,8 +1,8 @@
 # Status
 
 ## Stand
-Stand dieser Doku: 2026-03-19
-Aktueller sichtbarer Versionsstand: `Acta v0.9.2`
+Stand dieser Doku: 2026-03-26
+Aktueller sichtbarer Versionsstand: `Acta v0.9.3`
 
 ## Technischer Gesamtzustand
 - Build zuletzt grün
@@ -47,6 +47,7 @@ Aktueller sichtbarer Versionsstand: `Acta v0.9.2`
 - Die `ext`/`disp`-Statuszellen des Mini-Stundenplans hängen jetzt ebenfalls an der UI-Skalierung und wirken auf großen Stufen nicht mehr zu klein
 - Der Wochenplan-Cache schreibt seine JSON-Datei nicht mehr innerhalb des Cache-Locks; das reduziert unnötige Blockierung bei langsamerem Dateisystemzugriff
 - Mini-Stundenplan `disp.` wird jetzt nur noch über echte rote Markierung erkannt (`w:highlight=red` oder rotes `w:shd`/`fill`); rote Schrift allein gilt nicht mehr als dispensiert, damit neue TN nicht fälschlich als `disp.` erscheinen
+- GitHub-Auto-Update ist jetzt vorhanden: Acta prüft im Hintergrund auf das neueste stabile Release, zeigt bei Bedarf einen Update-Dialog, lädt `Acta.exe` nach `%LOCALAPPDATA%\XHub\updates\pending` und startet einen eingebetteten externen Updater für den EXE-Austausch
 
 ## Produktnaher Ist-Zustand
 - Sichtbarer Produktname in der UI ist aktuell `Acta`; interner Projekt-/Repo-Name bleibt vorerst `XHub`.
@@ -98,6 +99,7 @@ Aktueller sichtbarer Versionsstand: `Acta v0.9.2`
 - Log-Dateien liegen unter `%LOCALAPPDATA%\XHub\logs`
 - In den Einstellungen gibt es unter `Daten` einen direkten Button `Log-Ordner oeffnen`
 - Das ist aktuell der pragmatische Support-/Debug-Zugang fuer verteilte Tests
+- Der Updater schreibt zusätzlich `updater-YYYY-MM-DD.log` in denselben Log-Ordner
 
 ## Praktische Stolpersteine fuer Git/GitHub
 - Root ist auf Quellcode, Doku, Mockups und bewusst behaltene Handover-Dateien bereinigt

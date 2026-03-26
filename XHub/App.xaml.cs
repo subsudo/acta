@@ -36,6 +36,7 @@ public partial class App : Application
     private CancellationTokenSource? _singleInstanceListenerCancellation;
     private Task? _singleInstanceListenerTask;
     private bool _ownsSingleInstanceMutex;
+    private bool _singleInstanceInfrastructureReleased;
 
     public static int NormalizeUiScaleLevel(int level) => Math.Clamp(level, MinUiScaleLevel, MaxUiScaleLevel);
 
@@ -128,33 +129,14 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        try
-        {
-            _singleInstanceListenerCancellation?.Cancel();
-            _singleInstanceListenerTask?.Wait(TimeSpan.FromMilliseconds(250));
-        }
-        catch
-        {
-            // Best effort cleanup only.
-        }
-        finally
-        {
-            _singleInstanceListenerCancellation?.Dispose();
-            if (_ownsSingleInstanceMutex && _singleInstanceMutex is not null)
-            {
-                try
-                {
-                    _singleInstanceMutex.ReleaseMutex();
-                }
-                catch
-                {
-                    // Best effort cleanup only.
-                }
-            }
-            _singleInstanceMutex?.Dispose();
-        }
-
+        ReleaseSingleInstanceInfrastructure();
         base.OnExit(e);
+    }
+
+    public void PrepareForUpdateShutdown()
+    {
+        AppLogger.Info("Update-Shutdown: Single-Instance-Infrastruktur wird vorzeitig freigegeben.");
+        ReleaseSingleInstanceInfrastructure();
     }
 
     public static AppConfig CreateDefaultConfig()
@@ -631,6 +613,58 @@ public partial class App : Application
     {
         _singleInstanceListenerCancellation = new CancellationTokenSource();
         _singleInstanceListenerTask = ListenForSingleInstanceSignalsAsync(_singleInstanceListenerCancellation.Token);
+    }
+
+    private void ReleaseSingleInstanceInfrastructure()
+    {
+        if (_singleInstanceInfrastructureReleased)
+        {
+            return;
+        }
+
+        _singleInstanceInfrastructureReleased = true;
+
+        try
+        {
+            _singleInstanceListenerCancellation?.Cancel();
+            _singleInstanceListenerTask?.Wait(TimeSpan.FromMilliseconds(250));
+        }
+        catch
+        {
+            // Best effort cleanup only.
+        }
+        finally
+        {
+            _singleInstanceListenerCancellation?.Dispose();
+            _singleInstanceListenerCancellation = null;
+            _singleInstanceListenerTask = null;
+        }
+
+        if (_ownsSingleInstanceMutex && _singleInstanceMutex is not null)
+        {
+            try
+            {
+                _singleInstanceMutex.ReleaseMutex();
+            }
+            catch
+            {
+                // Best effort cleanup only.
+            }
+        }
+
+        try
+        {
+            _singleInstanceMutex?.Dispose();
+        }
+        catch
+        {
+            // Best effort cleanup only.
+        }
+        finally
+        {
+            _singleInstanceMutex = null;
+            _ownsSingleInstanceMutex = false;
+        }
     }
 
     private async Task ListenForSingleInstanceSignalsAsync(CancellationToken cancellationToken)

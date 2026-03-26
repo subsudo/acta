@@ -29,6 +29,7 @@ XHub ist eine WPF-App mit pragmatischer Service-Struktur und zentraler UI-Orches
 - [ParticipantIndexService.cs](../XHub/Services/ParticipantIndexService.cs): Dateisystem-Scan und Indexaufbau
 - [ParticipantSearchService.cs](../XHub/Services/ParticipantSearchService.cs): Suche
 - [NavigatorWordService.cs](../XHub/Services/NavigatorWordService.cs): Word COM, Dokumente, Bookmarks, Fenstersteuerung
+- [AppUpdateService.cs](../XHub/Services/AppUpdateService.cs): GitHub-Release-Check, Snooze, Download und Updater-Start
 - [DocxHeaderMetadataService.cs](../XHub/Services/DocxHeaderMetadataService.cs): Header-Metadaten direkt aus DOCX
 - [WeeklyScheduleService.cs](../XHub/Services/WeeklyScheduleService.cs): Stundenplan-Parsing, Matching, Cache, Diagnose
 - [AttendanceImportService.cs](../XHub/Services/AttendanceImportService.cs): textbasierter Listenimport
@@ -39,6 +40,7 @@ XHub ist eine WPF-App mit pragmatischer Service-Struktur und zentraler UI-Orches
 
 ### Views / Controls
 - [SettingsWindow.xaml](../XHub/Views/SettingsWindow.xaml): Einstellungen, inklusive Datenaktionen und direktem Log-Ordner-Zugriff
+- [AppUpdateWindow.xaml](../XHub/AppUpdateWindow.xaml): modaler Update-Dialog im Scola-Muster
 - [ParticipantDetailPanel.xaml](../XHub/Controls/ParticipantDetailPanel.xaml): eingebetteter Detailbereich im Hauptfenster
 - [ParticipantDetailWindow.xaml.cs](../XHub/Views/ParticipantDetailWindow.xaml.cs): separates Detailfenster als historische/alternative View, aktuell nicht der Primaerpfad
 - [ModuleSettingsWindow.xaml.cs](../XHub/Views/ModuleSettingsWindow.xaml.cs): Reihenfolge und Sichtbarkeit der Detailmodule
@@ -65,6 +67,9 @@ Stundenplan-DOCX -> `WeeklyScheduleService` -> Wochen-Cache + Diagnose + `Partic
 ### 5. Word
 UI-Aktion -> `NavigatorWordService` -> bestehende oder neue Word-Instanz -> Dokument/Bookmark
 
+### 6. App-Update
+Start -> `AppUpdateService` -> GitHub `releases/latest` -> optional `AppUpdateWindow` -> eingebetteter `ActaUpdater.exe` -> EXE-Austausch -> Neustart
+
 ## Persistenz
 Standardpfad:
 - `%LOCALAPPDATA%\XHub`
@@ -75,6 +80,7 @@ Wichtige Dateien:
 - `lists.json`
 - `header-metadata-cache.json`
 - `weekly-schedule-cache.json`
+- `update-state.json`
 - `logs\app-YYYY-MM-DD.log`
 
 Diagnose:
@@ -85,6 +91,7 @@ Diagnose:
 ## Externe Abhaengigkeiten
 - WPF / .NET 8
 - Word COM, spaet gebunden
+- GitHub Releases API fuer den optionalen Update-Check
 - Windows Forms FrameworkReference nur fuer Monitor-Erkennung
 - Dateisystem und DOCX-Dateien als Hauptdatenquelle
 

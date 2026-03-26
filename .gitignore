@@ -20,6 +20,7 @@
 build-check/
 backup-pre-schedule-*/
 publish-single-onefile-*/
+publish-check-*/
 
 # Local scratch files
 _codex_test.txt

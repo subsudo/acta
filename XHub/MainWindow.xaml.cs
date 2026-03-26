@@ -28,6 +28,7 @@ public partial class MainWindow : Window
     private readonly NavigatorWordService _wordService = new();
     private readonly DocxHeaderMetadataService _headerMetadataService;
     private readonly WeeklyScheduleService _weeklyScheduleService;
+    private readonly AppUpdateService _appUpdateService;
 
     private ParticipantIndexService _indexService;
     private AttendanceImportService _attendanceImportService;
@@ -44,6 +45,7 @@ public partial class MainWindow : Window
     private bool _isDetailPanelOpen;
     private bool _suppressSearchResultsUntilTyping;
     private DateTime? _lastRefreshAt;
+    private bool _isUpdateShutdownRequested;
 
     private const double BaseCompactWindowMinWidth = 400;
     private const double BaseListPanelWindowMinWidth = 520;
@@ -65,6 +67,7 @@ public partial class MainWindow : Window
         _workingList = _temporaryList;
         _headerMetadataService = new DocxHeaderMetadataService(App.HeaderMetadataCachePath, App.HeaderMetadataCacheBackupPath);
         _weeklyScheduleService = new WeeklyScheduleService(App.WeeklyScheduleCachePath, App.WeeklyScheduleCacheBackupPath);
+        _appUpdateService = new AppUpdateService();
 
         _indexService = new ParticipantIndexService(App.Config, _initialsResolver);
         _attendanceImportService = new AttendanceImportService(_searchService);
@@ -88,8 +91,10 @@ public partial class MainWindow : Window
         UpdateListsEmptyState();
         Title = $"Acta v{App.DisplayVersion}";
         UpdateStatus("Bereit.");
+        _appUpdateService.TryCleanupSuccessfulUpdateArtifactsOnStartup();
 
         Loaded += async (_, _) => await RefreshIndexAsync(false);
+        Loaded += async (_, _) => await BeginStartupUpdateCheckAsync();
         Loaded += (_, _) => UpdateLayoutAlignment();
         SizeChanged += (_, _) => UpdateLayoutAlignment();
         LocationChanged += (_, _) => RefreshSearchResultsPopupPlacement();
@@ -1454,6 +1459,58 @@ public partial class MainWindow : Window
     private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
     {
         PersistWindowState();
+    }
+
+    private async Task BeginStartupUpdateCheckAsync()
+    {
+        var availableRelease = await _appUpdateService.GetAvailableUpdateAsync(CancellationToken.None);
+        if (availableRelease is null || !IsLoaded || _isUpdateShutdownRequested)
+        {
+            return;
+        }
+
+        await Dispatcher.InvokeAsync(() =>
+        {
+            var updateDialog = new AppUpdateWindow(_appUpdateService, availableRelease)
+            {
+                Owner = this
+            };
+
+            var dialogResult = updateDialog.ShowDialog();
+            if (dialogResult == true && updateDialog.DownloadedUpdate is not null)
+            {
+                TryStartDownloadedUpdate(updateDialog.DownloadedUpdate);
+                return;
+            }
+
+            if (updateDialog.WasDeferred)
+            {
+                _appUpdateService.SnoozeRelease(availableRelease);
+            }
+        });
+    }
+
+    private bool TryStartDownloadedUpdate(DownloadedUpdateInfo downloadedUpdate)
+    {
+        try
+        {
+            _appUpdateService.LaunchUpdater(downloadedUpdate);
+            AppLogger.Info("Updater: Update-Shutdown gestartet.");
+            _isUpdateShutdownRequested = true;
+            (Application.Current as App)?.PrepareForUpdateShutdown();
+            Close();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Error("Updater: Updater konnte nicht gestartet werden.", ex);
+            MessageBox.Show(
+                $"Das Update wurde bereits heruntergeladen, konnte aber nicht übernommen werden:\n{ex.Message}",
+                "Update konnte nicht gestartet werden",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            return false;
+        }
     }
 }
 

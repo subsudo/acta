@@ -134,6 +134,19 @@ Aktueller Stand:
 
 **Folge:** Die App behaelt die sichtbare Versionsnummer und das natuerliche Windows-Fensterverhalten, ohne auf den ruhigeren Header-Look im Arbeitsbereich zu verzichten.
 
+### 16. Auto-Update folgt dem bewährten Scola-Muster
+Der GitHub-Updater wird fuer Acta nicht neu entworfen, sondern moeglichst baugleich zum bestehenden Scola-Flow uebernommen.
+
+Aktueller Stand:
+- Check gegen `subsudo/acta` via `releases/latest`
+- nur stabile Releases, keine Drafts und keine Pre-Releases
+- sichtbares Release-Asset fuer Nutzer bleibt exakt `Acta.exe`
+- ein eingebetteter externer `ActaUpdater.exe` ersetzt die laufende EXE erst nach App-Ende
+- `Später` unterdrueckt dieselbe Version fuer 7 Tage
+- Update-Zustaende und Downloads bleiben bewusst unter `%LOCALAPPDATA%\XHub`
+
+**Folge:** gleiches Update-Verhalten wie Scola, ohne neue Updater-Architektur und ohne Migration des bestehenden lokalen XHub-AppData-Bestands.
+
 ## Noch offene Entscheidungen
 
 ### Stundenplan-Zuverlaessigkeit

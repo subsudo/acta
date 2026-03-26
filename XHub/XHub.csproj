@@ -8,10 +8,10 @@
     <AssemblyName>Acta</AssemblyName>
     <Product>Acta</Product>
     <Title>Acta</Title>
-    <Version>0.9.2</Version>
-    <AssemblyVersion>0.9.2.0</AssemblyVersion>
-    <FileVersion>0.9.2.0</FileVersion>
-    <InformationalVersion>0.9.2</InformationalVersion>
+    <Version>0.9.3</Version>
+    <AssemblyVersion>0.9.3.0</AssemblyVersion>
+    <FileVersion>0.9.3.0</FileVersion>
+    <InformationalVersion>0.9.3</InformationalVersion>
     <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -23,4 +23,29 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="ActaUpdater\**\*.cs" />
+    <EmbeddedResource Remove="ActaUpdater\**\*" />
+    <Page Remove="ActaUpdater\**\*" />
+    <None Remove="ActaUpdater\**\*" />
+    <EmbeddedResource Include="$(MSBuildProjectDirectory)\obj\$(Configuration)\net8.0-windows\win-x64\EmbeddedUpdater\ActaUpdater.exe">
+      <LogicalName>XHub.Updater.ActaUpdater.exe</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <Target Name="BuildEmbeddedUpdater" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <EmbeddedUpdaterResourceDir>$(MSBuildProjectDirectory)\obj\$(Configuration)\net8.0-windows\win-x64\EmbeddedUpdater\</EmbeddedUpdaterResourceDir>
+      <EmbeddedUpdaterPublishDir>$(MSBuildProjectDirectory)\obj\$(Configuration)\net8.0-windows\win-x64\EmbeddedUpdaterPublish\</EmbeddedUpdaterPublishDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(EmbeddedUpdaterResourceDir)" />
+    <MakeDir Directories="$(EmbeddedUpdaterPublishDir)" />
+    <MSBuild Projects="$(MSBuildProjectDirectory)\ActaUpdater\ActaUpdater.csproj"
+             Targets="Restore;Publish"
+             Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x64;PublishSingleFile=true;SelfContained=true;EnableCompressionInSingleFile=true;PublishTrimmed=false;PublishDir=$(EmbeddedUpdaterPublishDir)" />
+    <Copy SourceFiles="$(EmbeddedUpdaterPublishDir)ActaUpdater.exe"
+          DestinationFiles="$(EmbeddedUpdaterResourceDir)ActaUpdater.exe"
+          SkipUnchangedFiles="false" />
+  </Target>
 </Project>
