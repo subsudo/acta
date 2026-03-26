@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XHub Detail Panel — Vorschlag A: Card Compact</title>
+<style>
+  /* ─── DESIGN TOKENS ─── */
+  :root {
+    /* DARK (default) */
+    --window-bg: #262B34;
+    --panel-bg: #313846;
+    --card-bg: #3C4556;
+    --card-hover: #485365;
+    --primary-text: #F5F7FA;
+    --secondary-text: #CCD4E0;
+    --subtle-text: #9CA7B8;
+    --border: #59647A;
+    --accent: #8EA9CE;
+    --accent-hover: #A4BDE0;
+    --accent-pressed: #7996BA;
+    --accent-subtle: #3D4F6B;
+    --soft-surface: #4A5260;
+    --success: #34D399;
+    --warning: #FBBF24;
+    --error: #F87171;
+    --info: #60A5FA;
+    --schedule-cell-bg: var(--panel-bg);
+    --schedule-header-bg: #3A4255;
+    --schedule-lunch: #3A4255;
+    --schedule-primary: #F5F7FA;
+    --schedule-ext-fg: #6EE7B7;
+    --schedule-ext-bg: rgba(52,211,153,0.12);
+    --schedule-disp-fg: #FCA5A5;
+    --schedule-disp-bg: rgba(248,113,113,0.12);
+    --photo-placeholder-bg: #4A5260;
+    --tag-bg: rgba(142,169,206,0.15);
+    --tag-text: #8EA9CE;
+    --odoo-btn-bg: #8EA9CE;
+    --odoo-btn-text: #1A1D22;
+    --action-icon-bg: var(--card-bg);
+  }
+
+  :root.light {
+    --window-bg: #F4F6F8;
+    --panel-bg: #FFFFFF;
+    --card-bg: #F8FAFC;
+    --card-hover: #EEF2F6;
+    --primary-text: #1A1D22;
+    --secondary-text: #646B76;
+    --subtle-text: #8B94A3;
+    --border: #D5DCE5;
+    --accent: #7394BD;
+    --accent-hover: #89A8CE;
+    --accent-pressed: #6486B0;
+    --accent-subtle: #E3EBF5;
+    --soft-surface: #EDF1F5;
+    --schedule-cell-bg: #FFFFFF;
+    --schedule-header-bg: #F0F3F7;
+    --schedule-lunch: #E8ECF1;
+    --schedule-primary: #1A1D22;
+    --schedule-ext-fg: #059669;
+    --schedule-ext-bg: rgba(5,150,105,0.08);
+    --schedule-disp-fg: #DC2626;
+    --schedule-disp-bg: rgba(220,38,38,0.08);
+    --photo-placeholder-bg: #EDF1F5;
+    --tag-bg: rgba(115,148,189,0.12);
+    --tag-text: #5A7DA8;
+    --odoo-btn-bg: #7394BD;
+    --odoo-btn-text: #FFFFFF;
+    --action-icon-bg: #F0F3F7;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--window-bg);
+    color: var(--primary-text);
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px;
+    min-height: 100vh;
+    transition: background .25s, color .25s;
+  }
+
+  /* ─── CONTAINER (simulates the right panel ~320px) ─── */
+  .detail-panel {
+    width: 340px;
+    min-height: 600px;
+    background: var(--panel-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: background .25s, border-color .25s;
+  }
+
+  /* ─── THEME TOGGLE ─── */
+  .theme-toggle {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--primary-text);
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    transition: all .2s;
+    z-index: 100;
+  }
+  .theme-toggle:hover { background: var(--card-hover); }
+
+  /* ─── HEADER: Photo + Name ─── */
+  .header {
+    padding: 24px 20px 16px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 14px;
+    background: var(--photo-placeholder-bg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    transition: background .25s, border-color .25s;
+  }
+  .avatar svg {
+    width: 32px;
+    height: 32px;
+    opacity: 0.5;
+    color: var(--subtle-text);
+  }
+
+  .header-info {
+    flex: 1;
+    min-width: 0;
+    padding-top: 2px;
+  }
+
+  .name {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--primary-text);
+    word-wrap: break-word;
+  }
+
+  .initials-badge {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 2px 8px;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  .counselor {
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: var(--subtle-text);
+  }
+  .counselor strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .status-tag {
+    display: inline-block;
+    margin-top: 6px;
+    margin-left: 6px;
+    padding: 2px 8px;
+    background: rgba(251,191,36,0.12);
+    color: var(--warning);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 20px;
+    opacity: 0.5;
+  }
+
+  /* ─── QUICK ACTIONS (icon grid) ─── */
+  .actions-section {
+    padding: 14px 20px;
+  }
+  .actions-section .section-label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--subtle-text);
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 4px 8px;
+    background: var(--action-icon-bg);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all .15s;
+    color: var(--primary-text);
+    font-family: inherit;
+  }
+  .action-btn:hover {
+    background: var(--card-hover);
+    border-color: var(--border);
+  }
+  .action-btn .icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--accent-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--accent);
+  }
+  .action-btn .label {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--secondary-text);
+    white-space: nowrap;
+  }
+
+  /* ─── ODOO BUTTON ─── */
+  .odoo-row {
+    padding: 0 20px 14px;
+  }
+  .odoo-btn {
+    width: 100%;
+    padding: 9px 0;
+    background: var(--odoo-btn-bg);
+    color: var(--odoo-btn-text);
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .15s;
+    letter-spacing: 0.01em;
+  }
+  .odoo-btn:hover { opacity: 0.88; }
+
+  /* ─── SCHEDULE ─── */
+  .schedule-section {
+    padding: 14px 20px 20px;
+  }
+  .schedule-section .section-label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--subtle-text);
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: border-color .25s;
+  }
+
+  .schedule-header {
+    background: var(--schedule-header-bg);
+    padding: 6px 0;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--secondary-text);
+    border-bottom: 1px solid var(--border);
+    transition: background .25s;
+  }
+
+  .schedule-cell {
+    background: var(--schedule-cell-bg);
+    padding: 6px 3px;
+    text-align: center;
+    min-height: 46px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    transition: background .25s, border-color .25s;
+  }
+  .schedule-cell:nth-child(5n) { border-right: none; }
+
+  .schedule-lunch {
+    grid-column: 1 / -1;
+    height: 5px;
+    background: var(--schedule-lunch);
+    border-bottom: 1px solid var(--border);
+    transition: background .25s;
+  }
+
+  .cell-group {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--schedule-primary);
+    line-height: 1.2;
+  }
+  .cell-teacher {
+    font-size: 8.5px;
+    color: var(--secondary-text);
+    letter-spacing: 0.02em;
+  }
+  .cell-room {
+    font-size: 8px;
+    color: var(--subtle-text);
+  }
+  .cell-empty {
+    font-size: 11px;
+    color: var(--subtle-text);
+    opacity: 0.5;
+  }
+  .cell-status {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .cell-status.ext {
+    color: var(--schedule-ext-fg);
+    background: var(--schedule-ext-bg);
+  }
+  .cell-status.disp {
+    color: var(--schedule-disp-fg);
+    background: var(--schedule-disp-bg);
+  }
+  .cell-daz {
+    font-size: 7.5px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* ─── DESIGN LABEL ─── */
+  .design-label {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    font-size: 11px;
+    color: var(--subtle-text);
+    background: var(--card-bg);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+  <div class="design-label">Vorschlag A — Card Compact</div>
+  <button class="theme-toggle" onclick="toggle()">Theme wechseln</button>
+
+  <div class="detail-panel">
+
+    <!-- ── HEADER ── -->
+    <div class="header">
+      <div class="avatar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a8.25 8.25 0 0116.5 0" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="header-info">
+        <div class="name">Jan Müller</div>
+        <div>
+          <span class="initials-badge">JMU</span>
+          <span class="status-tag">Aktiv</span>
+        </div>
+        <div class="counselor">Beratung: <strong>KS</strong></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ── QUICK ACTIONS ── -->
+    <div class="actions-section">
+      <div class="section-label">Schnellzugriff</div>
+      <div class="actions-grid">
+        <button class="action-btn">
+          <div class="icon">&#128193;</div>
+          <div class="label">Ordner</div>
+        </button>
+        <button class="action-btn">
+          <div class="icon">&#128196;</div>
+          <div class="label">Akte</div>
+        </button>
+        <button class="action-btn">
+          <div class="icon">BU</div>
+          <div class="label">BU</div>
+        </button>
+        <button class="action-btn">
+          <div class="icon">BI</div>
+          <div class="label">BI</div>
+        </button>
+        <button class="action-btn">
+          <div class="icon">BE</div>
+          <div class="label">BE</div>
+        </button>
+        <button class="action-btn">
+          <div class="icon">LB</div>
+          <div class="label">LB</div>
+        </button>
+        <button class="action-btn">
+          <div class="icon" style="font-size:10px">E BU</div>
+          <div class="label">E BU</div>
+        </button>
+        <button class="action-btn">
+          <div class="icon" style="font-size:10px">E BI</div>
+          <div class="label">E BI</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── ODOO ── -->
+    <div class="odoo-row">
+      <button class="odoo-btn">Odoo offnen</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ── SCHEDULE ── -->
+    <div class="schedule-section">
+      <div class="section-label">Wochenplan</div>
+      <div class="schedule-grid">
+        <!-- Header -->
+        <div class="schedule-header">Mo</div>
+        <div class="schedule-header">Di</div>
+        <div class="schedule-header">Mi</div>
+        <div class="schedule-header">Do</div>
+        <div class="schedule-header">Fr</div>
+
+        <!-- VM -->
+        <div class="schedule-cell">
+          <span class="cell-group">BI</span>
+          <span class="cell-teacher">HM</span>
+          <span class="cell-room">203</span>
+        </div>
+        <div class="schedule-cell">
+          <span class="cell-group">MO</span>
+          <span class="cell-teacher">KS</span>
+          <span class="cell-room">105</span>
+        </div>
+        <div class="schedule-cell">
+          <span class="cell-group">DAZ</span>
+          <span class="cell-daz">+DAZ</span>
+        </div>
+        <div class="schedule-cell">
+          <span class="cell-status ext">ext</span>
+        </div>
+        <div class="schedule-cell">
+          <span class="cell-group">BE</span>
+          <span class="cell-teacher">FL</span>
+          <span class="cell-room">W01</span>
+        </div>
+
+        <!-- Lunch -->
+        <div class="schedule-lunch"></div>
+
+        <!-- NM -->
+        <div class="schedule-cell">
+          <span class="cell-empty">-</span>
+        </div>
+        <div class="schedule-cell">
+          <span class="cell-group">BU</span>
+          <span class="cell-teacher">RS</span>
+          <span class="cell-room">107</span>
+        </div>
+        <div class="schedule-cell">
+          <span class="cell-empty">-</span>
+        </div>
+        <div class="schedule-cell">
+          <span class="cell-group">LB</span>
+          <span class="cell-teacher">AP</span>
+          <span class="cell-room">210</span>
+        </div>
+        <div class="schedule-cell">
+          <span class="cell-status disp">disp</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+function toggle() {
+  document.documentElement.classList.toggle('light');
+}
+</script>
+</body>
+</html>
