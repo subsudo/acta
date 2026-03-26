@@ -58,6 +58,17 @@ Aktueller Stand:
 
 **Folge:** Realtests und AI-gestuetzte Fehlersuche bleiben moeglich, ohne die Hauptoberflaeche unnoetig nach Debug aussehen zu lassen; spaeter weiter aufraeumen.
 
+### 8a. Wochenplan-Cache bleibt konservativ gegen Dateilocks
+Ein temporaer gesperrtes `KW_*.docx` darf keinen bereits gueltigen Mini-Stundenplan-Cache mit leerem Inhalt ersetzen.
+
+Aktueller Stand:
+- erfolgreiche Reads aktualisieren den Cache wie bisher
+- temporaere Lesefehler behalten den letzten gueltigen Cache bei
+- fehlgeschlagene Reads machen den Cache nicht neu "frisch"
+- nach einer Frist wird erneut versucht, den Wochenplan zu lesen
+
+**Folge:** kurze Locks auf dem Wochenplan fuehren nicht mehr dazu, dass der Mini-Stundenplan fuer den Rest der Woche leer bleibt.
+
 ### 9. Dokumentation soll kuenftig in `docs/` konsolidiert werden
 Historische Handover-Dateien bleiben erhalten, aber der aktuelle Projektkontext soll fuer weitere AI-/GitHub-Arbeit primar in `docs/` gepflegt werden.
 

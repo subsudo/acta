@@ -9,8 +9,9 @@ namespace XHub.Services;
 
 public sealed class WeeklyScheduleService
 {
-    private const int CacheVersion = 5;
+    private const int CacheVersion = 6;
     private const int MaxDisplayMatchesPerWeek = 10;
+    private static readonly TimeSpan CacheRefreshInterval = TimeSpan.FromHours(12);
 
     private static readonly Regex TimeMarkerRegex = new(@"\b(08|09|10|11|13|14|15|16|17)[\.:]\s*\d{2}\b", RegexOptions.Compiled);
     private static readonly Regex RoomRegex = new(@"\b([UB])\s*(\d+)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -399,13 +400,23 @@ public sealed class WeeklyScheduleService
             return new WeeklyScheduleDocument();
         }
 
+        WeeklyScheduleCacheEntryInternal? cachedEntry = null;
         lock (_syncRoot)
         {
             if (_cache.TryGetValue(fileInfo.FullName, out var cached) &&
                 cached.LastWriteTimeUtc == fileInfo.LastWriteTimeUtc &&
                 cached.Length == fileInfo.Length)
             {
-                return cached.Document;
+                if (DateTime.UtcNow - cached.CachedAtUtc < CacheRefreshInterval)
+                {
+                    return cached.Document;
+                }
+
+                cachedEntry = cached;
+            }
+            else if (_cache.TryGetValue(fileInfo.FullName, out cached))
+            {
+                cachedEntry = cached;
             }
         }
 
@@ -417,7 +428,14 @@ public sealed class WeeklyScheduleService
         catch (Exception ex)
         {
             AppLogger.Warn($"Stundenplan konnte nicht gelesen werden '{schedulePath}': {ex.Message}");
+            if (cachedEntry is not null)
+            {
+                AppLogger.Info($"Stundenplan: Nutze letzten erfolgreichen Cache weiter fuer '{schedulePath}'.");
+                return cachedEntry.Document;
+            }
+
             document = new WeeklyScheduleDocument();
+            return document;
         }
 
         UpdateCache(fileInfo, document);
@@ -436,7 +454,11 @@ public sealed class WeeklyScheduleService
             .Where(entry => !string.IsNullOrWhiteSpace(entry.DocumentPath))
             .ToDictionary(
                 entry => entry.DocumentPath,
-                entry => new WeeklyScheduleCacheEntryInternal(entry.LastWriteTimeUtc, entry.Length, entry.Document ?? new WeeklyScheduleDocument()),
+                entry => new WeeklyScheduleCacheEntryInternal(
+                    entry.LastWriteTimeUtc,
+                    entry.Length,
+                    entry.CachedAtUtc == default ? entry.LastWriteTimeUtc : entry.CachedAtUtc,
+                    entry.Document ?? new WeeklyScheduleDocument()),
                 StringComparer.OrdinalIgnoreCase);
     }
 
@@ -445,7 +467,11 @@ public sealed class WeeklyScheduleService
         WeeklyScheduleCacheDocument? documentToPersist = null;
         lock (_syncRoot)
         {
-            _cache[fileInfo.FullName] = new WeeklyScheduleCacheEntryInternal(fileInfo.LastWriteTimeUtc, fileInfo.Length, document);
+            _cache[fileInfo.FullName] = new WeeklyScheduleCacheEntryInternal(
+                fileInfo.LastWriteTimeUtc,
+                fileInfo.Length,
+                DateTime.UtcNow,
+                document);
             documentToPersist = CreateCacheDocumentUnsafe();
         }
 
@@ -464,6 +490,7 @@ public sealed class WeeklyScheduleService
                     DocumentPath = entry.Key,
                     LastWriteTimeUtc = entry.Value.LastWriteTimeUtc,
                     Length = entry.Value.Length,
+                    CachedAtUtc = entry.Value.CachedAtUtc,
                     Document = entry.Value.Document
                 })
                 .ToList()
@@ -952,7 +979,7 @@ public sealed class WeeklyScheduleService
         return int.TryParse(attributes[name]?.Value, out var value) ? value : null;
     }
 
-    private sealed record WeeklyScheduleCacheEntryInternal(DateTime LastWriteTimeUtc, long Length, WeeklyScheduleDocument Document);
+    private sealed record WeeklyScheduleCacheEntryInternal(DateTime LastWriteTimeUtc, long Length, DateTime CachedAtUtc, WeeklyScheduleDocument Document);
     private sealed record WeekFileCandidate(string Path, int Year, int Week);
 
     private sealed class ParticipantAliasMatcher
@@ -1318,6 +1345,7 @@ public sealed class WeeklyScheduleCacheEntry
     public string DocumentPath { get; set; } = string.Empty;
     public DateTime LastWriteTimeUtc { get; set; }
     public long Length { get; set; }
+    public DateTime CachedAtUtc { get; set; }
     public WeeklyScheduleDocument Document { get; set; } = new();
 }
 
