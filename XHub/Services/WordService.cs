@@ -80,6 +80,14 @@ public class WordService
             throw new FileNotFoundException("Dokumentdatei nicht gefunden", docPath);
         }
 
+        if (IsFileLocked(docPath))
+        {
+            AppLogger.Info($"XHub.Word.Lock-Precheck zu nativem Öffnen ohne Bookmark. Doc='{docPath}', Bookmark='{bookmarkName}'");
+            OpenDocumentViaShell(docPath);
+            Thread.Sleep(NativeOpenCooldownMs);
+            return;
+        }
+
         dynamic? app = null;
         dynamic? doc = null;
         var shouldQuitCreatedApp = false;
