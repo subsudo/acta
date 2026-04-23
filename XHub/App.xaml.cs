@@ -75,6 +75,7 @@ public partial class App : Application
     public static string DisplayVersion { get; } = ResolveDisplayVersion();
     public static AppConfig Config { get; private set; } = new();
     public static UserPrefs UserPrefs { get; private set; } = new();
+    public static WordStaHost WordStaHost { get; private set; } = null!;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -119,6 +120,7 @@ public partial class App : Application
         ApplyTheme(UserPrefs.IsDarkTheme);
         ApplyUiScale(UserPrefs.UiScaleLevel);
         TryPersistNormalizedUserPrefs(prefsService);
+        WordStaHost = new WordStaHost();
 
         base.OnStartup(e);
 
@@ -129,6 +131,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        TryDisposeWordStaHost();
         ReleaseSingleInstanceInfrastructure();
         base.OnExit(e);
     }
@@ -136,6 +139,7 @@ public partial class App : Application
     public void PrepareForUpdateShutdown()
     {
         AppLogger.Info("Update-Shutdown: Single-Instance-Infrastruktur wird vorzeitig freigegeben.");
+        TryDisposeWordStaHost();
         ReleaseSingleInstanceInfrastructure();
     }
 
@@ -426,9 +430,6 @@ public partial class App : Application
     private static void NormalizeUserPrefs(UserPrefs prefs, bool hasExistingPrefs)
     {
         prefs.SelectedListId ??= string.Empty;
-        prefs.PreferredWordMonitorId = string.IsNullOrWhiteSpace(prefs.PreferredWordMonitorId)
-            ? "__PRIMARY__"
-            : prefs.PreferredWordMonitorId;
 
         if (prefs.UiScaleSchemaVersion < CurrentUiScaleSchemaVersion)
         {
@@ -439,6 +440,27 @@ public partial class App : Application
         }
 
         prefs.UiScaleLevel = NormalizeUiScaleLevel(prefs.UiScaleLevel);
+    }
+
+    private static void TryDisposeWordStaHost()
+    {
+        if (WordStaHost is null)
+        {
+            return;
+        }
+
+        try
+        {
+            WordStaHost.Dispose();
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Warn($"WordStaHost konnte beim Beenden nicht sauber freigegeben werden: {ex.Message}");
+        }
+        finally
+        {
+            WordStaHost = null!;
+        }
     }
 
     private static int MigrateLegacyUiScaleLevel(int legacyLevel)

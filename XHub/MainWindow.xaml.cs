@@ -9,7 +9,6 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using Microsoft.Win32;
-using Forms = System.Windows.Forms;
 using XHub.Models;
 using XHub.Services;
 using XHub.Views;
@@ -25,7 +24,6 @@ public partial class MainWindow : Window
     private readonly ExportService _exportService = new();
     private readonly ParticipantSearchService _searchService = new();
     private readonly InitialsResolver _initialsResolver = new();
-    private readonly NavigatorWordService _wordService = new();
     private readonly DocxHeaderMetadataService _headerMetadataService;
     private readonly WeeklyScheduleService _weeklyScheduleService;
     private readonly AppUpdateService _appUpdateService;
@@ -509,35 +507,13 @@ public partial class MainWindow : Window
     {
         var requestedWidth = App.UserPrefs.WindowWidth is > 0 ? App.UserPrefs.WindowWidth.Value : Width;
         var requestedHeight = App.UserPrefs.WindowHeight is > 0 ? App.UserPrefs.WindowHeight.Value : Height;
-
-        if (App.UserPrefs.WindowLeft.HasValue && App.UserPrefs.WindowTop.HasValue &&
-            TryGetVisibleWindowBounds(
-                App.UserPrefs.WindowLeft.Value,
-                App.UserPrefs.WindowTop.Value,
-                requestedWidth,
-                requestedHeight,
-                out var adjustedBounds))
-        {
-            WindowStartupLocation = WindowStartupLocation.Manual;
-            Width = adjustedBounds.Width;
-            Height = adjustedBounds.Height;
-            Left = adjustedBounds.Left;
-            Top = adjustedBounds.Top;
-        }
-        else
-        {
-            ApplyCenteredPrimaryBounds(requestedWidth, requestedHeight);
-        }
+        ApplyCenteredPrimaryBounds(requestedWidth, requestedHeight);
     }
 
     private void PersistWindowState()
     {
-        var bounds = WindowState == WindowState.Normal
-            ? new Rect(Left, Top, Width, Height)
-            : RestoreBounds;
+        var bounds = WindowState == WindowState.Normal ? new Size(Width, Height) : RestoreBounds.Size;
 
-        App.UserPrefs.WindowLeft = bounds.Left;
-        App.UserPrefs.WindowTop = bounds.Top;
         App.UserPrefs.WindowWidth = bounds.Width;
         App.UserPrefs.WindowHeight = bounds.Height;
         App.UserPrefs.UiScaleLevel = CurrentUiScaleLevel;
@@ -886,8 +862,6 @@ public partial class MainWindow : Window
         App.SaveConfig();
 
         App.UserPrefs.ShowMiniSchedule = dialog.Result.ShowMiniSchedule;
-        App.UserPrefs.OpenWordMaximized = dialog.Result.OpenWordMaximized;
-        App.UserPrefs.PreferredWordMonitorId = dialog.Result.PreferredWordMonitorId;
         App.ApplyTheme(dialog.Result.IsDarkTheme);
         UpdateDetailPanelState();
         App.SaveUserPrefs();
@@ -1106,12 +1080,15 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OpenAkte(ParticipantIndexEntry entry) => TryWordAction(entry, (path, mode) => _wordService.OpenDocument(path, mode));
+    private void OpenAkte(ParticipantIndexEntry entry) =>
+        TryWordAction(entry, (path, mode) => App.WordStaHost.RunAsync("OpenDocument", service => service.OpenDocument(path, mode)));
 
     private void OpenBookmark(ParticipantIndexEntry entry, string bookmark) =>
-        TryWordAction(entry, (path, mode) => _wordService.OpenDocumentAtBookmark(path, bookmark, mode));
+        TryWordAction(entry, (path, mode) => App.WordStaHost.RunAsync(
+            $"OpenDocumentAtBookmark:{bookmark}",
+            service => service.OpenDocumentAtBookmark(path, bookmark, mode)));
 
-    private void TryWordAction(ParticipantIndexEntry entry, Action<string, WordOpenMode> action)
+    private async void TryWordAction(ParticipantIndexEntry entry, Func<string, WordOpenMode, Task> action)
     {
         if (!WordBusyGuard.TryEnter())
         {
@@ -1129,7 +1106,7 @@ public partial class MainWindow : Window
             UpdateStatus(openingStatus);
             Mouse.OverrideCursor = Cursors.Wait;
             Dispatcher.Invoke(() => { }, DispatcherPriority.Render);
-            action(documentPath, WordOpenMode.Normal);
+            await action(documentPath, WordOpenMode.Normal);
         }
         catch (DocumentLockedException ex)
         {
@@ -1144,7 +1121,10 @@ public partial class MainWindow : Window
                 try
                 {
                     var documentPath = ResolveDocumentPath(entry, refreshDetailPanel: false);
-                    action(documentPath, WordOpenMode.ReadOnlyOnly);
+                    UpdateStatus(openingStatus);
+                    Mouse.OverrideCursor = Cursors.Wait;
+                    Dispatcher.Invoke(() => { }, DispatcherPriority.Render);
+                    await action(documentPath, WordOpenMode.ReadOnlyOnly);
                 }
                 catch (Exception fallbackEx)
                 {
@@ -1225,7 +1205,7 @@ public partial class MainWindow : Window
         if (!Directory.Exists(entry.FolderPath))
             throw new InvalidOperationException("Teilnehmerordner ist nicht erreichbar.");
 
-        var docPath = _wordService.FindVerlaufsakte(entry.FolderPath, App.Config.VerlaufsakteKeyword);
+        var docPath = WordService.FindVerlaufsakte(entry.FolderPath, App.Config.VerlaufsakteKeyword);
         entry.DocumentPath = docPath;
         entry.Initials = _initialsResolver.TryResolveFromDocumentPath(docPath);
         if (refreshDetailPanel)
@@ -1286,81 +1266,28 @@ public partial class MainWindow : Window
         return false;
     }
 
-    private bool TryGetVisibleWindowBounds(double left, double top, double width, double height, out Rect adjustedBounds)
-    {
-        adjustedBounds = Rect.Empty;
-
-        var screens = Forms.Screen.AllScreens;
-        if (screens.Length == 0)
-        {
-            return false;
-        }
-
-        const double minimumVisibleWidth = 160;
-        const double minimumVisibleHeight = 120;
-
-        var requestedBounds = new Rect(left, top, width, height);
-        Rect? bestScreenBounds = null;
-        var bestVisibleArea = 0d;
-
-        foreach (var screen in screens)
-        {
-            var workingArea = screen.WorkingArea;
-            var screenBounds = new Rect(workingArea.Left, workingArea.Top, workingArea.Width, workingArea.Height);
-            var visibleBounds = Rect.Intersect(requestedBounds, screenBounds);
-            if (visibleBounds.IsEmpty ||
-                visibleBounds.Width < minimumVisibleWidth ||
-                visibleBounds.Height < minimumVisibleHeight)
-            {
-                continue;
-            }
-
-            var visibleArea = visibleBounds.Width * visibleBounds.Height;
-            if (visibleArea <= bestVisibleArea)
-            {
-                continue;
-            }
-
-            bestVisibleArea = visibleArea;
-            bestScreenBounds = screenBounds;
-        }
-
-        if (bestScreenBounds is null)
-        {
-            return false;
-        }
-
-        var targetScreenBounds = bestScreenBounds.Value;
-        var clampedWidth = Math.Min(Math.Max(width, MinWidth), targetScreenBounds.Width);
-        var clampedHeight = Math.Min(Math.Max(height, MinHeight), targetScreenBounds.Height);
-        var clampedLeft = Math.Min(Math.Max(left, targetScreenBounds.Left), targetScreenBounds.Right - clampedWidth);
-        var clampedTop = Math.Min(Math.Max(top, targetScreenBounds.Top), targetScreenBounds.Bottom - clampedHeight);
-
-        adjustedBounds = new Rect(clampedLeft, clampedTop, clampedWidth, clampedHeight);
-        return true;
-    }
-
     private void ApplyCenteredPrimaryBounds(double requestedWidth, double requestedHeight)
     {
-        var primaryScreen = Forms.Screen.PrimaryScreen ?? Forms.Screen.AllScreens.FirstOrDefault();
-        if (primaryScreen is null)
-        {
-            WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            Width = requestedWidth;
-            Height = requestedHeight;
-            return;
-        }
-
-        var workingArea = primaryScreen.WorkingArea;
-        var clampedWidth = Math.Min(Math.Max(requestedWidth, MinWidth), workingArea.Width);
+        var workingArea = SystemParameters.WorkArea;
+        var minimumWidth = GetRequestedWindowMinWidth();
+        var clampedWidth = Math.Min(Math.Max(requestedWidth, minimumWidth), workingArea.Width);
         var clampedHeight = Math.Min(Math.Max(requestedHeight, MinHeight), workingArea.Height);
+        var freeVerticalSpace = Math.Max(0, workingArea.Height - clampedHeight);
 
         WindowStartupLocation = WindowStartupLocation.Manual;
         Width = clampedWidth;
         Height = clampedHeight;
         Left = workingArea.Left + Math.Max(0, (workingArea.Width - clampedWidth) / 2);
-        Top = workingArea.Top + Math.Max(0, (workingArea.Height - clampedHeight) / 2);
+        Top = workingArea.Top + (freeVerticalSpace * 0.20);
     }
+
+    private double GetRequestedWindowMinWidth() => _isListPanelOpen && _isDetailPanelOpen
+        ? GetFullPanelsWindowMinWidth()
+        : _isDetailPanelOpen
+            ? GetDetailPanelWindowMinWidth()
+            : _isListPanelOpen
+                ? GetListPanelWindowMinWidth()
+                : GetCompactWindowMinWidth();
 
     private double GetCompactWindowMinWidth() => CurrentUiScaleLevel switch
     {

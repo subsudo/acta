@@ -21,10 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Remove="ActaUpdater\**\*.cs" />
     <EmbeddedResource Remove="ActaUpdater\**\*" />
     <Page Remove="ActaUpdater\**\*" />

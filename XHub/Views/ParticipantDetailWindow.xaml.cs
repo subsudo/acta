@@ -13,7 +13,6 @@ namespace XHub.Views;
 
 public partial class ParticipantDetailWindow : Window
 {
-    private readonly NavigatorWordService _wordService = new();
     private readonly InitialsResolver _initialsResolver = new();
     private ParticipantIndexEntry? _participant;
     private IReadOnlyList<DetailModuleConfig> _modules = ListRepository.NormalizeModules(null);
@@ -45,12 +44,12 @@ public partial class ParticipantDetailWindow : Window
             {
                 QuickActionKeys.Folder => CreateActionButton("Ordner", (_, _) => OpenFolder(_participant), Directory.Exists(_participant.FolderPath)),
                 QuickActionKeys.Document => CreateActionButton("Akte", (_, _) => OpenAkte(_participant), HasDocumentOrFolder(_participant)),
-                QuickActionKeys.Bu => CreateActionButton("BU", (_, _) => OpenBookmark(_participant, App.Config.WordBuBookmarkName), HasDocumentOrFolder(_participant) && _wordService.IsWordAvailable),
-                QuickActionKeys.Bi => CreateActionButton("BI", (_, _) => OpenBookmark(_participant, App.Config.WordBiBookmarkName), HasDocumentOrFolder(_participant) && _wordService.IsWordAvailable),
-                QuickActionKeys.Be => CreateActionButton("BE", (_, _) => OpenBookmark(_participant, App.Config.WordBeBookmarkName), HasDocumentOrFolder(_participant) && _wordService.IsWordAvailable),
-                QuickActionKeys.Lb => CreateActionButton("LB", (_, _) => OpenBookmark(_participant, App.Config.WordLbBookmarkName), HasDocumentOrFolder(_participant) && _wordService.IsWordAvailable),
-                QuickActionKeys.EntryBu => CreateActionButton("E BU", (_, _) => OpenBookmark(_participant, App.Config.WordEntryBuBookmarkName), HasDocumentOrFolder(_participant) && _wordService.IsWordAvailable),
-                QuickActionKeys.EntryBi => CreateActionButton("E BI", (_, _) => OpenBookmark(_participant, App.Config.WordEntryBiBookmarkName), HasDocumentOrFolder(_participant) && _wordService.IsWordAvailable),
+                QuickActionKeys.Bu => CreateActionButton("BU", (_, _) => OpenBookmark(_participant, App.Config.WordBuBookmarkName), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
+                QuickActionKeys.Bi => CreateActionButton("BI", (_, _) => OpenBookmark(_participant, App.Config.WordBiBookmarkName), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
+                QuickActionKeys.Be => CreateActionButton("BE", (_, _) => OpenBookmark(_participant, App.Config.WordBeBookmarkName), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
+                QuickActionKeys.Lb => CreateActionButton("LB", (_, _) => OpenBookmark(_participant, App.Config.WordLbBookmarkName), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
+                QuickActionKeys.EntryBu => CreateActionButton("E BU", (_, _) => OpenBookmark(_participant, App.Config.WordEntryBuBookmarkName), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
+                QuickActionKeys.EntryBi => CreateActionButton("E BI", (_, _) => OpenBookmark(_participant, App.Config.WordEntryBiBookmarkName), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
                 _ => null
             };
             if (button is not null) QuickActionPanel.Children.Add(button);
@@ -144,10 +143,15 @@ public partial class ParticipantDetailWindow : Window
                 MessageBoxImage.Warning);
         }
     }
-    private void OpenAkte(ParticipantIndexEntry entry) => TryWordAction(entry, (path, mode) => _wordService.OpenDocument(path, mode));
-    private void OpenBookmark(ParticipantIndexEntry entry, string bookmark) => TryWordAction(entry, (path, mode) => _wordService.OpenDocumentAtBookmark(path, bookmark, mode));
+    private void OpenAkte(ParticipantIndexEntry entry) =>
+        TryWordAction(entry, (path, mode) => App.WordStaHost.RunAsync("OpenDocument", service => service.OpenDocument(path, mode)));
 
-    private void TryWordAction(ParticipantIndexEntry entry, Action<string, WordOpenMode> action)
+    private void OpenBookmark(ParticipantIndexEntry entry, string bookmark) =>
+        TryWordAction(entry, (path, mode) => App.WordStaHost.RunAsync(
+            $"OpenDocumentAtBookmark:{bookmark}",
+            service => service.OpenDocumentAtBookmark(path, bookmark, mode)));
+
+    private async void TryWordAction(ParticipantIndexEntry entry, Func<string, WordOpenMode, Task> action)
     {
         if (!WordBusyGuard.TryEnter())
         {
@@ -161,7 +165,7 @@ public partial class ParticipantDetailWindow : Window
             var documentPath = ResolveDocumentPath(entry);
             Mouse.OverrideCursor = Cursors.Wait;
             Dispatcher.Invoke(() => { }, DispatcherPriority.Render);
-            action(documentPath, WordOpenMode.Normal);
+            await action(documentPath, WordOpenMode.Normal);
         }
         catch (DocumentLockedException ex)
         {
@@ -176,7 +180,9 @@ public partial class ParticipantDetailWindow : Window
                 try
                 {
                     var documentPath = ResolveDocumentPath(entry);
-                    action(documentPath, WordOpenMode.ReadOnlyOnly);
+                    Mouse.OverrideCursor = Cursors.Wait;
+                    Dispatcher.Invoke(() => { }, DispatcherPriority.Render);
+                    await action(documentPath, WordOpenMode.ReadOnlyOnly);
                 }
                 catch (Exception fallbackEx)
                 {
@@ -201,7 +207,7 @@ public partial class ParticipantDetailWindow : Window
     {
         if (!string.IsNullOrWhiteSpace(entry.DocumentPath) && File.Exists(entry.DocumentPath)) return entry.DocumentPath;
         if (!Directory.Exists(entry.FolderPath)) throw new InvalidOperationException("Teilnehmerordner ist nicht erreichbar.");
-        var docPath = _wordService.FindVerlaufsakte(entry.FolderPath, App.Config.VerlaufsakteKeyword);
+        var docPath = WordService.FindVerlaufsakte(entry.FolderPath, App.Config.VerlaufsakteKeyword);
         entry.DocumentPath = docPath;
         entry.Initials = _initialsResolver.TryResolveFromDocumentPath(docPath);
         InitialsTextBlock.Text = entry.Initials;

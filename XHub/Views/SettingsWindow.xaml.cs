@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using Forms = System.Windows.Forms;
 using XHub.Models;
 using XHub.Services;
 
@@ -11,7 +10,6 @@ namespace XHub.Views;
 
 public partial class SettingsWindow : Window
 {
-    private const string PrimaryMonitorId = "__PRIMARY__";
     private readonly bool _initialIsDarkTheme;
     private bool _persistThemeChange;
     private SettingsWindowAction _requestedAction = SettingsWindowAction.Save;
@@ -40,7 +38,6 @@ public partial class SettingsWindow : Window
         StatusTagsToggleCheckBox.IsChecked = config.ShowStatusTags;
         ParticipantPhotoToggleCheckBox.IsChecked = config.ShowParticipantPhoto;
         MiniScheduleToggleCheckBox.IsChecked = prefs.ShowMiniSchedule;
-        WordMaximizedToggleCheckBox.IsChecked = prefs.OpenWordMaximized;
 
         FolderActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.Folder, StringComparer.OrdinalIgnoreCase);
         DocumentActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.Document, StringComparer.OrdinalIgnoreCase);
@@ -48,14 +45,12 @@ public partial class SettingsWindow : Window
         BiActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.Bi, StringComparer.OrdinalIgnoreCase);
         BeActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.Be, StringComparer.OrdinalIgnoreCase);
         LbActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.Lb, StringComparer.OrdinalIgnoreCase);
-        PopulateWordMonitorOptions(prefs.PreferredWordMonitorId);
 
         SetComboSelection(config.AutoRefreshHours);
         UpdateThemePreview();
         UpdateStatusTagsPreview();
         UpdateParticipantPhotoPreview();
         UpdateMiniSchedulePreview();
-        UpdateWordMaximizedPreview();
     }
 
     public SettingsWindowResult Result => new()
@@ -70,8 +65,6 @@ public partial class SettingsWindow : Window
         ShowStatusTags = StatusTagsToggleCheckBox.IsChecked == true,
         ShowParticipantPhoto = ParticipantPhotoToggleCheckBox.IsChecked == true,
         ShowMiniSchedule = MiniScheduleToggleCheckBox.IsChecked == true,
-        OpenWordMaximized = WordMaximizedToggleCheckBox.IsChecked == true,
-        PreferredWordMonitorId = (WordMonitorComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? PrimaryMonitorId,
         AutoRefreshHours = GetSelectedRefreshHours(),
         VisibleQuickActions = GetSelectedQuickActions(),
         RequestedAction = _requestedAction
@@ -164,11 +157,6 @@ public partial class SettingsWindow : Window
         UpdateMiniSchedulePreview();
     }
 
-    private void WordMaximizedToggleCheckBox_OnChanged(object sender, RoutedEventArgs e)
-    {
-        UpdateWordMaximizedPreview();
-    }
-
     private void UpdateThemePreview()
     {
         var isDark = ThemeToggleCheckBox.IsChecked == true;
@@ -189,61 +177,6 @@ public partial class SettingsWindow : Window
     private void UpdateMiniSchedulePreview()
     {
         MiniScheduleModeTextBlock.Text = MiniScheduleToggleCheckBox.IsChecked == true ? "Ein" : "Aus";
-    }
-
-    private void UpdateWordMaximizedPreview()
-    {
-        var isEnabled = WordMaximizedToggleCheckBox.IsChecked == true;
-        WordMaximizedModeTextBlock.Text = isEnabled ? "Ein" : "Aus";
-        WordMonitorComboBox.IsEnabled = isEnabled;
-    }
-
-    private void PopulateWordMonitorOptions(string preferredMonitorId)
-    {
-        WordMonitorComboBox.Items.Clear();
-
-        var screens = Forms.Screen.AllScreens;
-        WordMonitorComboBox.Items.Add(new ComboBoxItem
-        {
-            Content = "Hauptbildschirm",
-            Tag = PrimaryMonitorId
-        });
-
-        for (var i = 0; i < screens.Length; i++)
-        {
-            var screen = screens[i];
-            if (screen.Primary)
-            {
-                continue;
-            }
-
-            var label = $"Monitor {i + 1}";
-
-            WordMonitorComboBox.Items.Add(new ComboBoxItem
-            {
-                Content = label,
-                Tag = screen.DeviceName
-            });
-        }
-
-        foreach (var item in WordMonitorComboBox.Items.OfType<ComboBoxItem>())
-        {
-            if (string.Equals(item.Tag?.ToString(), preferredMonitorId, StringComparison.OrdinalIgnoreCase))
-            {
-                WordMonitorComboBox.SelectedItem = item;
-                return;
-            }
-        }
-
-        var primaryScreen = Forms.Screen.PrimaryScreen;
-        if (primaryScreen is not null &&
-            string.Equals(primaryScreen.DeviceName, preferredMonitorId, StringComparison.OrdinalIgnoreCase))
-        {
-            WordMonitorComboBox.SelectedIndex = 0;
-            return;
-        }
-
-        WordMonitorComboBox.SelectedIndex = 0;
     }
 
     private void SetComboSelection(int hours)
@@ -280,8 +213,6 @@ public class SettingsWindowResult
     public bool ShowStatusTags { get; set; } = true;
     public bool ShowParticipantPhoto { get; set; } = true;
     public bool ShowMiniSchedule { get; set; } = true;
-    public bool OpenWordMaximized { get; set; }
-    public string PreferredWordMonitorId { get; set; } = "__PRIMARY__";
     public int AutoRefreshHours { get; set; }
     public List<string> VisibleQuickActions { get; set; } = QuickActionKeys.CreateDefaults().ToList();
     public SettingsWindowAction RequestedAction { get; set; } = SettingsWindowAction.Save;

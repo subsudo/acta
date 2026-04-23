@@ -1,7 +1,7 @@
 # Status
 
 ## Stand
-Stand dieser Doku: 2026-03-26
+Stand dieser Doku: 2026-04-23
 Aktueller sichtbarer Versionsstand: `Acta v0.9.4`
 
 ## Technischer Gesamtzustand
@@ -19,10 +19,10 @@ Aktueller sichtbarer Versionsstand: `Acta v0.9.4`
 - Odoo-Link aus DOCX-Header
 - Mini-Stundenplan aus `KW_*.docx`
 - Word-Aktionen inkl. Bookmark-Spruengen
-- Word-Fensterlogik mit optionalem `maximiert auf Monitor X`
+- Word-Aktionen laufen jetzt seriell ueber einen zentralen `WordStaHost` auf einem dedizierten STA-Thread
 - Single-Instance-Start: zweite Starts holen die laufende App nach vorne statt eine zweite Instanz zu oeffnen
 - Log-Zugang direkt ueber die Einstellungen
-- Fensterposition wird bei geaenderten Monitor-Setups auf sichtbare Screens geprueft und faellt sonst auf den Hauptbildschirm zurueck
+- Hauptfenster startet jetzt bei jedem Start frisch auf dem Primary-Monitor und nutzt `SystemParameters.WorkArea` statt alter `Left`/`Top`-Restore-Logik
 - subtiler Aktivitaetsindikator beim Index-Refresh in der Statusleiste
 - native Windows-Titelleiste ist wieder aktiv
 - die sichtbare Versionsnummer sitzt jetzt im Fenstertitel als `Acta vX.Y.Z`
@@ -33,6 +33,7 @@ Aktueller sichtbarer Versionsstand: `Acta v0.9.4`
 - Lock-Rennen bei `docs.Open()` werden fachlich als Sperrfall behandelt statt als rohe COM-Fehlermeldung
 - Bei gesperrten Akten bietet Acta jetzt einen ReadOnly-Fallback an: Nutzer können dieselbe Akte auf Wunsch schreibgeschützt in Word öffnen, statt nur einen harten Abbruch zu bekommen
 - Vor Word-Aktionen erzwingen Statusmeldung, Wait-Cursor und Render-Flush ein sofort sichtbares Feedback; im Detailfenster läuft derselbe Wait-Cursor ohne zusätzliche Status-UI
+- Word-Fenster werden von Acta nicht mehr aktiv platziert; Word entscheidet Monitor, Größe und Position selbst
 - Kleine Stabilitätsrunde ist drin: Odoo-/Ordner-`Process.Start(...)` ist gegen Shell-Fehler abgesichert, die Modul-Normalisierung toleriert doppelte Keys aus fehlerhaften JSON-Daten, der Such-Regex ist kompiliert, und Theme-Brushes werden beim Erzeugen eingefroren
 - Der Mini-Stundenplan setzt seine Standard-Textfarben jetzt wieder über Resource-Referenzen statt über lokale Brush-Werte; das ist robuster bei Theme-Wechseln und spart wiederholte `FindResource(...)`-Aufrufe
 - Die Word-ReadOnly-Prüfung ist jetzt diagnostizierbar und fail-closed: technische Fehler beim Sperrstatus werden geloggt und nicht mehr still als „Akte ist frei“ behandelt
@@ -70,7 +71,7 @@ Aktueller sichtbarer Versionsstand: `Acta v0.9.4`
 ### In echtem Test weiter absichern
 - Stundenplan-Matching gegen echten Bestand
 - Odoo-Link-Erkennung bei gesperrten oder anders strukturierten DOCX-Dateien
-- Word-Verhalten auf mehreren Monitoren
+- Word-Verhalten nach dem STA-Host-Port im echten Alltag weiter beobachten
 
 ## Aktuelle offene Punkte
 - Stundenplan-Matching ist konservativ, aber noch nicht final belastbar fuer alle Namensformen

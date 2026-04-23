@@ -27,16 +27,16 @@ Word COM wird nur dort genutzt, wo das reale Dokumentverhalten gebraucht wird.
 
 **Folge:** Word bleibt kritischer Integrationspunkt, aber nicht Datenquelle fuer alles.
 
-### 6. Word-Fensterposition wird nicht mehr frei gemerkt
-Die fruehere Idee “alte Bounds wiederherstellen” wurde verworfen.
+### 6. Word verwaltet seine Fenster selbst
+Acta platziert Word-Fenster nicht mehr aktiv.
 
 Aktueller Stand:
-- Option `Word maximiert oeffnen`
-- optionaler Zielmonitor
-- Fallback auf Hauptbildschirm
-- wenn deaktiviert: keine aktive Positionssteuerung
+- keine Option `Word maximiert oeffnen` mehr
+- kein Zielmonitor fuer Word mehr
+- `EnsureWordUiState(...)` setzt nur Sichtbarkeit und Vordergrund
+- Word entscheidet selbst ueber Monitor, Groesse und Position
 
-**Folge:** weniger “smarte”, aber vorhersagbarere Word-Oberflaeche.
+**Folge:** weniger fragile Multi-Monitor-/DPI-Logik und stabileres reales Word-Verhalten.
 
 ### 7. Stundenplan-Matching bleibt konservativ
 Lieber nichts anzeigen als falsch zuordnen.
@@ -100,15 +100,17 @@ Aktueller Stand:
 
 **Folge:** weniger Verwirrung bei verteilten Tests und im Alltag, besonders wenn Nutzer mehrfach auf das Icon klicken.
 
-### 12. Fensterpositionen werden nur wiederverwendet, wenn sie noch sichtbar sind
-Gespeicherte Fensterkoordinaten duerfen bei geaenderten Multi-Monitor-Setups nicht dazu fuehren, dass Acta ausserhalb des sichtbaren Bereichs startet.
+### 12. Das Hauptfenster startet kontrolliert frisch auf dem Primary-Monitor
+Die gemerkte Fensterposition ist als Hauptstrategie verworfen.
 
 Aktueller Stand:
-- beim Schliessen werden normale Fenster-Bounds bzw. `RestoreBounds` gespeichert
-- beim Start werden gespeicherte Bounds gegen die aktuell vorhandenen Screens geprueft
-- wenn sie nicht mehr sinnvoll sichtbar sind, faellt Acta auf den Hauptbildschirm zurueck
+- `WindowLeft` und `WindowTop` werden nicht mehr aktiv genutzt oder gespeichert
+- das Hauptfenster startet bei jedem Start frisch auf dem Primary-Monitor
+- Berechnung erfolgt ueber `SystemParameters.WorkArea` in WPF-DIPs
+- horizontal zentriert, vertikal leicht oberhalb der Mitte
+- `WindowWidth` und `WindowHeight` bleiben nur als geklammerter Groessenwunsch erhalten
 
-**Folge:** robusteres Verhalten zwischen Laptop-only, Docking und wechselnden Monitor-Anordnungen.
+**Folge:** robusteres Verhalten bei DPI-Wechseln, Docking und wechselnden Monitor-Anordnungen ohne Off-screen-Schattenlogik.
 
 ### 13. UI-Skalierung wurde nach unten erweitert
 Die App soll deutlich kompakter gestellt werden koennen, ohne dass bestehende Nutzer nach dem Update ploetzlich unerwartet kleiner starten.
@@ -121,19 +123,19 @@ Aktueller Stand:
 
 **Folge:** bessere Nutzbarkeit auf kleineren Screens und mehr Reserven nach unten, ohne bestehende Installationen optisch unnoetig zu brechen.
 
-### 14. Word bleibt vorerst synchron, wird aber minimal gehaertet
-Die bestehende Word-Integration soll vorerst ohne `WordStaHost` oder groesseren Umbau stabiler werden.
+### 14. Word-Aktionen laufen jetzt seriell ueber einen zentralen STA-Host
+Die fruehere synchrone UI-nahe COM-Ausfuehrung wurde durch einen app-weiten `WordStaHost` ersetzt.
 
 Aktueller Stand:
-- `docs.Open()` wird gegen bekannte Lock-COMExceptions gehaertet
-- Word-Aktionen aus Hauptfenster und Detailfenster teilen sich einen globalen Busy-Guard
-- keine zweite Word-Aktion waehrend eine laeuft
-- technische Fehler beim ReadOnly-/Sperrstatus werden konservativ behandelt statt still als Erfolg interpretiert
-- gesperrte Akten duerfen auf ausdruecklichen Nutzerwunsch schreibgeschuetzt geoeffnet werden
-- vor Word-Aktionen gibt es bewusst nur kleines sofort sichtbares Feedback (`Öffne Dokument...` + Wait-Cursor), aber weiterhin keinen separaten Word-Hintergrundworker
-- bekannte harmlose COM-/Dynamic-Sonderfaelle bei `UserControl` und `Hwnd` werden nicht mehr als normale Dauerwarnungen behandelt
+- genau ein `WordStaHost` pro App-Prozess
+- genau eine `WordService`-Instanz auf einem dedizierten STA-Thread
+- Hauptfenster und separates Detailfenster nutzen denselben Host
+- alle heutigen Word-Aktionen bleiben Open-/Bookmark-Operationen und laufen ueber denselben Pfad
+- `DocumentLockedException` bleibt der typstabile fachliche Lock-/ReadOnly-Signalpfad
+- der ReadOnly-Fallback bleibt unveraendert
+- der globale Busy-Guard bleibt zusaetzlich aktiv
 
-**Folge:** weniger doppelte Word-Aufrufe und sauberere fachliche Fehlermeldungen, ohne den Word-Workflow grundlegend umzubauen.
+**Folge:** weniger Thread-/COM-Stoerfaelle bei Word, ohne den sichtbaren Nutzerfluss fuer Dokumente und Bookmarks umzubauen.
 
 ### 15. Native Windows-Titelleiste ist wieder bevorzugt
 Die sichtbare Produktversion soll oben links sichtbar bleiben, aber ohne dafuer eine eigene Titelleiste und zusaetzliche Fensterlogik mitzuschleppen.

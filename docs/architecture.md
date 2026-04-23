@@ -28,7 +28,8 @@ XHub ist eine WPF-App mit pragmatischer Service-Struktur und zentraler UI-Orches
 - [InitialsResolver.cs](../XHub/Services/InitialsResolver.cs): Kuerzelableitung aus Akten-/Dateinamen
 - [ParticipantIndexService.cs](../XHub/Services/ParticipantIndexService.cs): Dateisystem-Scan und Indexaufbau
 - [ParticipantSearchService.cs](../XHub/Services/ParticipantSearchService.cs): Suche
-- [NavigatorWordService.cs](../XHub/Services/NavigatorWordService.cs): Word COM, Dokumente, Bookmarks, Fenstersteuerung
+- [WordStaHost.cs](../XHub/Services/WordStaHost.cs): zentraler app-weiter STA-Worker fuer alle Word-Aktionen
+- [WordService.cs](../XHub/Services/WordService.cs): Word COM, Dokumente, Bookmarks und ReadOnly-Fallback auf dem STA-Thread
 - [AppUpdateService.cs](../XHub/Services/AppUpdateService.cs): GitHub-Release-Check, Snooze, Download und Updater-Start
 - [DocxHeaderMetadataService.cs](../XHub/Services/DocxHeaderMetadataService.cs): Header-Metadaten direkt aus DOCX
 - [WeeklyScheduleService.cs](../XHub/Services/WeeklyScheduleService.cs): Stundenplan-Parsing, Matching, Cache, Diagnose
@@ -65,7 +66,7 @@ Detailansicht -> `DocxHeaderMetadataService` -> DOCX ZIP/XML -> lokaler Cache ->
 Stundenplan-DOCX -> `WeeklyScheduleService` -> Wochen-Cache + Diagnose + `ParticipantMiniScheduleSummary` -> UI
 
 ### 5. Word
-UI-Aktion -> `NavigatorWordService` -> bestehende oder neue Word-Instanz -> Dokument/Bookmark
+UI-Aktion -> Pfadauflösung im UI -> `WordStaHost.RunAsync(...)` -> `WordService` auf dediziertem STA-Thread -> bestehende oder neue Word-Instanz -> Dokument/Bookmark
 
 ### 6. App-Update
 Start -> `AppUpdateService` -> GitHub `releases/latest` -> optional `AppUpdateWindow` -> eingebetteter `ActaUpdater.exe` -> EXE-Austausch -> Neustart
@@ -92,7 +93,6 @@ Diagnose:
 - WPF / .NET 8
 - Word COM, spaet gebunden
 - GitHub Releases API fuer den optionalen Update-Check
-- Windows Forms FrameworkReference nur fuer Monitor-Erkennung
 - Dateisystem und DOCX-Dateien als Hauptdatenquelle
 
 ## Architekturentscheidungen, die sichtbar im Code stecken
@@ -110,5 +110,5 @@ Diagnose:
 ## Offene Architekturrisiken
 - viel Produktlogik sitzt in `MainWindow.xaml.cs`
 - Stundenplan-Matching bleibt fragil, solange der echte Plan handgepflegt und uneinheitlich ist
-- Word COM bleibt grundsaetzlich ein stoeranfaelliger Randbereich
+- Word COM bleibt grundsaetzlich ein stoeranfaelliger Randbereich, jetzt aber seriell ueber einen zentralen STA-Host entkoppelt
 - Repo-Root ist inzwischen auf Quellcode, Doku, Mockups und bewusst behaltene historische Handovers reduziert; lokale Build- und Publish-Artefakte sollen weiterhin ausserhalb des versionierten Zustands bleiben

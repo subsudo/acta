@@ -2,28 +2,22 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows;
-using Forms = System.Windows.Forms;
-
 
 namespace XHub.Services;
 
-public class NavigatorWordService
+public class WordService
 {
     private const string DocumentLockedMessage = "Akte ist bereits offen oder gesperrt (evtl. durch anderen Benutzer). Bitte später erneut versuchen.";
     private const string ReadOnlyOpenFailedMessage = "Die Akte konnte auch schreibgeschützt nicht geöffnet werden. Bitte später erneut versuchen.";
     private const int WordForegroundRetryDelayMs = 80;
-    private const int WordWindowStateNormal = 0;
-    private const int WordWindowStateMaximized = 1;
-    private const string PrimaryMonitorId = "__PRIMARY__";
 
-    public bool IsWordAvailable => Type.GetTypeFromProgID("Word.Application") is not null;
+    public static bool IsWordAvailable => Type.GetTypeFromProgID("Word.Application") is not null;
 
     public static bool IsDocumentLockedMessage(string? message) =>
         !string.IsNullOrWhiteSpace(message)
         && message.Contains("offen oder gesperrt", StringComparison.OrdinalIgnoreCase);
 
-    public string FindVerlaufsakte(string folderPath, string keyword)
+    public static string FindVerlaufsakte(string folderPath, string keyword)
     {
         var matches = FindVerlaufsakteCandidates(folderPath, keyword);
         if (matches.Count > 1)
@@ -34,7 +28,7 @@ public class NavigatorWordService
         return matches[0];
     }
 
-    public List<string> FindVerlaufsakteCandidates(string folderPath, string keyword)
+    public static List<string> FindVerlaufsakteCandidates(string folderPath, string keyword)
     {
         if (!Directory.Exists(folderPath))
         {
@@ -312,8 +306,6 @@ public class NavigatorWordService
         }
 
         app.Visible = true;
-
-        TryApplyPreferredWindowPlacement(app);
         TryBringWordToForeground(app);
     }
 
@@ -549,105 +541,6 @@ public class NavigatorWordService
         }
     }
 
-    private static void TryApplyPreferredWindowPlacement(dynamic app)
-    {
-        var prefs = App.UserPrefs;
-        if (!prefs.OpenWordMaximized)
-        {
-            return;
-        }
-
-        var targetWindow = TryGetWordTargetWindow(app);
-        if (targetWindow is null)
-        {
-            return;
-        }
-
-        try
-        {
-            var screen = ResolvePreferredScreen(prefs.PreferredWordMonitorId);
-            var workingArea = screen.WorkingArea;
-
-            TrySetWordWindowState(targetWindow, WordWindowStateNormal);
-            targetWindow.Left = workingArea.Left;
-            targetWindow.Top = workingArea.Top;
-            targetWindow.Width = workingArea.Width;
-            targetWindow.Height = workingArea.Height;
-            TrySetWordWindowState(targetWindow, WordWindowStateMaximized);
-        }
-        catch (Exception ex)
-        {
-            AppLogger.Warn($"XHub.Word.Platzierung konnte nicht angewendet werden: {ex.Message}");
-        }
-        finally
-        {
-            ReleaseComObject(targetWindow);
-        }
-    }
-
-    private static dynamic? TryGetWordTargetWindow(dynamic app)
-    {
-        try
-        {
-            var activeWindow = app.ActiveWindow;
-            if (activeWindow is not null)
-            {
-                return activeWindow;
-            }
-        }
-        catch (Exception ex)
-        {
-            AppLogger.Warn($"XHub.Word.ActiveWindow konnte nicht gelesen werden ({ex.GetType().Name}): {ex.Message}");
-        }
-
-        try
-        {
-            return app;
-        }
-        catch (Exception ex)
-        {
-            AppLogger.Warn($"XHub.Word.Fallback-Appfenster konnte nicht verwendet werden ({ex.GetType().Name}): {ex.Message}");
-            return null;
-        }
-    }
-
-    private static void TrySetWordWindowState(dynamic targetWindow, int state)
-    {
-        try
-        {
-            targetWindow.WindowState = state;
-        }
-        catch (Exception ex)
-        {
-            AppLogger.Warn($"XHub.Word.WindowState konnte nicht gesetzt werden: {ex.Message}");
-        }
-    }
-
-    private static Forms.Screen ResolvePreferredScreen(string? monitorId)
-    {
-        var screens = Forms.Screen.AllScreens;
-        if (screens.Length == 0)
-        {
-            throw new InvalidOperationException("Kein Bildschirm verfügbar.");
-        }
-
-        if (string.IsNullOrWhiteSpace(monitorId) ||
-            string.Equals(monitorId, PrimaryMonitorId, StringComparison.OrdinalIgnoreCase))
-        {
-            return Forms.Screen.PrimaryScreen ?? screens[0];
-        }
-
-        foreach (var screen in screens)
-        {
-            if (string.Equals(screen.DeviceName, monitorId, StringComparison.OrdinalIgnoreCase))
-            {
-                return screen;
-            }
-        }
-
-        return Forms.Screen.PrimaryScreen ?? screens[0];
-    }
-
     private static void TryBringWordToForeground(dynamic app)
     {
         var hwnd = TryGetWordMainWindowHandle(app);
@@ -658,7 +551,11 @@ public class NavigatorWordService
 
         try
         {
-            NativeMethods.ShowWindowAsync(hwnd, NativeMethods.SW_RESTORE);
+            if (NativeMethods.IsIconic(hwnd))
+            {
+                NativeMethods.ShowWindowAsync(hwnd, NativeMethods.SW_RESTORE);
+            }
+
             NativeMethods.SetForegroundWindow(hwnd);
             Thread.Sleep(WordForegroundRetryDelayMs);
             NativeMethods.ShowWindowAsync(hwnd, NativeMethods.SW_SHOW);
@@ -790,6 +687,10 @@ public class NavigatorWordService
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsIconic(IntPtr hWnd);
     }
 
     private sealed class WordApplicationHandle
@@ -825,11 +726,3 @@ public sealed class DocumentLockedException : InvalidOperationException
     {
     }
 }
-
-
-
-
-
-
-
-
