@@ -446,31 +446,9 @@
                         <TextBlock Text="Word"
                                    Style="{StaticResource FieldLabelStyle}"
                                    Margin="0,12,0,8" />
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       Text="Maximiert öffnen"
-                                       Style="{StaticResource FieldLabelStyle}"
-                                       VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="1"
-                                       x:Name="WordMaximizedModeTextBlock"
-                                       Margin="0,0,8,0"
-                                       VerticalAlignment="Center"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource Brush.SecondaryText}" />
-                            <CheckBox Grid.Column="2"
-                                      x:Name="WordMaximizedToggleCheckBox"
-                                      Style="{StaticResource ToggleSwitchStyle}"
-                                      Checked="WordMaximizedToggleCheckBox_OnChanged"
-                                      Unchecked="WordMaximizedToggleCheckBox_OnChanged" />
-                        </Grid>
-                        <ComboBox x:Name="WordMonitorComboBox"
-                                  HorizontalAlignment="Stretch"
-                                  Style="{StaticResource SettingsComboBoxStyle}" />
+                        <TextBlock Text="Word verwaltet Fenstergröße und -position selbst."
+                                   Style="{StaticResource FieldLabelStyle}"
+                                   TextWrapping="Wrap" />
                     </StackPanel>
                 </Border>
 
