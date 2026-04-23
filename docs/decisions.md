@@ -123,19 +123,20 @@ Aktueller Stand:
 
 **Folge:** bessere Nutzbarkeit auf kleineren Screens und mehr Reserven nach unten, ohne bestehende Installationen optisch unnoetig zu brechen.
 
-### 14. Word-Aktionen laufen jetzt seriell ueber einen zentralen STA-Host
-Die fruehere synchrone UI-nahe COM-Ausfuehrung wurde durch einen app-weiten `WordStaHost` ersetzt.
+### 14. Word nutzt zwei klar getrennte Pfade: nativer Open fuer `Akte`, COM-Bookmark ueber STA-Host fuer `BU`/`BI`/`BE`/`LB`
+Die fruehere synchrone UI-nahe COM-Ausfuehrung wurde fuer Bookmark-Aktionen durch einen app-weiten `WordStaHost` ersetzt; das normale Oeffnen ueber `Akte` laeuft bewusst Word-nativ.
 
 Aktueller Stand:
 - genau ein `WordStaHost` pro App-Prozess
 - genau eine `WordService`-Instanz auf einem dedizierten STA-Thread
 - Hauptfenster und separates Detailfenster nutzen denselben Host
-- alle heutigen Word-Aktionen bleiben Open-/Bookmark-Operationen und laufen ueber denselben Pfad
-- `DocumentLockedException` bleibt der typstabile fachliche Lock-/ReadOnly-Signalpfad
-- der ReadOnly-Fallback bleibt unveraendert
-- der globale Busy-Guard bleibt zusaetzlich aktiv
+- `Akte` oeffnet ueber Shell/Word-Dateizuordnung und ueberlaesst Sperren vollstaendig Word
+- `BU`/`BI`/`BE`/`LB` versuchen zuerst COM + Bookmark; bei Sperre oder ReadOnly-Fall wird ohne Bookmark an den nativen Word-Pfad abgegeben
+- `DocumentLockedException` bleibt der typstabile interne Signalpfad fuer den Wechsel vom COM-Bookmark-Pfad auf das native Oeffnen
+- der fruehere Acta-ReadOnly-Dialog wurde bewusst entfernt
+- der globale Busy-Guard bleibt zusaetzlich aktiv; fuer nativen Shell-Open nur als kurzer Cooldown gegen Doppelklicks
 
-**Folge:** weniger Thread-/COM-Stoerfaelle bei Word, ohne den sichtbaren Nutzerfluss fuer Dokumente und Bookmarks umzubauen.
+**Folge:** weniger Thread-/COM-Stoerfaelle bei Word, wieder nativer Word-Sperrdialog fuer gesperrte Akten und ein klar akzeptierter Edge Case: im Lock-Fall entfällt der Bookmark-Sprung.
 
 ### 15. Native Windows-Titelleiste ist wieder bevorzugt
 Die sichtbare Produktversion soll oben links sichtbar bleiben, aber ohne dafuer eine eigene Titelleiste und zusaetzliche Fensterlogik mitzuschleppen.

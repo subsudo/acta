@@ -159,8 +159,6 @@ public partial class App : Application
             WordBiBookmarkName = "_Berufsintegration",
             WordBeBookmarkName = "_Beratung",
             WordLbBookmarkName = "_Lehrbetrieb",
-            WordEntryBuBookmarkName = "_Eintrag_Bildung",
-            WordEntryBiBookmarkName = "_Eintrag_Berufsintegration",
             VisibleQuickActions = QuickActionKeys.CreateDefaults().ToList(),
             AutoRefreshHours = 0,
             ShowStatusTags = true,
@@ -484,8 +482,6 @@ public partial class App : Application
         config.ExitBasePath ??= string.Empty;
         config.ScheduleRootPath ??= string.Empty;
         config.WordLbBookmarkName ??= string.Empty;
-        config.WordEntryBuBookmarkName ??= string.Empty;
-        config.WordEntryBiBookmarkName ??= string.Empty;
         config.VisibleQuickActions ??= QuickActionKeys.CreateDefaults().ToList();
 
         if (string.IsNullOrWhiteSpace(config.LvBasePath) && !string.IsNullOrWhiteSpace(config.ServerBasePath))
@@ -517,12 +513,6 @@ public partial class App : Application
         config.WordLbBookmarkName = string.IsNullOrWhiteSpace(config.WordLbBookmarkName)
             ? "_Lehrbetrieb"
             : config.WordLbBookmarkName.Trim();
-        config.WordEntryBuBookmarkName = string.IsNullOrWhiteSpace(config.WordEntryBuBookmarkName)
-            ? "_Eintrag_Bildung"
-            : config.WordEntryBuBookmarkName.Trim();
-        config.WordEntryBiBookmarkName = string.IsNullOrWhiteSpace(config.WordEntryBiBookmarkName)
-            ? "_Eintrag_Berufsintegration"
-            : config.WordEntryBiBookmarkName.Trim();
         config.VisibleQuickActions = config.VisibleQuickActions
             .Where(key => QuickActionKeys.All.Any(definition => string.Equals(definition.Key, key, StringComparison.OrdinalIgnoreCase)))
             .Distinct(StringComparer.OrdinalIgnoreCase)

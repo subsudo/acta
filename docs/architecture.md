@@ -28,8 +28,8 @@ XHub ist eine WPF-App mit pragmatischer Service-Struktur und zentraler UI-Orches
 - [InitialsResolver.cs](../XHub/Services/InitialsResolver.cs): Kuerzelableitung aus Akten-/Dateinamen
 - [ParticipantIndexService.cs](../XHub/Services/ParticipantIndexService.cs): Dateisystem-Scan und Indexaufbau
 - [ParticipantSearchService.cs](../XHub/Services/ParticipantSearchService.cs): Suche
-- [WordStaHost.cs](../XHub/Services/WordStaHost.cs): zentraler app-weiter STA-Worker fuer alle Word-Aktionen
-- [WordService.cs](../XHub/Services/WordService.cs): Word COM, Dokumente, Bookmarks und ReadOnly-Fallback auf dem STA-Thread
+- [WordStaHost.cs](../XHub/Services/WordStaHost.cs): zentraler app-weiter STA-Worker fuer den COM-Bookmark-Pfad
+- [WordService.cs](../XHub/Services/WordService.cs): nativer Word-Open-Pfad, Word COM, Dokumente und Bookmarks
 - [AppUpdateService.cs](../XHub/Services/AppUpdateService.cs): GitHub-Release-Check, Snooze, Download und Updater-Start
 - [DocxHeaderMetadataService.cs](../XHub/Services/DocxHeaderMetadataService.cs): Header-Metadaten direkt aus DOCX
 - [WeeklyScheduleService.cs](../XHub/Services/WeeklyScheduleService.cs): Stundenplan-Parsing, Matching, Cache, Diagnose
@@ -66,7 +66,9 @@ Detailansicht -> `DocxHeaderMetadataService` -> DOCX ZIP/XML -> lokaler Cache ->
 Stundenplan-DOCX -> `WeeklyScheduleService` -> Wochen-Cache + Diagnose + `ParticipantMiniScheduleSummary` -> UI
 
 ### 5. Word
-UI-Aktion -> Pfadauflösung im UI -> `WordStaHost.RunAsync(...)` -> `WordService` auf dediziertem STA-Thread -> bestehende oder neue Word-Instanz -> Dokument/Bookmark
+- `Akte`: UI-Aktion -> Pfadauflösung im UI -> nativer Shell-Open (`Process.Start(... UseShellExecute = true)`) -> Word uebernimmt Oeffnen und Sperrhandling
+- `BU`/`BI`/`BE`/`LB`: UI-Aktion -> Pfadauflösung im UI -> `WordStaHost.RunAsync(...)` -> `WordService` auf dediziertem STA-Thread -> bestehende oder neue Word-Instanz -> Dokument/Bookmark
+- Sperrfall bei Bookmark-Aktionen: COM-Pfad signalisiert Lock/ReadOnly -> nativer Shell-Open ohne Bookmark-Sprung
 
 ### 6. App-Update
 Start -> `AppUpdateService` -> GitHub `releases/latest` -> optional `AppUpdateWindow` -> eingebetteter `ActaUpdater.exe` -> EXE-Austausch -> Neustart
@@ -110,5 +112,5 @@ Diagnose:
 ## Offene Architekturrisiken
 - viel Produktlogik sitzt in `MainWindow.xaml.cs`
 - Stundenplan-Matching bleibt fragil, solange der echte Plan handgepflegt und uneinheitlich ist
-- Word COM bleibt grundsaetzlich ein stoeranfaelliger Randbereich, jetzt aber seriell ueber einen zentralen STA-Host entkoppelt
+- Word COM bleibt grundsaetzlich ein stoeranfaelliger Randbereich; fuer Bookmark-Aktionen ist es jetzt seriell ueber einen zentralen STA-Host entkoppelt, waehrend `Akte` bewusst Word-nativ oeffnet
 - Repo-Root ist inzwischen auf Quellcode, Doku, Mockups und bewusst behaltene historische Handovers reduziert; lokale Build- und Publish-Artefakte sollen weiterhin ausserhalb des versionierten Zustands bleiben

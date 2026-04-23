@@ -15,7 +15,7 @@ using XHub.Views;
 
 namespace XHub;
 
-public partial class MainWindow : Window
+public partial class MainWindow : Window, INotifyPropertyChanged
 {
     private readonly ObservableCollection<SavedList> _savedLists = new();
     private readonly ObservableCollection<ParticipantIndexEntry> _currentParticipants = new();
@@ -51,6 +51,8 @@ public partial class MainWindow : Window
     private const double BaseFullPanelsWindowMinWidth = 860;
 
     private int CurrentUiScaleLevel => App.NormalizeUiScaleLevel(App.UserPrefs.UiScaleLevel);
+    public bool IsWordActionRunning => WordBusyGuard.IsBusy;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     protected override void OnSourceInitialized(EventArgs e)
     {
@@ -102,6 +104,8 @@ public partial class MainWindow : Window
         ListPanelBorder.SizeChanged += (_, _) => UpdateLayoutAlignment();
         Deactivated += MainWindow_OnDeactivated;
         Closing += MainWindow_OnClosing;
+        Closed += MainWindow_OnClosed;
+        WordBusyGuard.BusyStateChanged += WordBusyGuard_OnBusyStateChanged;
     }
 
     public IReadOnlyList<string> VisibleQuickActions => App.Config.VisibleQuickActions;
@@ -1052,12 +1056,6 @@ public partial class MainWindow : Window
             case QuickActionKeys.Lb:
                 OpenBookmark(entry, App.Config.WordLbBookmarkName);
                 break;
-            case QuickActionKeys.EntryBu:
-                OpenBookmark(entry, App.Config.WordEntryBuBookmarkName);
-                break;
-            case QuickActionKeys.EntryBi:
-                OpenBookmark(entry, App.Config.WordEntryBiBookmarkName);
-                break;
         }
     }
 
@@ -1081,14 +1079,14 @@ public partial class MainWindow : Window
     }
 
     private void OpenAkte(ParticipantIndexEntry entry) =>
-        TryWordAction(entry, (path, mode) => App.WordStaHost.RunAsync("OpenDocument", service => service.OpenDocument(path, mode)));
+        TryWordAction(entry, OpenDocumentViaShellWithCooldownAsync);
 
     private void OpenBookmark(ParticipantIndexEntry entry, string bookmark) =>
-        TryWordAction(entry, (path, mode) => App.WordStaHost.RunAsync(
+        TryWordAction(entry, path => App.WordStaHost.RunAsync(
             $"OpenDocumentAtBookmark:{bookmark}",
-            service => service.OpenDocumentAtBookmark(path, bookmark, mode)));
+            service => service.OpenDocumentAtBookmark(path, bookmark)));
 
-    private async void TryWordAction(ParticipantIndexEntry entry, Func<string, WordOpenMode, Task> action)
+    private async void TryWordAction(ParticipantIndexEntry entry, Func<string, Task> action)
     {
         if (!WordBusyGuard.TryEnter())
         {
@@ -1104,34 +1102,9 @@ public partial class MainWindow : Window
         {
             var documentPath = ResolveDocumentPath(entry);
             UpdateStatus(openingStatus);
-            Mouse.OverrideCursor = Cursors.Wait;
+            Mouse.OverrideCursor = Cursors.AppStarting;
             Dispatcher.Invoke(() => { }, DispatcherPriority.Render);
-            await action(documentPath, WordOpenMode.Normal);
-        }
-        catch (DocumentLockedException ex)
-        {
-            var result = MessageBox.Show(
-                $"{ex.Message}\n\nMöchtest du sie schreibgeschützt öffnen?",
-                "Akte momentan gesperrt",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                try
-                {
-                    var documentPath = ResolveDocumentPath(entry, refreshDetailPanel: false);
-                    UpdateStatus(openingStatus);
-                    Mouse.OverrideCursor = Cursors.Wait;
-                    Dispatcher.Invoke(() => { }, DispatcherPriority.Render);
-                    await action(documentPath, WordOpenMode.ReadOnlyOnly);
-                }
-                catch (Exception fallbackEx)
-                {
-                    AppLogger.Error($"XHub.MainWindow.WordAction.ReadOnlyFallback '{entry.DisplayName}'", fallbackEx);
-                    MessageBox.Show(fallbackEx.Message, "Acta", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
+            await action(documentPath);
         }
         catch (Exception ex)
         {
@@ -1148,6 +1121,12 @@ public partial class MainWindow : Window
 
             WordBusyGuard.Exit();
         }
+    }
+
+    private static async Task OpenDocumentViaShellWithCooldownAsync(string documentPath)
+    {
+        WordService.OpenDocumentViaShell(documentPath);
+        await Task.Delay(WordService.NativeOpenCooldownMs);
     }
 
     private void EnrichParticipantDetailMetadata(ParticipantIndexEntry entry)
@@ -1401,6 +1380,22 @@ public partial class MainWindow : Window
         PersistWindowState();
     }
 
+    private void MainWindow_OnClosed(object? sender, EventArgs e)
+    {
+        WordBusyGuard.BusyStateChanged -= WordBusyGuard_OnBusyStateChanged;
+    }
+
+    private void WordBusyGuard_OnBusyStateChanged(object? sender, EventArgs e)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(WordBusyGuard_OnBusyStateChanged, sender, e);
+            return;
+        }
+
+        OnPropertyChanged(nameof(IsWordActionRunning));
+    }
+
     private async Task BeginStartupUpdateCheckAsync()
     {
         var availableRelease = await _appUpdateService.GetAvailableUpdateAsync(CancellationToken.None);
@@ -1451,6 +1446,11 @@ public partial class MainWindow : Window
                 MessageBoxImage.Error);
             return false;
         }
+    }
+
+    private void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
 

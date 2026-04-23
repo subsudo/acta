@@ -17,7 +17,12 @@ public partial class ParticipantDetailWindow : Window
     private ParticipantIndexEntry? _participant;
     private IReadOnlyList<DetailModuleConfig> _modules = ListRepository.NormalizeModules(null);
 
-    public ParticipantDetailWindow() => InitializeComponent();
+    public ParticipantDetailWindow()
+    {
+        InitializeComponent();
+        WordBusyGuard.BusyStateChanged += WordBusyGuard_OnBusyStateChanged;
+        Closed += ParticipantDetailWindow_OnClosed;
+    }
 
     public void UpdateParticipant(ParticipantIndexEntry? participant, IReadOnlyList<DetailModuleConfig> modules)
     {
@@ -48,8 +53,6 @@ public partial class ParticipantDetailWindow : Window
                 QuickActionKeys.Bi => CreateActionButton("BI", (_, _) => OpenBookmark(_participant, App.Config.WordBiBookmarkName), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
                 QuickActionKeys.Be => CreateActionButton("BE", (_, _) => OpenBookmark(_participant, App.Config.WordBeBookmarkName), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
                 QuickActionKeys.Lb => CreateActionButton("LB", (_, _) => OpenBookmark(_participant, App.Config.WordLbBookmarkName), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
-                QuickActionKeys.EntryBu => CreateActionButton("E BU", (_, _) => OpenBookmark(_participant, App.Config.WordEntryBuBookmarkName), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
-                QuickActionKeys.EntryBi => CreateActionButton("E BI", (_, _) => OpenBookmark(_participant, App.Config.WordEntryBiBookmarkName), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
                 _ => null
             };
             if (button is not null) QuickActionPanel.Children.Add(button);
@@ -116,7 +119,12 @@ public partial class ParticipantDetailWindow : Window
 
     private Button CreateActionButton(string label, RoutedEventHandler handler, bool isEnabled)
     {
-        var button = new Button { Content = label, Style = (Style)FindResource("SecondaryButtonStyle"), IsEnabled = isEnabled };
+        var button = new Button
+        {
+            Content = label,
+            Style = (Style)FindResource("SecondaryButtonStyle"),
+            IsEnabled = isEnabled && !WordBusyGuard.IsBusy
+        };
         button.Click += handler;
         return button;
     }
@@ -144,14 +152,14 @@ public partial class ParticipantDetailWindow : Window
         }
     }
     private void OpenAkte(ParticipantIndexEntry entry) =>
-        TryWordAction(entry, (path, mode) => App.WordStaHost.RunAsync("OpenDocument", service => service.OpenDocument(path, mode)));
+        TryWordAction(entry, OpenDocumentViaShellWithCooldownAsync);
 
     private void OpenBookmark(ParticipantIndexEntry entry, string bookmark) =>
-        TryWordAction(entry, (path, mode) => App.WordStaHost.RunAsync(
+        TryWordAction(entry, path => App.WordStaHost.RunAsync(
             $"OpenDocumentAtBookmark:{bookmark}",
-            service => service.OpenDocumentAtBookmark(path, bookmark, mode)));
+            service => service.OpenDocumentAtBookmark(path, bookmark)));
 
-    private async void TryWordAction(ParticipantIndexEntry entry, Func<string, WordOpenMode, Task> action)
+    private async void TryWordAction(ParticipantIndexEntry entry, Func<string, Task> action)
     {
         if (!WordBusyGuard.TryEnter())
         {
@@ -163,33 +171,9 @@ public partial class ParticipantDetailWindow : Window
         try
         {
             var documentPath = ResolveDocumentPath(entry);
-            Mouse.OverrideCursor = Cursors.Wait;
+            Mouse.OverrideCursor = Cursors.AppStarting;
             Dispatcher.Invoke(() => { }, DispatcherPriority.Render);
-            await action(documentPath, WordOpenMode.Normal);
-        }
-        catch (DocumentLockedException ex)
-        {
-            var result = MessageBox.Show(
-                $"{ex.Message}\n\nMöchtest du sie schreibgeschützt öffnen?",
-                "Akte momentan gesperrt",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                try
-                {
-                    var documentPath = ResolveDocumentPath(entry);
-                    Mouse.OverrideCursor = Cursors.Wait;
-                    Dispatcher.Invoke(() => { }, DispatcherPriority.Render);
-                    await action(documentPath, WordOpenMode.ReadOnlyOnly);
-                }
-                catch (Exception fallbackEx)
-                {
-                    AppLogger.Error($"XHub.DetailWindow.WordAction.ReadOnlyFallback '{entry.DisplayName}'", fallbackEx);
-                    MessageBox.Show(fallbackEx.Message, "Acta", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
+            await action(documentPath);
         }
         catch (Exception ex)
         {
@@ -216,4 +200,26 @@ public partial class ParticipantDetailWindow : Window
     }
 
     private static bool HasDocumentOrFolder(ParticipantIndexEntry entry) => File.Exists(entry.DocumentPath) || Directory.Exists(entry.FolderPath);
+
+    private static async Task OpenDocumentViaShellWithCooldownAsync(string documentPath)
+    {
+        WordService.OpenDocumentViaShell(documentPath);
+        await Task.Delay(WordService.NativeOpenCooldownMs);
+    }
+
+    private void WordBusyGuard_OnBusyStateChanged(object? sender, EventArgs e)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(WordBusyGuard_OnBusyStateChanged, sender, e);
+            return;
+        }
+
+        RebuildActions();
+    }
+
+    private void ParticipantDetailWindow_OnClosed(object? sender, EventArgs e)
+    {
+        WordBusyGuard.BusyStateChanged -= WordBusyGuard_OnBusyStateChanged;
+    }
 }

@@ -8,14 +8,10 @@ namespace XHub.Services;
 public class WordService
 {
     private const string DocumentLockedMessage = "Akte ist bereits offen oder gesperrt (evtl. durch anderen Benutzer). Bitte später erneut versuchen.";
-    private const string ReadOnlyOpenFailedMessage = "Die Akte konnte auch schreibgeschützt nicht geöffnet werden. Bitte später erneut versuchen.";
     private const int WordForegroundRetryDelayMs = 80;
+    public const int NativeOpenCooldownMs = 400;
 
     public static bool IsWordAvailable => Type.GetTypeFromProgID("Word.Application") is not null;
-
-    public static bool IsDocumentLockedMessage(string? message) =>
-        !string.IsNullOrWhiteSpace(message)
-        && message.Contains("offen oder gesperrt", StringComparison.OrdinalIgnoreCase);
 
     public static string FindVerlaufsakte(string folderPath, string keyword)
     {
@@ -49,64 +45,31 @@ public class WordService
         return files;
     }
 
-    public void OpenDocument(string docPath, WordOpenMode mode = WordOpenMode.Normal)
+    public static void OpenDocumentViaShell(string docPath)
     {
-        AppLogger.Info($"XHub.Word.OpenDocument start. Doc='{docPath}', Mode='{mode}'");
-        if (!IsWordAvailable)
-        {
-            throw new InvalidOperationException("Microsoft Word wurde nicht gefunden");
-        }
-
         if (!File.Exists(docPath))
         {
             throw new FileNotFoundException("Dokumentdatei nicht gefunden", docPath);
         }
 
-        dynamic? app = null;
-        dynamic? doc = null;
-        var shouldQuitCreatedApp = false;
-        var openedHere = false;
-        var operationSucceeded = false;
-
         try
         {
-            var wordApp = CreateOrAttachWordApplication();
-            app = wordApp.App;
-            shouldQuitCreatedApp = wordApp.WasCreatedHere;
-
-            AppLogger.Info($"XHub.Word.Instance attached={!wordApp.WasCreatedHere}, initialUnsaved={wordApp.InitialUnsavedDocumentCount}");
-
-            doc = OpenOrGetDocument(app, docPath, mode, out openedHere);
-            AppLogger.Info($"XHub.Word.Document openedHere={openedHere}. Doc='{docPath}'");
-
-            CloseTransientEmptyDocuments(app, docPath, wordApp.InitialUnsavedDocumentCount);
-            EnsureWordUiState(app);
-            EnsureDocumentNotLocked(doc, mode);
-            FocusDocument(app, doc);
-
-            operationSucceeded = true;
-            shouldQuitCreatedApp = false;
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = docPath,
+                UseShellExecute = true
+            });
+            AppLogger.Info($"XHub.Word.NativeOpen gestartet. Doc='{docPath}'");
         }
-        finally
+        catch (Exception ex)
         {
-            if (!operationSucceeded && openedHere && !shouldQuitCreatedApp)
-            {
-                TryCloseDocument(doc);
-            }
-
-            ReleaseComObject(doc);
-            if (shouldQuitCreatedApp)
-            {
-                TryQuitWordApplication(app);
-            }
-
-            ReleaseComObject(app);
+            throw new InvalidOperationException("Die Akte konnte nicht an Word übergeben werden.", ex);
         }
     }
 
-    public void OpenDocumentAtBookmark(string docPath, string bookmarkName, WordOpenMode mode = WordOpenMode.Normal)
+    public void OpenDocumentAtBookmark(string docPath, string bookmarkName)
     {
-        AppLogger.Info($"XHub.Word.OpenDocumentAtBookmark start. Doc='{docPath}', Bookmark='{bookmarkName}', Mode='{mode}'");
+        AppLogger.Info($"XHub.Word.OpenDocumentAtBookmark start. Doc='{docPath}', Bookmark='{bookmarkName}'");
         if (!IsWordAvailable)
         {
             throw new InvalidOperationException("Microsoft Word wurde nicht gefunden");
@@ -131,12 +94,12 @@ public class WordService
 
             AppLogger.Info($"XHub.Word.Instance attached={!wordApp.WasCreatedHere}, initialUnsaved={wordApp.InitialUnsavedDocumentCount}");
 
-            doc = OpenOrGetDocument(app, docPath, mode, out openedHere);
+            doc = OpenOrGetDocument(app, docPath, out openedHere);
             AppLogger.Info($"XHub.Word.Document openedHere={openedHere}. Doc='{docPath}'");
 
             CloseTransientEmptyDocuments(app, docPath, wordApp.InitialUnsavedDocumentCount);
             EnsureWordUiState(app);
-            EnsureDocumentNotLocked(doc, mode);
+            EnsureDocumentIsWritableForBookmark(doc);
 
             if (!doc.Bookmarks.Exists(bookmarkName))
             {
@@ -147,6 +110,19 @@ public class WordService
 
             operationSucceeded = true;
             shouldQuitCreatedApp = false;
+        }
+        catch (DocumentLockedException ex)
+        {
+            AppLogger.Info($"XHub.Word.Lock-Fallback zu nativem Öffnen ohne Bookmark. Doc='{docPath}', Bookmark='{bookmarkName}', Message='{ex.Message}'");
+            if (openedHere)
+            {
+                TryCloseDocument(doc);
+                openedHere = false;
+            }
+
+            OpenDocumentViaShell(docPath);
+            Thread.Sleep(NativeOpenCooldownMs);
+            return;
         }
         finally
         {
@@ -202,7 +178,7 @@ public class WordService
         return new WordApplicationHandle(app, true, 0);
     }
 
-    private static dynamic OpenOrGetDocument(dynamic app, string docPath, WordOpenMode mode, out bool openedHere)
+    private static dynamic OpenOrGetDocument(dynamic app, string docPath, out bool openedHere)
     {
         var targetPath = Path.GetFullPath(docPath);
         dynamic? docs = null;
@@ -222,7 +198,7 @@ public class WordService
                         Path.GetFullPath(openPath).Equals(targetPath, StringComparison.OrdinalIgnoreCase))
                     {
                         var isReadOnly = GetDocumentReadOnlyOrThrow(openDoc);
-                        if (mode == WordOpenMode.Normal && isReadOnly)
+                        if (isReadOnly)
                         {
                             throw new DocumentLockedException(BuildDocumentLockedMessage());
                         }
@@ -236,20 +212,6 @@ public class WordService
                 finally
                 {
                     ReleaseComObject(openDoc);
-                }
-            }
-
-            if (mode == WordOpenMode.ReadOnlyOnly)
-            {
-                try
-                {
-                    openedHere = true;
-                    return docs.Open(docPath, ReadOnly: true, AddToRecentFiles: false);
-                }
-                catch (COMException ex) when (IsLockRelatedHResult((uint)ex.HResult))
-                {
-                    openedHere = false;
-                    throw new InvalidOperationException(ReadOnlyOpenFailedMessage, ex);
                 }
             }
 
@@ -275,11 +237,11 @@ public class WordService
         }
     }
 
-    private static void EnsureDocumentNotLocked(dynamic doc, WordOpenMode mode)
+    private static void EnsureDocumentIsWritableForBookmark(dynamic doc)
     {
         var isReadOnly = GetDocumentReadOnlyOrThrow(doc);
 
-        if (!isReadOnly || mode == WordOpenMode.ReadOnlyOnly)
+        if (!isReadOnly)
         {
             return;
         }
@@ -490,15 +452,13 @@ public class WordService
 
     private static void FocusRangeAtTop(dynamic app, dynamic range)
     {
-        dynamic? selectionRange = null;
         try
         {
             TryActivateWordWindow(app);
             app.Activate();
             var start = (int)range.Start;
             app.Selection.SetRange(start, start);
-            selectionRange = app.Selection.Range;
-            app.ActiveWindow?.ScrollIntoView(selectionRange, true);
+            app.ActiveWindow?.ScrollIntoView(app.Selection.Range, true);
             TryBringWordToForeground(app);
             return;
         }
@@ -506,9 +466,16 @@ public class WordService
         {
             AppLogger.Warn($"XHub.Word.Range-Fokus fehlgeschlagen ({ex.GetType().Name}): {ex.Message}");
         }
-        finally
+
+        try
         {
-            ReleaseComObject(selectionRange);
+            TryActivateWordWindow(app);
+            range.Select();
+            app.ActiveWindow?.ScrollIntoView(range, true);
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Warn($"XHub.Word.Range.Select fallback fehlgeschlagen ({ex.GetType().Name}): {ex.Message}");
         }
 
         TryBringWordToForeground(app);
@@ -558,7 +525,15 @@ public class WordService
 
             NativeMethods.SetForegroundWindow(hwnd);
             Thread.Sleep(WordForegroundRetryDelayMs);
-            NativeMethods.ShowWindowAsync(hwnd, NativeMethods.SW_SHOW);
+            if (NativeMethods.IsIconic(hwnd))
+            {
+                NativeMethods.ShowWindowAsync(hwnd, NativeMethods.SW_RESTORE);
+            }
+            else
+            {
+                NativeMethods.ShowWindowAsync(hwnd, NativeMethods.SW_SHOW);
+            }
+
             NativeMethods.SetForegroundWindow(hwnd);
         }
         catch (Exception ex)
@@ -706,12 +681,6 @@ public class WordService
         public bool WasCreatedHere { get; }
         public int InitialUnsavedDocumentCount { get; }
     }
-}
-
-public enum WordOpenMode
-{
-    Normal,
-    ReadOnlyOnly
 }
 
 public sealed class DocumentLockedException : InvalidOperationException

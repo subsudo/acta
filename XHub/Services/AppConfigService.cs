@@ -41,8 +41,6 @@ public class AppConfigService
             WordBiBookmarkName = source.WordBiBookmarkName,
             WordBeBookmarkName = source.WordBeBookmarkName,
             WordLbBookmarkName = source.WordLbBookmarkName,
-            WordEntryBuBookmarkName = source.WordEntryBuBookmarkName,
-            WordEntryBiBookmarkName = source.WordEntryBiBookmarkName,
             VisibleQuickActions = source.VisibleQuickActions.ToList(),
             AutoRefreshHours = source.AutoRefreshHours,
             ShowStatusTags = source.ShowStatusTags,

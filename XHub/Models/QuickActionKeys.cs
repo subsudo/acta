@@ -14,8 +14,6 @@ public static class QuickActionKeys
     public const string Bi = "bi";
     public const string Be = "be";
     public const string Lb = "lb";
-    public const string EntryBu = "entry-bu";
-    public const string EntryBi = "entry-bi";
 
     public static IReadOnlyList<QuickActionDefinition> All { get; } = new[]
     {
@@ -24,9 +22,7 @@ public static class QuickActionKeys
         new QuickActionDefinition { Key = Bu, Label = "BU" },
         new QuickActionDefinition { Key = Bi, Label = "BI" },
         new QuickActionDefinition { Key = Be, Label = "BE" },
-        new QuickActionDefinition { Key = Lb, Label = "LB" },
-        new QuickActionDefinition { Key = EntryBu, Label = "E BU" },
-        new QuickActionDefinition { Key = EntryBi, Label = "E BI" }
+        new QuickActionDefinition { Key = Lb, Label = "LB" }
     };
 
     public static IReadOnlyList<string> CreateDefaults()

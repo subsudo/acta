@@ -17,6 +17,7 @@
         Foreground="{DynamicResource Brush.PrimaryText}">
     <Window.Resources>
         <converters:QuickActionVisibilityConverter x:Key="QuickActionVisibilityConverter" />
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
 
         <Style TargetType="Border" x:Key="PanelBorderStyle">
             <Setter Property="Background" Value="{DynamicResource Brush.PanelBg}" />
@@ -412,25 +413,24 @@
                                                         Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=folder}"
                                                         PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
                                                 <Button Style="{StaticResource QuickActionButtonStyle}" Content="Akte" Tag="document"
+                                                        IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
                                                         Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=document}"
                                                         PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
                                                 <Button Style="{StaticResource QuickActionButtonStyle}" Content="BU" Tag="bu"
+                                                        IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
                                                         Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=bu}"
                                                         PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
                                                 <Button Style="{StaticResource QuickActionButtonStyle}" Content="BI" Tag="bi"
+                                                        IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
                                                         Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=bi}"
                                                         PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
                                                 <Button Style="{StaticResource QuickActionButtonStyle}" Content="BE" Tag="be"
+                                                        IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
                                                         Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=be}"
                                                         PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
                                                 <Button Style="{StaticResource QuickActionButtonStyle}" Content="LB" Tag="lb"
+                                                        IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
                                                         Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=lb}"
-                                                        PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
-                                                <Button Style="{StaticResource QuickActionButtonStyle}" Content="E BU" Tag="entry-bu"
-                                                        Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=entry-bu}"
-                                                        PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
-                                                <Button Style="{StaticResource QuickActionButtonStyle}" Content="E BI" Tag="entry-bi"
-                                                        Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=entry-bi}"
                                                         PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
                                             </WrapPanel>
                                         </Grid>
@@ -704,25 +704,24 @@
                                                     Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=folder}"
                                                     PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
                                             <Button Style="{StaticResource QuickActionButtonStyle}" Content="Akte" Tag="document"
+                                                    IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
                                                     Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=document}"
                                                     PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
                                             <Button Style="{StaticResource QuickActionButtonStyle}" Content="BU" Tag="bu"
+                                                    IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
                                                     Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=bu}"
                                                     PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
                                             <Button Style="{StaticResource QuickActionButtonStyle}" Content="BI" Tag="bi"
+                                                    IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
                                                     Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=bi}"
                                                     PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
                                             <Button Style="{StaticResource QuickActionButtonStyle}" Content="BE" Tag="be"
+                                                    IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
                                                     Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=be}"
                                                     PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
                                             <Button Style="{StaticResource QuickActionButtonStyle}" Content="LB" Tag="lb"
+                                                    IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
                                                     Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=lb}"
-                                                    PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
-                                            <Button Style="{StaticResource QuickActionButtonStyle}" Content="E BU" Tag="entry-bu"
-                                                    Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=entry-bu}"
-                                                    PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
-                                            <Button Style="{StaticResource QuickActionButtonStyle}" Content="E BI" Tag="entry-bi"
-                                                    Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=entry-bi}"
                                                     PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
                                         </WrapPanel>
 
