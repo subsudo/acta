@@ -1106,12 +1106,12 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OpenAkte(ParticipantIndexEntry entry) => TryWordAction(entry, path => _wordService.OpenDocument(path));
+    private void OpenAkte(ParticipantIndexEntry entry) => TryWordAction(entry, (path, mode) => _wordService.OpenDocument(path, mode));
 
     private void OpenBookmark(ParticipantIndexEntry entry, string bookmark) =>
-        TryWordAction(entry, path => _wordService.OpenDocumentAtBookmark(path, bookmark));
+        TryWordAction(entry, (path, mode) => _wordService.OpenDocumentAtBookmark(path, bookmark, mode));
 
-    private void TryWordAction(ParticipantIndexEntry entry, Action<string> action)
+    private void TryWordAction(ParticipantIndexEntry entry, Action<string, WordOpenMode> action)
     {
         if (!WordBusyGuard.TryEnter())
         {
@@ -1125,24 +1125,37 @@ public partial class MainWindow : Window
 
         try
         {
+            var documentPath = ResolveDocumentPath(entry);
             UpdateStatus(openingStatus);
             Mouse.OverrideCursor = Cursors.Wait;
             Dispatcher.Invoke(() => { }, DispatcherPriority.Render);
-            action(ResolveDocumentPath(entry));
+            action(documentPath, WordOpenMode.Normal);
+        }
+        catch (DocumentLockedException ex)
+        {
+            var result = MessageBox.Show(
+                $"{ex.Message}\n\nMöchtest du sie schreibgeschützt öffnen?",
+                "Akte momentan gesperrt",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    var documentPath = ResolveDocumentPath(entry, refreshDetailPanel: false);
+                    action(documentPath, WordOpenMode.ReadOnlyOnly);
+                }
+                catch (Exception fallbackEx)
+                {
+                    AppLogger.Error($"XHub.MainWindow.WordAction.ReadOnlyFallback '{entry.DisplayName}'", fallbackEx);
+                    MessageBox.Show(fallbackEx.Message, "Acta", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
         catch (Exception ex)
         {
             AppLogger.Error($"XHub.MainWindow.WordAction '{entry.DisplayName}'", ex);
-            if (NavigatorWordService.IsDocumentLockedMessage(ex.Message))
-            {
-                NoticeWindow.ShowNotice(
-                    this,
-                    "Akte momentan gesperrt",
-                    ex.Message,
-                    "Die Akte wird gerade verwendet oder ist im Moment schreibgeschuetzt erreichbar.");
-                return;
-            }
-
             MessageBox.Show(ex.Message, "Acta", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally

@@ -129,7 +129,9 @@ Aktueller Stand:
 - Word-Aktionen aus Hauptfenster und Detailfenster teilen sich einen globalen Busy-Guard
 - keine zweite Word-Aktion waehrend eine laeuft
 - technische Fehler beim ReadOnly-/Sperrstatus werden konservativ behandelt statt still als Erfolg interpretiert
+- gesperrte Akten duerfen auf ausdruecklichen Nutzerwunsch schreibgeschuetzt geoeffnet werden
 - vor Word-Aktionen gibt es bewusst nur kleines sofort sichtbares Feedback (`Öffne Dokument...` + Wait-Cursor), aber weiterhin keinen separaten Word-Hintergrundworker
+- bekannte harmlose COM-/Dynamic-Sonderfaelle bei `UserControl` und `Hwnd` werden nicht mehr als normale Dauerwarnungen behandelt
 
 **Folge:** weniger doppelte Word-Aufrufe und sauberere fachliche Fehlermeldungen, ohne den Word-Workflow grundlegend umzubauen.
 

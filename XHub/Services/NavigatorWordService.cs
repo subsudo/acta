@@ -11,6 +11,7 @@ namespace XHub.Services;
 public class NavigatorWordService
 {
     private const string DocumentLockedMessage = "Akte ist bereits offen oder gesperrt (evtl. durch anderen Benutzer). Bitte später erneut versuchen.";
+    private const string ReadOnlyOpenFailedMessage = "Die Akte konnte auch schreibgeschützt nicht geöffnet werden. Bitte später erneut versuchen.";
     private const int WordForegroundRetryDelayMs = 80;
     private const int WordWindowStateNormal = 0;
     private const int WordWindowStateMaximized = 1;
@@ -54,9 +55,9 @@ public class NavigatorWordService
         return files;
     }
 
-    public void OpenDocument(string docPath)
+    public void OpenDocument(string docPath, WordOpenMode mode = WordOpenMode.Normal)
     {
-        AppLogger.Info($"XHub.Word.OpenDocument start. Doc='{docPath}'");
+        AppLogger.Info($"XHub.Word.OpenDocument start. Doc='{docPath}', Mode='{mode}'");
         if (!IsWordAvailable)
         {
             throw new InvalidOperationException("Microsoft Word wurde nicht gefunden");
@@ -81,12 +82,12 @@ public class NavigatorWordService
 
             AppLogger.Info($"XHub.Word.Instance attached={!wordApp.WasCreatedHere}, initialUnsaved={wordApp.InitialUnsavedDocumentCount}");
 
-            doc = OpenOrGetDocument(app, docPath, out openedHere);
+            doc = OpenOrGetDocument(app, docPath, mode, out openedHere);
             AppLogger.Info($"XHub.Word.Document openedHere={openedHere}. Doc='{docPath}'");
 
             CloseTransientEmptyDocuments(app, docPath, wordApp.InitialUnsavedDocumentCount);
             EnsureWordUiState(app);
-            EnsureDocumentNotLocked(doc);
+            EnsureDocumentNotLocked(doc, mode);
             FocusDocument(app, doc);
 
             operationSucceeded = true;
@@ -109,9 +110,9 @@ public class NavigatorWordService
         }
     }
 
-    public void OpenDocumentAtBookmark(string docPath, string bookmarkName)
+    public void OpenDocumentAtBookmark(string docPath, string bookmarkName, WordOpenMode mode = WordOpenMode.Normal)
     {
-        AppLogger.Info($"XHub.Word.OpenDocumentAtBookmark start. Doc='{docPath}', Bookmark='{bookmarkName}'");
+        AppLogger.Info($"XHub.Word.OpenDocumentAtBookmark start. Doc='{docPath}', Bookmark='{bookmarkName}', Mode='{mode}'");
         if (!IsWordAvailable)
         {
             throw new InvalidOperationException("Microsoft Word wurde nicht gefunden");
@@ -136,12 +137,12 @@ public class NavigatorWordService
 
             AppLogger.Info($"XHub.Word.Instance attached={!wordApp.WasCreatedHere}, initialUnsaved={wordApp.InitialUnsavedDocumentCount}");
 
-            doc = OpenOrGetDocument(app, docPath, out openedHere);
+            doc = OpenOrGetDocument(app, docPath, mode, out openedHere);
             AppLogger.Info($"XHub.Word.Document openedHere={openedHere}. Doc='{docPath}'");
 
             CloseTransientEmptyDocuments(app, docPath, wordApp.InitialUnsavedDocumentCount);
             EnsureWordUiState(app);
-            EnsureDocumentNotLocked(doc);
+            EnsureDocumentNotLocked(doc, mode);
 
             if (!doc.Bookmarks.Exists(bookmarkName))
             {
@@ -207,7 +208,7 @@ public class NavigatorWordService
         return new WordApplicationHandle(app, true, 0);
     }
 
-    private static dynamic OpenOrGetDocument(dynamic app, string docPath, out bool openedHere)
+    private static dynamic OpenOrGetDocument(dynamic app, string docPath, WordOpenMode mode, out bool openedHere)
     {
         var targetPath = Path.GetFullPath(docPath);
         dynamic? docs = null;
@@ -226,6 +227,12 @@ public class NavigatorWordService
                     if (!string.IsNullOrWhiteSpace(openPath) &&
                         Path.GetFullPath(openPath).Equals(targetPath, StringComparison.OrdinalIgnoreCase))
                     {
+                        var isReadOnly = GetDocumentReadOnlyOrThrow(openDoc);
+                        if (mode == WordOpenMode.Normal && isReadOnly)
+                        {
+                            throw new DocumentLockedException(BuildDocumentLockedMessage());
+                        }
+
                         openedHere = false;
                         var result = openDoc;
                         openDoc = null;
@@ -238,9 +245,23 @@ public class NavigatorWordService
                 }
             }
 
+            if (mode == WordOpenMode.ReadOnlyOnly)
+            {
+                try
+                {
+                    openedHere = true;
+                    return docs.Open(docPath, ReadOnly: true, AddToRecentFiles: false);
+                }
+                catch (COMException ex) when (IsLockRelatedHResult((uint)ex.HResult))
+                {
+                    openedHere = false;
+                    throw new InvalidOperationException(ReadOnlyOpenFailedMessage, ex);
+                }
+            }
+
             if (IsFileLocked(docPath))
             {
-                throw new InvalidOperationException(BuildDocumentLockedMessage());
+                throw new DocumentLockedException(BuildDocumentLockedMessage());
             }
 
             try
@@ -251,7 +272,7 @@ public class NavigatorWordService
             catch (COMException ex) when (IsLockRelatedHResult((uint)ex.HResult))
             {
                 openedHere = false;
-                throw new InvalidOperationException(BuildDocumentLockedMessage(), ex);
+                throw new DocumentLockedException(BuildDocumentLockedMessage(), ex);
             }
         }
         finally
@@ -260,30 +281,16 @@ public class NavigatorWordService
         }
     }
 
-    private static void EnsureDocumentNotLocked(dynamic doc)
+    private static void EnsureDocumentNotLocked(dynamic doc, WordOpenMode mode)
     {
-        bool isReadOnly;
-        try
-        {
-            isReadOnly = (bool)doc.ReadOnly;
-        }
-        catch (COMException ex)
-        {
-            AppLogger.Warn($"XHub.Word.ReadOnly-Status konnte nicht gelesen werden ({ex.GetType().Name}): {ex.Message}");
-            throw new InvalidOperationException("Der Schreibstatus der Akte konnte nicht geprüft werden. Bitte erneut versuchen.", ex);
-        }
-        catch (Exception ex)
-        {
-            AppLogger.Warn($"XHub.Word.ReadOnly-Status konnte nicht gelesen werden ({ex.GetType().Name}): {ex.Message}");
-            throw new InvalidOperationException("Der Schreibstatus der Akte konnte nicht geprüft werden. Bitte erneut versuchen.", ex);
-        }
+        var isReadOnly = GetDocumentReadOnlyOrThrow(doc);
 
-        if (!isReadOnly)
+        if (!isReadOnly || mode == WordOpenMode.ReadOnlyOnly)
         {
             return;
         }
 
-        throw new InvalidOperationException(BuildDocumentLockedMessage());
+        throw new DocumentLockedException(BuildDocumentLockedMessage());
     }
 
     private static void EnsureWordUiState(dynamic app)
@@ -294,7 +301,14 @@ public class NavigatorWordService
         }
         catch (COMException ex)
         {
-            AppLogger.Warn($"XHub.Word.UserControl konnte nicht gesetzt werden: {ex.Message}");
+            if (ex.Message.Contains("schreibgeschützte Eigenschaft", StringComparison.OrdinalIgnoreCase))
+            {
+                AppLogger.Info("XHub.Word.UserControl ist in dieser Word-Variante nicht beschreibbar.");
+            }
+            else
+            {
+                AppLogger.Warn($"XHub.Word.UserControl konnte nicht gesetzt werden: {ex.Message}");
+            }
         }
 
         app.Visible = true;
@@ -665,8 +679,34 @@ public class NavigatorWordService
         }
         catch (Exception ex)
         {
-            AppLogger.Warn($"XHub.Word.Hwnd konnte nicht gelesen werden ({ex.GetType().Name}): {ex.Message}");
+            if (ex.GetType().Name == "RuntimeBinderException")
+            {
+                AppLogger.Info("XHub.Word.Hwnd ist in dieser Word-Variante nicht direkt verfügbar.");
+            }
+            else
+            {
+                AppLogger.Warn($"XHub.Word.Hwnd konnte nicht gelesen werden ({ex.GetType().Name}): {ex.Message}");
+            }
+
             return IntPtr.Zero;
+        }
+    }
+
+    private static bool GetDocumentReadOnlyOrThrow(dynamic doc)
+    {
+        try
+        {
+            return (bool)doc.ReadOnly;
+        }
+        catch (COMException ex)
+        {
+            AppLogger.Warn($"XHub.Word.ReadOnly-Status konnte nicht gelesen werden ({ex.GetType().Name}): {ex.Message}");
+            throw new InvalidOperationException("Der Schreibstatus der Akte konnte nicht geprüft werden. Bitte erneut versuchen.", ex);
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Warn($"XHub.Word.ReadOnly-Status konnte nicht gelesen werden ({ex.GetType().Name}): {ex.Message}");
+            throw new InvalidOperationException("Der Schreibstatus der Akte konnte nicht geprüft werden. Bitte erneut versuchen.", ex);
         }
     }
 
@@ -764,6 +804,25 @@ public class NavigatorWordService
         public dynamic App { get; }
         public bool WasCreatedHere { get; }
         public int InitialUnsavedDocumentCount { get; }
+    }
+}
+
+public enum WordOpenMode
+{
+    Normal,
+    ReadOnlyOnly
+}
+
+public sealed class DocumentLockedException : InvalidOperationException
+{
+    public DocumentLockedException(string message)
+        : base(message)
+    {
+    }
+
+    public DocumentLockedException(string message, Exception innerException)
+        : base(message, innerException)
+    {
     }
 }
 

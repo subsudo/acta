@@ -31,6 +31,7 @@ Aktueller sichtbarer Versionsstand: `Acta v0.9.4`
 - UI-Skalierung arbeitet jetzt mit 5 Stufen; neue Nutzer starten kompakter und bestehende 4-Stufen-Werte werden einmalig auf die neue Logik migriert
 - Word-Aktionen sind global gegen Doppelauslösung abgesichert; parallele zweite Klicks werden verworfen
 - Lock-Rennen bei `docs.Open()` werden fachlich als Sperrfall behandelt statt als rohe COM-Fehlermeldung
+- Bei gesperrten Akten bietet Acta jetzt einen ReadOnly-Fallback an: Nutzer können dieselbe Akte auf Wunsch schreibgeschützt in Word öffnen, statt nur einen harten Abbruch zu bekommen
 - Vor Word-Aktionen erzwingen Statusmeldung, Wait-Cursor und Render-Flush ein sofort sichtbares Feedback; im Detailfenster läuft derselbe Wait-Cursor ohne zusätzliche Status-UI
 - Kleine Stabilitätsrunde ist drin: Odoo-/Ordner-`Process.Start(...)` ist gegen Shell-Fehler abgesichert, die Modul-Normalisierung toleriert doppelte Keys aus fehlerhaften JSON-Daten, der Such-Regex ist kompiliert, und Theme-Brushes werden beim Erzeugen eingefroren
 - Der Mini-Stundenplan setzt seine Standard-Textfarben jetzt wieder über Resource-Referenzen statt über lokale Brush-Werte; das ist robuster bei Theme-Wechseln und spart wiederholte `FindResource(...)`-Aufrufe
@@ -38,6 +39,7 @@ Aktueller sichtbarer Versionsstand: `Acta v0.9.4`
 - Such- und Listenpfade wurden leicht entlastet: das TN-Index-Dictionary wird gecacht, unnötige Lowercase-Allokationen in der Suche entfallen, und reine Layout-/Skalierungswechsel erzwingen keine pauschalen `Items.Refresh()`-Aufrufe mehr
 - Vor Word-Aktionen zeigt das Hauptfenster kurz `Öffne Dokument...`, ohne einen dauerhaften Word-Status einzuführen
 - Word-Aktionen geben jetzt auch unmittelbar sichtbares UI-Feedback: Wait-Cursor und Render-Flush sorgen dafür, dass die Rückmeldung vor dem kurzen COM-Freeze tatsächlich sichtbar wird
+- Bekannte harmlose Word-Sonderfälle bei `UserControl` und `Hwnd` werden defensiver geloggt, damit normale Öffnungen die Logs nicht mehr mit dauernden Warnungen füllen
 - Der `Start`-Pfad toleriert jetzt beide Realstrukturen: TN-Ordner direkt auf erster Ebene oder genau eine Zwischenebene tiefer; tiefer wird bewusst nicht rekursiv gesucht
 - Der Mini-Stundenplan skaliert die LP-/Zimmerzeile bei kleineren UI-Stufen jetzt kompakter und mit etwas mehr Innenabstand, damit die kurzen Randtexte in den Zellen nicht mehr so leicht abgeschnitten werden
 - Odoo-Links aus DOCX-Headern werden vor dem Öffnen jetzt auf echte absolute `http/https`-URLs begrenzt; ungültige oder nicht erlaubte Ziele werden freundlich geblockt statt an `Process.Start(...)` durchgereicht
