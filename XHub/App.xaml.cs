@@ -263,10 +263,10 @@ public partial class App : Application
                 SetResource(resources, "Ui.Size.WorkingButtonMinHeight", 21d);
                 SetResource(resources, "Ui.Size.DetailHeaderMinHeight", 88d);
                 SetResource(resources, "Ui.Size.DetailTitleMaxHeight", 42d);
-                SetResource(resources, "Ui.Size.DetailPhotoCardHeight", 182d);
-                SetResource(resources, "Ui.Size.DetailPhotoFrameWidth", 132d);
-                SetResource(resources, "Ui.Size.DetailPhotoFrameHeight", 164d);
-                SetResource(resources, "Ui.Size.DetailOdooButtonMinWidth", 132d);
+                SetResource(resources, "Ui.Size.DetailPhotoCardHeight", 176d);
+                SetResource(resources, "Ui.Size.DetailPhotoFrameWidth", 128d);
+                SetResource(resources, "Ui.Size.DetailPhotoFrameHeight", 158d);
+                SetResource(resources, "Ui.Size.DetailOdooButtonMinWidth", 120d);
                 break;
             case 2:
                 SetResource(resources, "Ui.Font.Search", 12d);
@@ -301,10 +301,10 @@ public partial class App : Application
                 SetResource(resources, "Ui.Size.WorkingButtonMinHeight", 21d);
                 SetResource(resources, "Ui.Size.DetailHeaderMinHeight", 92d);
                 SetResource(resources, "Ui.Size.DetailTitleMaxHeight", 44d);
-                SetResource(resources, "Ui.Size.DetailPhotoCardHeight", 190d);
-                SetResource(resources, "Ui.Size.DetailPhotoFrameWidth", 136d);
-                SetResource(resources, "Ui.Size.DetailPhotoFrameHeight", 170d);
-                SetResource(resources, "Ui.Size.DetailOdooButtonMinWidth", 136d);
+                SetResource(resources, "Ui.Size.DetailPhotoCardHeight", 184d);
+                SetResource(resources, "Ui.Size.DetailPhotoFrameWidth", 132d);
+                SetResource(resources, "Ui.Size.DetailPhotoFrameHeight", 164d);
+                SetResource(resources, "Ui.Size.DetailOdooButtonMinWidth", 124d);
                 break;
             case 3:
                 SetResource(resources, "Ui.Font.Search", 13d);
@@ -339,10 +339,10 @@ public partial class App : Application
                 SetResource(resources, "Ui.Size.WorkingButtonMinHeight", 22d);
                 SetResource(resources, "Ui.Size.DetailHeaderMinHeight", 96d);
                 SetResource(resources, "Ui.Size.DetailTitleMaxHeight", 46d);
-                SetResource(resources, "Ui.Size.DetailPhotoCardHeight", 198d);
-                SetResource(resources, "Ui.Size.DetailPhotoFrameWidth", 142d);
-                SetResource(resources, "Ui.Size.DetailPhotoFrameHeight", 178d);
-                SetResource(resources, "Ui.Size.DetailOdooButtonMinWidth", 140d);
+                SetResource(resources, "Ui.Size.DetailPhotoCardHeight", 192d);
+                SetResource(resources, "Ui.Size.DetailPhotoFrameWidth", 138d);
+                SetResource(resources, "Ui.Size.DetailPhotoFrameHeight", 172d);
+                SetResource(resources, "Ui.Size.DetailOdooButtonMinWidth", 128d);
                 break;
             case 4:
                 SetResource(resources, "Ui.Font.Search", 14d);
@@ -377,10 +377,10 @@ public partial class App : Application
                 SetResource(resources, "Ui.Size.WorkingButtonMinHeight", 24d);
                 SetResource(resources, "Ui.Size.DetailHeaderMinHeight", 108d);
                 SetResource(resources, "Ui.Size.DetailTitleMaxHeight", 52d);
-                SetResource(resources, "Ui.Size.DetailPhotoCardHeight", 214d);
-                SetResource(resources, "Ui.Size.DetailPhotoFrameWidth", 152d);
-                SetResource(resources, "Ui.Size.DetailPhotoFrameHeight", 190d);
-                SetResource(resources, "Ui.Size.DetailOdooButtonMinWidth", 148d);
+                SetResource(resources, "Ui.Size.DetailPhotoCardHeight", 206d);
+                SetResource(resources, "Ui.Size.DetailPhotoFrameWidth", 148d);
+                SetResource(resources, "Ui.Size.DetailPhotoFrameHeight", 184d);
+                SetResource(resources, "Ui.Size.DetailOdooButtonMinWidth", 136d);
                 break;
             case 5:
                 SetResource(resources, "Ui.Font.Search", 15d);
@@ -415,10 +415,10 @@ public partial class App : Application
                 SetResource(resources, "Ui.Size.WorkingButtonMinHeight", 26d);
                 SetResource(resources, "Ui.Size.DetailHeaderMinHeight", 120d);
                 SetResource(resources, "Ui.Size.DetailTitleMaxHeight", 58d);
-                SetResource(resources, "Ui.Size.DetailPhotoCardHeight", 232d);
-                SetResource(resources, "Ui.Size.DetailPhotoFrameWidth", 164d);
-                SetResource(resources, "Ui.Size.DetailPhotoFrameHeight", 205d);
-                SetResource(resources, "Ui.Size.DetailOdooButtonMinWidth", 156d);
+                SetResource(resources, "Ui.Size.DetailPhotoCardHeight", 222d);
+                SetResource(resources, "Ui.Size.DetailPhotoFrameWidth", 158d);
+                SetResource(resources, "Ui.Size.DetailPhotoFrameHeight", 198d);
+                SetResource(resources, "Ui.Size.DetailOdooButtonMinWidth", 144d);
                 break;
             default:
                 goto case 5;

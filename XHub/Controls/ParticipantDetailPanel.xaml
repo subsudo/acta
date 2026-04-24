@@ -136,7 +136,7 @@
                 </Grid>
 
                 <Grid x:Name="DetailsBodyGrid"
-                      Margin="0,18,0,0">
+                      Margin="0,12,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition x:Name="PhotoColumnDefinition" Width="Auto" />
                         <ColumnDefinition x:Name="LinkColumnDefinition" Width="*" />
@@ -149,19 +149,20 @@
                     <Border x:Name="PhotoCardBorder"
                             Grid.Row="0"
                             Grid.Column="0"
-                            Margin="0,0,12,0"
+                            Margin="0,0,10,0"
                             Height="{DynamicResource Ui.Size.DetailPhotoCardHeight}"
-                            CornerRadius="8"
+                            CornerRadius="7"
                             Background="{DynamicResource Brush.SoftSurface}"
                             BorderBrush="{DynamicResource Brush.Border}"
                             BorderThickness="1"
-                            Padding="12">
+                            Padding="8">
                         <Grid>
                             <Border x:Name="PhotoFrameBorder"
                                     Width="{DynamicResource Ui.Size.DetailPhotoFrameWidth}"
                                     Height="{DynamicResource Ui.Size.DetailPhotoFrameHeight}"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
+                                    Margin="0,-2,0,0"
                                     CornerRadius="0"
                                     Background="{DynamicResource Brush.SoftSurface}"
                                     BorderBrush="Transparent"
@@ -220,14 +221,14 @@
                     </Border>
 
                     <Border x:Name="LinkCardBorder"
-                            MinHeight="62"
+                            MinHeight="40"
                             Grid.Row="0"
                             Grid.Column="1"
-                            Padding="14"
-                            CornerRadius="10"
-                            Background="{DynamicResource Brush.SoftSurface}"
-                            BorderBrush="{DynamicResource Brush.Border}"
-                            BorderThickness="1">
+                            Padding="0"
+                            CornerRadius="0"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="0">
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Stretch">
                             <Button x:Name="OdooButton"
                                     Content="Odoo öffnen"
@@ -247,7 +248,7 @@
                 </Grid>
 
                 <Border x:Name="ScheduleCardBorder"
-                        Margin="0,16,0,0"
+                        Margin="0,10,0,0"
                         Padding="0"
                         CornerRadius="0"
                         Background="Transparent"

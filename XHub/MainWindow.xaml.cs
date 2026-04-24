@@ -247,9 +247,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             : $"{count} Teilnehmende";
 
         SavedBadge.Visibility = isSaved ? Visibility.Visible : Visibility.Collapsed;
-        SaveWorkingListButton.Content = isSaved ? "Speichern" : "Als Liste speichern";
-        SaveWorkingListButton.Visibility = count > 0 ? Visibility.Visible : Visibility.Collapsed;
-        ClearWorkingListButton.Visibility = count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        SaveWorkingListButton.Content = "Als Liste speichern";
+        SaveWorkingListButton.Visibility = !isSaved && count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        ClearWorkingListButton.Visibility = !isSaved && count > 0 ? Visibility.Visible : Visibility.Collapsed;
         WorkingAreaEmptyState.Visibility = count == 0 ? Visibility.Visible : Visibility.Collapsed;
         UpdateTemporaryListSummary();
 
@@ -261,6 +261,31 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         WorkspaceButton.Background = isWorkspaceActive
             ? (Brush)FindResource("Brush.AccentSubtle")
             : Brushes.Transparent;
+    }
+
+    private void PersistWorkingListIfSaved()
+    {
+        if (_loadedSavedListId is null)
+        {
+            return;
+        }
+
+        var savedList = FindListById(_loadedSavedListId);
+        if (savedList is null)
+        {
+            return;
+        }
+
+        savedList.Name = _workingListLabel;
+        savedList.Items = _workingList.Items
+            .Select(item => new SavedListItem
+            {
+                ParticipantKey = item.ParticipantKey,
+                SortOrder = item.SortOrder
+            })
+            .ToList();
+        savedList.Modules = _workingList.Modules.Select(module => module.Clone()).ToList();
+        SaveLists();
     }
 
     private void UpdateSearchUi()
@@ -985,6 +1010,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             SortOrder = _workingList.Items.Count
         });
         RebuildCurrentParticipants();
+        PersistWorkingListIfSaved();
 
         var added = _currentParticipants.FirstOrDefault(candidate =>
             string.Equals(candidate.ParticipantKey, entry.ParticipantKey, StringComparison.OrdinalIgnoreCase));
@@ -1023,6 +1049,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         _workingList.Items.Remove(item);
         ResequenceItems(_workingList);
         RebuildCurrentParticipants();
+        PersistWorkingListIfSaved();
 
         if (_selectedParticipant is not null &&
             string.Equals(_selectedParticipant.ParticipantKey, participantKey, StringComparison.OrdinalIgnoreCase))

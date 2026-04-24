@@ -27,6 +27,8 @@ Aktueller sichtbarer Versionsstand: `Acta v0.9.5`
 - native Windows-Titelleiste ist wieder aktiv
 - die sichtbare Versionsnummer sitzt jetzt im Fenstertitel als `Acta vX.Y.Z`
 - Refresh und Einstellungen sitzen wieder in der normalen oberen Aktionsleiste neben `Details`
+- Gespeicherte Listen speichern Inhaltsänderungen jetzt still im Hintergrund; die Header-Aktionen `Leeren` und `Als Liste speichern` bleiben nur noch für die temporäre Liste sichtbar
+- Der Detailbereich ist etwas kompakter gestellt: Foto sitzt leicht höher, der Fotorahmen ist enger gefasst, die Odoo-Karte entfällt und Foto/Odoo/Stundenplan rücken ruhiger zusammen; die Stundenplanfläche selbst bleibt unverändert
 - die fruehere Auto-fit- und Sonderlogik fuer Spalten-/Fensterbreiten ist wieder entfernt; Listen-, Haupt- und Detailspalte arbeiten wieder ueber die stabile Standard-Splitterlogik
 - UI-Skalierung arbeitet jetzt mit 5 Stufen; neue Nutzer starten kompakter und bestehende 4-Stufen-Werte werden einmalig auf die neue Logik migriert
 - Word-Aktionen sind global gegen Doppelauslösung abgesichert; parallele zweite Klicks werden verworfen

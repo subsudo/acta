@@ -446,7 +446,7 @@ public partial class ParticipantDetailPanel : UserControl
             Grid.SetColumn(LinkCardBorder, 1);
             Grid.SetColumnSpan(LinkCardBorder, 1);
 
-            PhotoCardBorder.Margin = new Thickness(0, 0, 12, 0);
+            PhotoCardBorder.Margin = new Thickness(0, 0, 10, 0);
             LinkCardBorder.Margin = new Thickness(0);
             UpdateScheduleWidth();
             return;
@@ -464,7 +464,7 @@ public partial class ParticipantDetailPanel : UserControl
         Grid.SetColumn(LinkCardBorder, 0);
         Grid.SetColumnSpan(LinkCardBorder, 2);
 
-        PhotoCardBorder.Margin = new Thickness(0, 0, 0, 10);
+        PhotoCardBorder.Margin = new Thickness(0, 0, 0, 8);
         LinkCardBorder.Margin = new Thickness(0);
         UpdateScheduleWidth();
     }
