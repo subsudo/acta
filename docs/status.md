@@ -2,7 +2,7 @@
 
 ## Stand
 Stand dieser Doku: 2026-04-29
-Aktueller sichtbarer Versionsstand: `Acta v0.9.6`
+Aktueller sichtbarer Versionsstand: `Acta v0.9.7`
 
 ## Technischer Gesamtzustand
 - Build zuletzt grün
