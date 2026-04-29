@@ -23,6 +23,8 @@ public partial class ParticipantNotesPanel : UserControl
     private bool _isLoading;
     private bool _isUpdatingToolbar;
 
+    public event EventHandler? CloseRequested;
+
     public ParticipantNotesPanel()
     {
         InitializeComponent();
@@ -139,6 +141,9 @@ public partial class ParticipantNotesPanel : UserControl
 
         Editor.Focus();
     }
+
+    private void CloseButton_OnClick(object sender, RoutedEventArgs e) =>
+        CloseRequested?.Invoke(this, EventArgs.Empty);
 
     private void FontSizeComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {

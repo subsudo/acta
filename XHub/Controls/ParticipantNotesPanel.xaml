@@ -4,14 +4,14 @@
              Background="Transparent">
     <UserControl.Resources>
         <Style x:Key="NotesSegmentButtonStyle" TargetType="Button">
-            <Setter Property="Height" Value="20" />
-            <Setter Property="MinWidth" Value="26" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="MinWidth" Value="29" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
             <Setter Property="BorderThickness" Value="0,0,1,0" />
             <Setter Property="Background" Value="{DynamicResource Brush.CardBg}" />
             <Setter Property="Foreground" Value="{DynamicResource Brush.PrimaryText}" />
-            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -36,14 +36,14 @@
         </Style>
 
         <Style x:Key="NotesToggleButtonStyle" TargetType="ToggleButton">
-            <Setter Property="Height" Value="20" />
-            <Setter Property="MinWidth" Value="26" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="MinWidth" Value="29" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
             <Setter Property="BorderThickness" Value="0,0,1,0" />
             <Setter Property="Background" Value="{DynamicResource Brush.CardBg}" />
             <Setter Property="Foreground" Value="{DynamicResource Brush.PrimaryText}" />
-            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -71,9 +71,9 @@
         </Style>
 
         <Style x:Key="NotesArrowButtonStyle" TargetType="Button" BasedOn="{StaticResource NotesSegmentButtonStyle}">
-            <Setter Property="MinWidth" Value="16" />
-            <Setter Property="Width" Value="16" />
-            <Setter Property="FontSize" Value="9" />
+            <Setter Property="MinWidth" Value="18" />
+            <Setter Property="Width" Value="18" />
+            <Setter Property="FontSize" Value="10" />
         </Style>
 
         <Style x:Key="NotesLastButtonStyle" TargetType="Button" BasedOn="{StaticResource NotesSegmentButtonStyle}">
@@ -102,8 +102,8 @@
         </Style>
 
         <Style x:Key="NotesColorDotButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="22" />
-            <Setter Property="Height" Value="20" />
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="22" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="1" />
             <Setter Property="Background" Value="Transparent" />
@@ -132,17 +132,210 @@
         </Style>
 
         <Style x:Key="NotesFontSizeComboBoxStyle" TargetType="ComboBox">
-            <Setter Property="Width" Value="50" />
-            <Setter Property="Height" Value="18" />
+            <Setter Property="Width" Value="55" />
+            <Setter Property="Height" Value="20" />
             <Setter Property="Margin" Value="2,0" />
             <Setter Property="Padding" Value="4,0,0,0" />
-            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontSize" Value="11" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
     </UserControl.Resources>
 
     <Grid>
-        <Border Background="{DynamicResource Brush.CardBg}"
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="Notizen"
+                       FontSize="{DynamicResource Ui.Font.SectionTitle}"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       Margin="0,0,10,0" />
+
+            <Border Grid.Column="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Brush.CardBg}"
+                    BorderBrush="{DynamicResource Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="7"
+                    SnapsToDevicePixels="True">
+                <StackPanel Orientation="Horizontal">
+                    <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,1,0" Height="22">
+                        <ComboBox x:Name="FontSizeComboBox"
+                                  Style="{StaticResource NotesFontSizeComboBoxStyle}"
+                                  ToolTip="Schriftgröße"
+                                  SelectionChanged="FontSizeComboBox_OnSelectionChanged">
+                            <ComboBoxItem Content="11" />
+                            <ComboBoxItem Content="12" />
+                            <ComboBoxItem Content="13" />
+                            <ComboBoxItem Content="14" IsSelected="True" />
+                            <ComboBoxItem Content="15" />
+                            <ComboBoxItem Content="16" />
+                            <ComboBoxItem Content="18" />
+                            <ComboBoxItem Content="20" />
+                            <ComboBoxItem Content="24" />
+                        </ComboBox>
+                    </Border>
+
+                    <ToggleButton x:Name="BoldToggleButton" Style="{StaticResource NotesToggleButtonStyle}" Content="B" FontWeight="Bold" ToolTip="Fett" Click="BoldButton_OnClick" />
+                    <ToggleButton x:Name="ItalicToggleButton" Style="{StaticResource NotesToggleButtonStyle}" Content="I" FontStyle="Italic" ToolTip="Kursiv" Click="ItalicButton_OnClick" />
+                    <ToggleButton x:Name="StrikeToggleButton" Style="{StaticResource NotesToggleButtonStyle}" ToolTip="Durchstreichen" Click="StrikeButton_OnClick">
+                        <TextBlock Text="S" TextDecorations="Strikethrough" FontSize="12" />
+                    </ToggleButton>
+
+                    <Button Style="{StaticResource NotesSegmentButtonStyle}" ToolTip="Bullet-Liste" Click="BulletsButton_OnClick">
+                        <Canvas Width="18" Height="15" SnapsToDevicePixels="True" UseLayoutRounding="True">
+                            <Ellipse Canvas.Left="0.5" Canvas.Top="1.5" Width="2.4" Height="2.4" Fill="{DynamicResource Brush.PrimaryText}" />
+                            <Ellipse Canvas.Left="0.5" Canvas.Top="6.4" Width="2.4" Height="2.4" Fill="{DynamicResource Brush.PrimaryText}" />
+                            <Ellipse Canvas.Left="0.5" Canvas.Top="11.3" Width="2.4" Height="2.4" Fill="{DynamicResource Brush.PrimaryText}" />
+                            <Rectangle Canvas.Left="6" Canvas.Top="1.9" Width="11" Height="1.4" Fill="{DynamicResource Brush.PrimaryText}" RadiusX="0.7" RadiusY="0.7" />
+                            <Rectangle Canvas.Left="6" Canvas.Top="6.8" Width="11" Height="1.4" Fill="{DynamicResource Brush.PrimaryText}" RadiusX="0.7" RadiusY="0.7" />
+                            <Rectangle Canvas.Left="6" Canvas.Top="11.7" Width="11" Height="1.4" Fill="{DynamicResource Brush.PrimaryText}" RadiusX="0.7" RadiusY="0.7" />
+                        </Canvas>
+                    </Button>
+
+                    <Button Style="{StaticResource NotesSegmentButtonStyle}" ToolTip="Nummerierte Liste" Click="NumberingButton_OnClick">
+                        <Canvas Width="19" Height="15" SnapsToDevicePixels="True" UseLayoutRounding="True">
+                            <TextBlock Canvas.Left="0" Canvas.Top="-1.4" Text="1" FontSize="5.2" FontWeight="SemiBold" Foreground="{DynamicResource Brush.PrimaryText}" />
+                            <TextBlock Canvas.Left="0" Canvas.Top="3.5" Text="2" FontSize="5.2" FontWeight="SemiBold" Foreground="{DynamicResource Brush.PrimaryText}" />
+                            <TextBlock Canvas.Left="0" Canvas.Top="8.4" Text="3" FontSize="5.2" FontWeight="SemiBold" Foreground="{DynamicResource Brush.PrimaryText}" />
+                            <Rectangle Canvas.Left="7" Canvas.Top="1.9" Width="11" Height="1.4" Fill="{DynamicResource Brush.PrimaryText}" RadiusX="0.7" RadiusY="0.7" />
+                            <Rectangle Canvas.Left="7" Canvas.Top="6.8" Width="11" Height="1.4" Fill="{DynamicResource Brush.PrimaryText}" RadiusX="0.7" RadiusY="0.7" />
+                            <Rectangle Canvas.Left="7" Canvas.Top="11.7" Width="11" Height="1.4" Fill="{DynamicResource Brush.PrimaryText}" RadiusX="0.7" RadiusY="0.7" />
+                        </Canvas>
+                    </Button>
+
+                    <Button Style="{StaticResource NotesSegmentButtonStyle}" ToolTip="Checkbox-Zeile einfügen oder toggeln" Click="CheckboxButton_OnClick">
+                        <Canvas Width="14" Height="14">
+                            <Rectangle Canvas.Left="2" Canvas.Top="2" Width="10" Height="10" Stroke="{DynamicResource Brush.PrimaryText}" StrokeThickness="1.2" RadiusX="1.4" RadiusY="1.4" />
+                            <Path Data="M 4.5 7.3 L 6.2 9 L 10 5"
+                                  Stroke="{DynamicResource Brush.PrimaryText}"
+                                  StrokeThickness="1.2"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round" />
+                        </Canvas>
+                    </Button>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="29" />
+                            <ColumnDefinition Width="18" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0"
+                                Style="{StaticResource NotesSegmentButtonStyle}"
+                                MinWidth="29"
+                                BorderThickness="0"
+                                ToolTip="Aktuelle Markierungsfarbe anwenden"
+                                Click="ApplyHighlightButton_OnClick">
+                            <Grid Width="15" Height="14">
+                                <TextBlock Text="✎"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource Brush.PrimaryText}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Top"
+                                           Margin="0,-1,0,0" />
+                                <Border x:Name="HighlightSwatch"
+                                        Width="15"
+                                        Height="2.5"
+                                        CornerRadius="2"
+                                        Background="#FFF2B8"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Bottom"
+                                        Margin="0,0,0,1" />
+                            </Grid>
+                        </Button>
+
+                        <Button Grid.Column="1"
+                                x:Name="HighlightDropdownButton"
+                                Style="{StaticResource NotesArrowButtonStyle}"
+                                Content="⌄"
+                                ToolTip="Markierungsfarbe wählen"
+                                Click="HighlightDropdownButton_OnClick" />
+
+                        <Popup x:Name="HighlightPopup"
+                               PlacementTarget="{Binding ElementName=HighlightDropdownButton}"
+                               Placement="Bottom"
+                               StaysOpen="False"
+                               AllowsTransparency="True"
+                               PopupAnimation="Fade">
+                            <Border Background="{DynamicResource Brush.CardBg}"
+                                    BorderBrush="{DynamicResource Brush.Border}"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="5"
+                                    Margin="0,3,0,0">
+                                <StackPanel Orientation="Vertical">
+                                    <Button Style="{StaticResource NotesColorDotButtonStyle}" Tag="#FFF2B8" Click="HighlightColorButton_OnClick">
+                                        <Ellipse Width="12" Height="12" Fill="#FFF2B8" Stroke="#E6D68C" StrokeThickness="1" />
+                                    </Button>
+                                    <Button Style="{StaticResource NotesColorDotButtonStyle}" Tag="#DDF4C7" Click="HighlightColorButton_OnClick">
+                                        <Ellipse Width="12" Height="12" Fill="#DDF4C7" Stroke="#BCDCA5" StrokeThickness="1" />
+                                    </Button>
+                                    <Button Style="{StaticResource NotesColorDotButtonStyle}" Tag="#CFEAF7" Click="HighlightColorButton_OnClick">
+                                        <Ellipse Width="12" Height="12" Fill="#CFEAF7" Stroke="#ACD2E3" StrokeThickness="1" />
+                                    </Button>
+                                    <Button Style="{StaticResource NotesColorDotButtonStyle}" Tag="#F2D5EA" Click="HighlightColorButton_OnClick">
+                                        <Ellipse Width="12" Height="12" Fill="#F2D5EA" Stroke="#DCB8D0" StrokeThickness="1" />
+                                    </Button>
+                                    <Button Style="{StaticResource NotesColorDotButtonStyle}" Tag="#E4D8F7" Click="HighlightColorButton_OnClick">
+                                        <Ellipse Width="12" Height="12" Fill="#E4D8F7" Stroke="#C7B9E8" StrokeThickness="1" />
+                                    </Button>
+                                    <Button Style="{StaticResource NotesColorDotButtonStyle}" ToolTip="Markierung entfernen" Click="ClearHighlightButton_OnClick">
+                                        <TextBlock Text="×" FontSize="13" Foreground="{DynamicResource Brush.PrimaryText}" />
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </Grid>
+
+                    <Button Style="{StaticResource NotesSegmentButtonStyle}" ToolTip="Rückgängig" Click="UndoButton_OnClick">
+                        <Path Data="M 18 5 L 8 15 L 18 25 M 9 15 H 30"
+                              Stroke="{DynamicResource Brush.PrimaryText}"
+                              StrokeThickness="3.4"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"
+                              StrokeLineJoin="Round"
+                              Stretch="Uniform"
+                              Width="11"
+                              Height="9" />
+                    </Button>
+                    <Button Style="{StaticResource NotesLastButtonStyle}" ToolTip="Wiederholen" Click="RedoButton_OnClick">
+                        <Path Data="M 12 5 L 22 15 L 12 25 M 21 15 H 0"
+                              Stroke="{DynamicResource Brush.PrimaryText}"
+                              StrokeThickness="3.4"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"
+                              StrokeLineJoin="Round"
+                              Stretch="Uniform"
+                              Width="11"
+                              Height="9" />
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <Button Grid.Column="2"
+                    Content="×"
+                    Width="{DynamicResource Ui.Size.IconButton}"
+                    Height="{DynamicResource Ui.Size.IconButton}"
+                    Padding="0"
+                    Margin="10,0,0,0"
+                    ToolTip="Notizspalte schliessen"
+                    Click="CloseButton_OnClick" />
+        </Grid>
+
+        <Border Grid.Row="1"
+                Background="{DynamicResource Brush.CardBg}"
                 BorderBrush="{DynamicResource Brush.Border}"
                 BorderThickness="1"
                 CornerRadius="8">
@@ -153,7 +346,7 @@
                              FontFamily="Segoe UI"
                              FontSize="14"
                              BorderThickness="0"
-                             Padding="14,46,14,14"
+                             Padding="14"
                              Background="Transparent"
                              Foreground="{DynamicResource Brush.PrimaryText}"
                              SelectionBrush="#9A9A9A"
@@ -176,170 +369,6 @@
                         <Paragraph />
                     </FlowDocument>
                 </RichTextBox>
-
-                <Border HorizontalAlignment="Center"
-                        VerticalAlignment="Top"
-                        Background="{DynamicResource Brush.CardBg}"
-                        BorderBrush="{DynamicResource Brush.Border}"
-                        BorderThickness="1"
-                        CornerRadius="7"
-                        Margin="0,10,0,0"
-                        SnapsToDevicePixels="True">
-                    <StackPanel Orientation="Horizontal">
-                        <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,1,0" Height="20">
-                            <ComboBox x:Name="FontSizeComboBox"
-                                      Style="{StaticResource NotesFontSizeComboBoxStyle}"
-                                      ToolTip="Schriftgröße"
-                                      SelectionChanged="FontSizeComboBox_OnSelectionChanged">
-                                <ComboBoxItem Content="11" />
-                                <ComboBoxItem Content="12" />
-                                <ComboBoxItem Content="13" />
-                                <ComboBoxItem Content="14" IsSelected="True" />
-                                <ComboBoxItem Content="15" />
-                                <ComboBoxItem Content="16" />
-                                <ComboBoxItem Content="18" />
-                                <ComboBoxItem Content="20" />
-                                <ComboBoxItem Content="24" />
-                            </ComboBox>
-                        </Border>
-
-                        <ToggleButton x:Name="BoldToggleButton" Style="{StaticResource NotesToggleButtonStyle}" Content="B" FontWeight="Bold" ToolTip="Fett" Click="BoldButton_OnClick" />
-                        <ToggleButton x:Name="ItalicToggleButton" Style="{StaticResource NotesToggleButtonStyle}" Content="I" FontStyle="Italic" ToolTip="Kursiv" Click="ItalicButton_OnClick" />
-                        <ToggleButton x:Name="StrikeToggleButton" Style="{StaticResource NotesToggleButtonStyle}" ToolTip="Durchstreichen" Click="StrikeButton_OnClick">
-                            <TextBlock Text="S" TextDecorations="Strikethrough" FontSize="11" />
-                        </ToggleButton>
-
-                <Button Style="{StaticResource NotesSegmentButtonStyle}" ToolTip="Bullet-Liste" Click="BulletsButton_OnClick">
-                    <Canvas Width="18" Height="15" SnapsToDevicePixels="True" UseLayoutRounding="True">
-                        <Ellipse Canvas.Left="0.5" Canvas.Top="1.5" Width="2.4" Height="2.4" Fill="{DynamicResource Brush.PrimaryText}" />
-                        <Ellipse Canvas.Left="0.5" Canvas.Top="6.4" Width="2.4" Height="2.4" Fill="{DynamicResource Brush.PrimaryText}" />
-                        <Ellipse Canvas.Left="0.5" Canvas.Top="11.3" Width="2.4" Height="2.4" Fill="{DynamicResource Brush.PrimaryText}" />
-                        <Rectangle Canvas.Left="6" Canvas.Top="1.9" Width="11" Height="1.4" Fill="{DynamicResource Brush.PrimaryText}" RadiusX="0.7" RadiusY="0.7" />
-                        <Rectangle Canvas.Left="6" Canvas.Top="6.8" Width="11" Height="1.4" Fill="{DynamicResource Brush.PrimaryText}" RadiusX="0.7" RadiusY="0.7" />
-                        <Rectangle Canvas.Left="6" Canvas.Top="11.7" Width="11" Height="1.4" Fill="{DynamicResource Brush.PrimaryText}" RadiusX="0.7" RadiusY="0.7" />
-                    </Canvas>
-                </Button>
-
-                <Button Style="{StaticResource NotesSegmentButtonStyle}" ToolTip="Nummerierte Liste" Click="NumberingButton_OnClick">
-                    <Canvas Width="19" Height="15" SnapsToDevicePixels="True" UseLayoutRounding="True">
-                        <TextBlock Canvas.Left="0" Canvas.Top="-1.4" Text="1" FontSize="5.2" FontWeight="SemiBold" Foreground="{DynamicResource Brush.PrimaryText}" />
-                        <TextBlock Canvas.Left="0" Canvas.Top="3.5" Text="2" FontSize="5.2" FontWeight="SemiBold" Foreground="{DynamicResource Brush.PrimaryText}" />
-                        <TextBlock Canvas.Left="0" Canvas.Top="8.4" Text="3" FontSize="5.2" FontWeight="SemiBold" Foreground="{DynamicResource Brush.PrimaryText}" />
-                        <Rectangle Canvas.Left="7" Canvas.Top="1.9" Width="11" Height="1.4" Fill="{DynamicResource Brush.PrimaryText}" RadiusX="0.7" RadiusY="0.7" />
-                        <Rectangle Canvas.Left="7" Canvas.Top="6.8" Width="11" Height="1.4" Fill="{DynamicResource Brush.PrimaryText}" RadiusX="0.7" RadiusY="0.7" />
-                        <Rectangle Canvas.Left="7" Canvas.Top="11.7" Width="11" Height="1.4" Fill="{DynamicResource Brush.PrimaryText}" RadiusX="0.7" RadiusY="0.7" />
-                    </Canvas>
-                </Button>
-
-                <Button Style="{StaticResource NotesSegmentButtonStyle}" ToolTip="Checkbox-Zeile einfügen oder toggeln" Click="CheckboxButton_OnClick">
-                    <Canvas Width="14" Height="14">
-                        <Rectangle Canvas.Left="2" Canvas.Top="2" Width="10" Height="10" Stroke="{DynamicResource Brush.PrimaryText}" StrokeThickness="1.2" RadiusX="1.4" RadiusY="1.4" />
-                        <Path Data="M 4.5 7.3 L 6.2 9 L 10 5"
-                              Stroke="{DynamicResource Brush.PrimaryText}"
-                              StrokeThickness="1.2"
-                              StrokeStartLineCap="Round"
-                              StrokeEndLineCap="Round"
-                              StrokeLineJoin="Round" />
-                    </Canvas>
-                </Button>
-
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="26" />
-                        <ColumnDefinition Width="16" />
-                    </Grid.ColumnDefinitions>
-
-                    <Button Grid.Column="0"
-                            Style="{StaticResource NotesSegmentButtonStyle}"
-                            MinWidth="26"
-                            BorderThickness="0"
-                            ToolTip="Aktuelle Markierungsfarbe anwenden"
-                            Click="ApplyHighlightButton_OnClick">
-                        <Grid Width="15" Height="14">
-                            <TextBlock Text="✎"
-                                       FontSize="10"
-                                       Foreground="{DynamicResource Brush.PrimaryText}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Top"
-                                       Margin="0,-1,0,0" />
-                            <Border x:Name="HighlightSwatch"
-                                    Width="15"
-                                    Height="2.5"
-                                    CornerRadius="2"
-                                    Background="#FFF2B8"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Bottom"
-                                    Margin="0,0,0,1" />
-                        </Grid>
-                    </Button>
-
-                    <Button Grid.Column="1"
-                            x:Name="HighlightDropdownButton"
-                            Style="{StaticResource NotesArrowButtonStyle}"
-                            Content="⌄"
-                            ToolTip="Markierungsfarbe wählen"
-                            Click="HighlightDropdownButton_OnClick" />
-
-                    <Popup x:Name="HighlightPopup"
-                           PlacementTarget="{Binding ElementName=HighlightDropdownButton}"
-                           Placement="Bottom"
-                           StaysOpen="False"
-                           AllowsTransparency="True"
-                           PopupAnimation="Fade">
-                        <Border Background="{DynamicResource Brush.CardBg}"
-                                BorderBrush="{DynamicResource Brush.Border}"
-                                BorderThickness="1"
-                                CornerRadius="6"
-                                Padding="5"
-                                Margin="0,3,0,0">
-                            <StackPanel Orientation="Vertical">
-                                <Button Style="{StaticResource NotesColorDotButtonStyle}" Tag="#FFF2B8" Click="HighlightColorButton_OnClick">
-                                    <Ellipse Width="12" Height="12" Fill="#FFF2B8" Stroke="#E6D68C" StrokeThickness="1" />
-                                </Button>
-                                <Button Style="{StaticResource NotesColorDotButtonStyle}" Tag="#DDF4C7" Click="HighlightColorButton_OnClick">
-                                    <Ellipse Width="12" Height="12" Fill="#DDF4C7" Stroke="#BCDCA5" StrokeThickness="1" />
-                                </Button>
-                                <Button Style="{StaticResource NotesColorDotButtonStyle}" Tag="#CFEAF7" Click="HighlightColorButton_OnClick">
-                                    <Ellipse Width="12" Height="12" Fill="#CFEAF7" Stroke="#ACD2E3" StrokeThickness="1" />
-                                </Button>
-                                <Button Style="{StaticResource NotesColorDotButtonStyle}" Tag="#F2D5EA" Click="HighlightColorButton_OnClick">
-                                    <Ellipse Width="12" Height="12" Fill="#F2D5EA" Stroke="#DCB8D0" StrokeThickness="1" />
-                                </Button>
-                                <Button Style="{StaticResource NotesColorDotButtonStyle}" Tag="#E4D8F7" Click="HighlightColorButton_OnClick">
-                                    <Ellipse Width="12" Height="12" Fill="#E4D8F7" Stroke="#C7B9E8" StrokeThickness="1" />
-                                </Button>
-                                <Button Style="{StaticResource NotesColorDotButtonStyle}" ToolTip="Markierung entfernen" Click="ClearHighlightButton_OnClick">
-                                    <TextBlock Text="×" FontSize="13" Foreground="{DynamicResource Brush.PrimaryText}" />
-                                </Button>
-                            </StackPanel>
-                        </Border>
-                    </Popup>
-                </Grid>
-
-                <Button Style="{StaticResource NotesSegmentButtonStyle}" ToolTip="Rückgängig" Click="UndoButton_OnClick">
-                    <Path Data="M 18 5 L 8 15 L 18 25 M 9 15 H 30"
-                          Stroke="{DynamicResource Brush.PrimaryText}"
-                          StrokeThickness="3.4"
-                          StrokeStartLineCap="Round"
-                          StrokeEndLineCap="Round"
-                          StrokeLineJoin="Round"
-                          Stretch="Uniform"
-                          Width="10"
-                          Height="8" />
-                </Button>
-                <Button Style="{StaticResource NotesLastButtonStyle}" ToolTip="Wiederholen" Click="RedoButton_OnClick">
-                    <Path Data="M 12 5 L 22 15 L 12 25 M 21 15 H 0"
-                          Stroke="{DynamicResource Brush.PrimaryText}"
-                          StrokeThickness="3.4"
-                          StrokeStartLineCap="Round"
-                          StrokeEndLineCap="Round"
-                          StrokeLineJoin="Round"
-                          Stretch="Uniform"
-                          Width="10"
-                          Height="8" />
-                </Button>
-                    </StackPanel>
-                </Border>
 
                 <TextBlock x:Name="EmptyStateTextBlock"
                            Text="Wähle einen Teilnehmenden aus, um Notizen zu erfassen."

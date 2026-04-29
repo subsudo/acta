@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
@@ -43,7 +42,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private bool _isListPanelOpen = true;
     private bool _isDetailPanelOpen;
     private bool _isNotesPanelOpen;
-    private double? _detailPanelWidthBeforeNotesResize;
     private bool _suppressSearchResultsUntilTyping;
     private DateTime? _lastRefreshAt;
     private bool _isUpdateShutdownRequested;
@@ -52,8 +50,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private const double BaseListPanelWindowMinWidth = 520;
     private const double BaseDetailPanelWindowMinWidth = 680;
     private const double BaseFullPanelsWindowMinWidth = 860;
-    private const double NotesPanelMinWidth = 320;
-    private const double NotesPanelDefaultWidth = 340;
+    private const double NotesPanelMinWidth = 430;
+    private const double NotesPanelDefaultWidth = 460;
     private const double NotesPanelWidthContribution = NotesPanelMinWidth + 6;
 
     private int CurrentUiScaleLevel => App.NormalizeUiScaleLevel(App.UserPrefs.UiScaleLevel);
@@ -828,44 +826,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         UpdateNotesPanelState();
     }
 
-    private void CloseNotesPanelButton_OnClick(object sender, RoutedEventArgs e)
+    private void NotesPanel_OnCloseRequested(object? sender, EventArgs e)
     {
         if (!_isNotesPanelOpen) return;
         _isNotesPanelOpen = false;
         UpdateNotesPanelState();
-    }
-
-    private void DetailPanelSplitter_OnDragStarted(object sender, DragStartedEventArgs e)
-    {
-        _detailPanelWidthBeforeNotesResize = _isNotesPanelOpen && _isDetailPanelOpen
-            ? Math.Max(DetailPanelColumn.ActualWidth, GetDetailPanelPreferredWidth())
-            : null;
-    }
-
-    private void DetailPanelSplitter_OnDragDelta(object sender, DragDeltaEventArgs e)
-    {
-        if (!_isNotesPanelOpen ||
-            !_isDetailPanelOpen ||
-            e.HorizontalChange <= 0 ||
-            _detailPanelWidthBeforeNotesResize is not { } detailWidth)
-        {
-            return;
-        }
-
-        var lostDetailWidth = detailWidth - DetailPanelColumn.ActualWidth;
-        if (lostDetailWidth <= 0.5)
-        {
-            return;
-        }
-
-        var workingAreaWidth = SystemParameters.WorkArea.Width;
-        Width = Math.Min(workingAreaWidth, Width + lostDetailWidth);
-        DetailPanelColumn.Width = new GridLength(detailWidth);
-    }
-
-    private void DetailPanelSplitter_OnDragCompleted(object sender, DragCompletedEventArgs e)
-    {
-        _detailPanelWidthBeforeNotesResize = null;
     }
 
     private void DecreaseUiScaleButton_OnClick(object sender, RoutedEventArgs e)

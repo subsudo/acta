@@ -772,36 +772,10 @@
             <Border x:Name="NotesPanelBorder"
                     Grid.Column="4"
                     Style="{StaticResource PanelBorderStyle}"
-                    MinWidth="320"
+                    MinWidth="430"
                     Visibility="Collapsed">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Notizen"
-                                   FontSize="{DynamicResource Ui.Font.SectionTitle}"
-                                   FontWeight="SemiBold"
-                                   VerticalAlignment="Center" />
-                        <Button Grid.Column="1"
-                                x:Name="CloseNotesPanelButton"
-                                Style="{StaticResource GhostButtonStyle}"
-                                Content="×"
-                                Width="{DynamicResource Ui.Size.IconButton}"
-                                Height="{DynamicResource Ui.Size.IconButton}"
-                                Padding="0"
-                                ToolTip="Notizspalte schliessen"
-                                Click="CloseNotesPanelButton_OnClick" />
-                    </Grid>
-
-                    <controls:ParticipantNotesPanel x:Name="NotesPanel" Grid.Row="1" />
-                </Grid>
+                <controls:ParticipantNotesPanel x:Name="NotesPanel"
+                                                CloseRequested="NotesPanel_OnCloseRequested" />
             </Border>
 
             <GridSplitter x:Name="DetailPanelSplitter"
@@ -812,10 +786,7 @@
                           Background="Transparent"
                           ResizeBehavior="PreviousAndNext"
                           ResizeDirection="Columns"
-                          ShowsPreview="False"
-                          DragStarted="DetailPanelSplitter_OnDragStarted"
-                          DragDelta="DetailPanelSplitter_OnDragDelta"
-                          DragCompleted="DetailPanelSplitter_OnDragCompleted" />
+                          ShowsPreview="False" />
 
             <Border x:Name="DetailPanelBorder" Grid.Column="6" Style="{StaticResource PanelBorderStyle}">
                 <Grid>
