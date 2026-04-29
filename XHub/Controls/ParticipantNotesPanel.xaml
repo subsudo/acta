@@ -139,6 +139,7 @@
             <Setter Property="FontSize" Value="11" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
+
     </UserControl.Resources>
 
     <Grid>
@@ -148,20 +149,7 @@
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0" Margin="0,0,0,10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Text="Notizen"
-                       FontSize="{DynamicResource Ui.Font.SectionTitle}"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Margin="0,0,10,0" />
-
-            <Border Grid.Column="1"
-                    HorizontalAlignment="Center"
+            <Border HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Background="{DynamicResource Brush.CardBg}"
                     BorderBrush="{DynamicResource Brush.Border}"
@@ -324,14 +312,6 @@
                 </StackPanel>
             </Border>
 
-            <Button Grid.Column="2"
-                    Content="×"
-                    Width="{DynamicResource Ui.Size.IconButton}"
-                    Height="{DynamicResource Ui.Size.IconButton}"
-                    Padding="0"
-                    Margin="10,0,0,0"
-                    ToolTip="Notizspalte schliessen"
-                    Click="CloseButton_OnClick" />
         </Grid>
 
         <Border Grid.Row="1"

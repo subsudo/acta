@@ -54,7 +54,7 @@ public sealed class ParticipantNotesService
         try
         {
             var range = new TextRange(document.ContentStart, document.ContentEnd);
-            using (var stream = new FileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            using (var stream = new FileStream(tempPath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
             {
                 range.Save(stream, DataFormats.XamlPackage);
             }

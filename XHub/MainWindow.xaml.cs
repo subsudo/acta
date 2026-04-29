@@ -51,7 +51,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private const double BaseDetailPanelWindowMinWidth = 680;
     private const double BaseFullPanelsWindowMinWidth = 860;
     private const double NotesPanelMinWidth = 430;
-    private const double NotesPanelDefaultWidth = 460;
+    private const double NotesPanelDefaultWidth = 450;
     private const double NotesPanelWidthContribution = NotesPanelMinWidth + 6;
 
     private int CurrentUiScaleLevel => App.NormalizeUiScaleLevel(App.UserPrefs.UiScaleLevel);
@@ -356,7 +356,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         {
             var detailWidth = GetDetailPanelPreferredWidth();
             DetailPanelColumn.MinWidth = detailWidth;
-            DetailPanelColumn.Width = new GridLength(Math.Max(DetailPanelColumn.ActualWidth, detailWidth));
+            DetailPanelColumn.Width = new GridLength(detailWidth);
             DetailPanelBorder.Visibility = Visibility.Visible;
             ToggleDetailPanelButton.ToolTip = "Detailbereich ausblenden";
             ToggleDetailPanelButton.Background = (Brush)FindResource("Brush.AccentSubtle");
@@ -425,13 +425,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void UpdateDetailSplitterState()
     {
-        if (_isDetailPanelOpen && _isNotesPanelOpen)
-        {
-            DetailPanelSplitterColumn.Width = new GridLength(6);
-            DetailPanelSplitter.Visibility = Visibility.Visible;
-            return;
-        }
-
         DetailPanelSplitterColumn.Width = new GridLength(0);
         DetailPanelSplitter.Visibility = Visibility.Collapsed;
     }
@@ -469,7 +462,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         if (_isDetailPanelOpen)
         {
-            minimum += GetDetailPanelPreferredWidth() + (_isNotesPanelOpen ? 6 : 0);
+            minimum += GetDetailPanelPreferredWidth();
         }
 
         return minimum;
@@ -823,13 +816,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private void ToggleNotesPanelButton_OnClick(object sender, RoutedEventArgs e)
     {
         _isNotesPanelOpen = !_isNotesPanelOpen;
-        UpdateNotesPanelState();
-    }
-
-    private void NotesPanel_OnCloseRequested(object? sender, EventArgs e)
-    {
-        if (!_isNotesPanelOpen) return;
-        _isNotesPanelOpen = false;
         UpdateNotesPanelState();
     }
 
@@ -1473,11 +1459,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private double GetDetailPanelPreferredWidth() => CurrentUiScaleLevel switch
     {
-        1 => 194,
-        2 => 206,
-        3 => 220,
-        4 => 220,
-        _ => 238
+        1 => 238,
+        2 => 250,
+        3 => 264,
+        4 => 278,
+        _ => 300
     };
 
     private void ApplyUiScaleLevel(int level)
