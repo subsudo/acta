@@ -38,6 +38,7 @@ public partial class SettingsWindow : Window
         StatusTagsToggleCheckBox.IsChecked = config.ShowStatusTags;
         ParticipantPhotoToggleCheckBox.IsChecked = config.ShowParticipantPhoto;
         MiniScheduleToggleCheckBox.IsChecked = prefs.ShowMiniSchedule;
+        NotesPanelToggleCheckBox.IsChecked = !prefs.IsNotesPanelCollapsed;
 
         FolderActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.Folder, StringComparer.OrdinalIgnoreCase);
         DocumentActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.Document, StringComparer.OrdinalIgnoreCase);
@@ -51,6 +52,7 @@ public partial class SettingsWindow : Window
         UpdateStatusTagsPreview();
         UpdateParticipantPhotoPreview();
         UpdateMiniSchedulePreview();
+        UpdateNotesPanelPreview();
     }
 
     public SettingsWindowResult Result => new()
@@ -65,6 +67,7 @@ public partial class SettingsWindow : Window
         ShowStatusTags = StatusTagsToggleCheckBox.IsChecked == true,
         ShowParticipantPhoto = ParticipantPhotoToggleCheckBox.IsChecked == true,
         ShowMiniSchedule = MiniScheduleToggleCheckBox.IsChecked == true,
+        ShowNotesPanel = NotesPanelToggleCheckBox.IsChecked == true,
         AutoRefreshHours = GetSelectedRefreshHours(),
         VisibleQuickActions = GetSelectedQuickActions(),
         RequestedAction = _requestedAction
@@ -157,6 +160,11 @@ public partial class SettingsWindow : Window
         UpdateMiniSchedulePreview();
     }
 
+    private void NotesPanelToggleCheckBox_OnChanged(object sender, RoutedEventArgs e)
+    {
+        UpdateNotesPanelPreview();
+    }
+
     private void UpdateThemePreview()
     {
         var isDark = ThemeToggleCheckBox.IsChecked == true;
@@ -177,6 +185,11 @@ public partial class SettingsWindow : Window
     private void UpdateMiniSchedulePreview()
     {
         MiniScheduleModeTextBlock.Text = MiniScheduleToggleCheckBox.IsChecked == true ? "Ein" : "Aus";
+    }
+
+    private void UpdateNotesPanelPreview()
+    {
+        NotesPanelModeTextBlock.Text = NotesPanelToggleCheckBox.IsChecked == true ? "Ein" : "Aus";
     }
 
     private void SetComboSelection(int hours)
@@ -213,6 +226,7 @@ public class SettingsWindowResult
     public bool ShowStatusTags { get; set; } = true;
     public bool ShowParticipantPhoto { get; set; } = true;
     public bool ShowMiniSchedule { get; set; } = true;
+    public bool ShowNotesPanel { get; set; }
     public int AutoRefreshHours { get; set; }
     public List<string> VisibleQuickActions { get; set; } = QuickActionKeys.CreateDefaults().ToList();
     public SettingsWindowAction RequestedAction { get; set; } = SettingsWindowAction.Save;

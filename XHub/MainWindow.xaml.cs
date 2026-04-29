@@ -41,6 +41,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private bool _isRefreshing;
     private bool _isListPanelOpen = true;
     private bool _isDetailPanelOpen;
+    private bool _isNotesPanelOpen;
     private bool _suppressSearchResultsUntilTyping;
     private DateTime? _lastRefreshAt;
     private bool _isUpdateShutdownRequested;
@@ -49,6 +50,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private const double BaseListPanelWindowMinWidth = 520;
     private const double BaseDetailPanelWindowMinWidth = 680;
     private const double BaseFullPanelsWindowMinWidth = 860;
+    private const double NotesPanelMinWidth = 400;
+    private const double NotesPanelDefaultWidth = 460;
+    private const double NotesPanelWidthContribution = NotesPanelMinWidth + 6;
 
     private int CurrentUiScaleLevel => App.NormalizeUiScaleLevel(App.UserPrefs.UiScaleLevel);
     public bool IsWordActionRunning => WordBusyGuard.IsBusy;
@@ -78,12 +82,14 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         _isListPanelOpen = !App.UserPrefs.IsListPanelCollapsed;
         _isDetailPanelOpen = !App.UserPrefs.IsDetailPanelCollapsed;
+        _isNotesPanelOpen = !App.UserPrefs.IsNotesPanelCollapsed;
 
         LoadLists();
         RestoreWindowState();
         ConfigureRefreshTimer();
         UpdateSearchUi();
         UpdateListPanelState();
+        UpdateNotesPanelState();
         UpdateDetailPanelState();
         UpdateWindowWidthConstraints();
         UpdateUiScaleButtons();
@@ -111,6 +117,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     public IReadOnlyList<string> VisibleQuickActions => App.Config.VisibleQuickActions;
     public bool ShowStatusTags => App.Config.ShowStatusTags;
     public bool IsDetailPanelOpen => _isDetailPanelOpen;
+    public bool IsNotesPanelOpen => _isNotesPanelOpen;
 
     private static SavedList CreateWorkingList()
     {
@@ -224,7 +231,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (clearDetail)
         {
             DetailPanel.Clear();
-            _selectedParticipant = null;
+            ClearSelectedParticipant();
         }
     }
 
@@ -350,9 +357,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             var detailWidth = GetDetailPanelPreferredWidth();
             DetailPanelColumn.MinWidth = detailWidth;
             DetailPanelColumn.Width = new GridLength(Math.Max(DetailPanelColumn.ActualWidth, detailWidth));
-            DetailPanelSplitterColumn.Width = new GridLength(6);
             DetailPanelBorder.Visibility = Visibility.Visible;
-            DetailPanelSplitter.Visibility = Visibility.Visible;
             ToggleDetailPanelButton.ToolTip = "Detailbereich ausblenden";
             ToggleDetailPanelButton.Background = (Brush)FindResource("Brush.AccentSubtle");
             ToggleDetailPanelButton.BorderBrush = (Brush)FindResource("Brush.Accent");
@@ -369,28 +374,72 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         {
             DetailPanelColumn.MinWidth = 0;
             DetailPanelColumn.Width = new GridLength(0);
-            DetailPanelSplitterColumn.Width = new GridLength(0);
             DetailPanelBorder.Visibility = Visibility.Collapsed;
-            DetailPanelSplitter.Visibility = Visibility.Collapsed;
             ToggleDetailPanelButton.ToolTip = "Detailbereich einblenden";
             ToggleDetailPanelButton.Background = (Brush)FindResource("Brush.CardBg");
             ToggleDetailPanelButton.BorderBrush = (Brush)FindResource("Brush.Border");
         }
 
+        UpdateDetailSplitterState();
         MainContentColumn.MinWidth = GetMainContentMinWidth();
         UpdateWindowWidthConstraints();
         UpdateLayoutAlignment();
     }
 
+    private void UpdateNotesPanelState()
+    {
+        if (_isNotesPanelOpen)
+        {
+            var notesWidth = NotesPanelColumn.ActualWidth >= NotesPanelMinWidth
+                ? NotesPanelColumn.ActualWidth
+                : Math.Max(App.UserPrefs.NotesPanelWidth ?? NotesPanelDefaultWidth, NotesPanelMinWidth);
+            NotesPanelColumn.MinWidth = NotesPanelMinWidth;
+            NotesPanelColumn.Width = new GridLength(notesWidth);
+            NotesPanelSplitterColumn.Width = new GridLength(6);
+            NotesPanelBorder.Visibility = Visibility.Visible;
+            NotesPanelSplitter.Visibility = Visibility.Visible;
+            ToggleNotesPanelButton.ToolTip = "Notizspalte ausblenden";
+            ToggleNotesPanelButton.Background = (Brush)FindResource("Brush.AccentSubtle");
+            ToggleNotesPanelButton.BorderBrush = (Brush)FindResource("Brush.Accent");
+            NotesPanel.SetParticipant(_selectedParticipant);
+        }
+        else
+        {
+            NotesPanel.FlushPendingAutosave();
+            NotesPanel.SetParticipant(null);
+            NotesPanelColumn.MinWidth = 0;
+            NotesPanelColumn.Width = new GridLength(0);
+            NotesPanelSplitterColumn.Width = new GridLength(0);
+            NotesPanelBorder.Visibility = Visibility.Collapsed;
+            NotesPanelSplitter.Visibility = Visibility.Collapsed;
+            ToggleNotesPanelButton.ToolTip = "Notizspalte einblenden";
+            ToggleNotesPanelButton.Background = (Brush)FindResource("Brush.CardBg");
+            ToggleNotesPanelButton.BorderBrush = (Brush)FindResource("Brush.Border");
+        }
+
+        UpdateDetailSplitterState();
+        MainContentColumn.MinWidth = GetMainContentMinWidth();
+        UpdateWindowWidthConstraints();
+        UpdateLayoutAlignment();
+    }
+
+    private void UpdateDetailSplitterState()
+    {
+        if (_isDetailPanelOpen && _isNotesPanelOpen)
+        {
+            DetailPanelSplitterColumn.Width = new GridLength(6);
+            DetailPanelSplitter.Visibility = Visibility.Visible;
+            return;
+        }
+
+        DetailPanelSplitterColumn.Width = new GridLength(0);
+        DetailPanelSplitter.Visibility = Visibility.Collapsed;
+    }
+
     private void UpdateWindowWidthConstraints()
     {
-        var targetMinWidth = _isListPanelOpen && _isDetailPanelOpen
-            ? GetFullPanelsWindowMinWidth()
-            : _isDetailPanelOpen
-                ? GetDetailPanelWindowMinWidth()
-                : _isListPanelOpen
-                    ? GetListPanelWindowMinWidth()
-                    : GetCompactWindowMinWidth();
+        var targetMinWidth = GetRequestedWindowMinWidth() +
+                             (_isNotesPanelOpen ? NotesPanelWidthContribution : 0);
 
         MinWidth = targetMinWidth;
         if (Width < targetMinWidth)
@@ -478,31 +527,49 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void RefreshDetailPanel()
     {
-        if (!_isDetailPanelOpen)
-        {
-            return;
-        }
-
         if (_selectedParticipant is null)
         {
-            DetailPanel.Clear();
+            if (_isDetailPanelOpen)
+            {
+                DetailPanel.Clear();
+            }
+
+            NotesPanel.SetParticipant(null);
             return;
         }
 
         _selectedParticipant = FindParticipantByKey(_selectedParticipant.ParticipantKey) ?? _selectedParticipant;
         EnrichParticipantDetailMetadata(_selectedParticipant);
-        DetailPanel.UpdateParticipant(_selectedParticipant, GetActiveModules());
+        if (_isDetailPanelOpen)
+        {
+            DetailPanel.UpdateParticipant(_selectedParticipant, GetActiveModules());
+        }
+
+        if (_isNotesPanelOpen)
+        {
+            NotesPanel.SetParticipant(_selectedParticipant);
+        }
     }
 
     private void ShowParticipantDetails(ParticipantIndexEntry entry)
     {
         _selectedParticipant = entry;
         EnrichParticipantDetailMetadata(entry);
+        if (_isNotesPanelOpen)
+        {
+            NotesPanel.SetParticipant(entry);
+        }
 
         if (_isDetailPanelOpen)
         {
             DetailPanel.UpdateParticipant(entry, GetActiveModules());
         }
+    }
+
+    private void ClearSelectedParticipant()
+    {
+        _selectedParticipant = null;
+        NotesPanel.SetParticipant(null);
     }
 
     private void UpdateIndexState(IReadOnlyList<string> warnings)
@@ -548,6 +615,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         App.UserPrefs.UiScaleLevel = CurrentUiScaleLevel;
         App.UserPrefs.IsListPanelCollapsed = !_isListPanelOpen;
         App.UserPrefs.IsDetailPanelCollapsed = !_isDetailPanelOpen;
+        App.UserPrefs.IsNotesPanelCollapsed = !_isNotesPanelOpen;
+        if (_isNotesPanelOpen && NotesPanelColumn.ActualWidth >= NotesPanelMinWidth)
+        {
+            App.UserPrefs.NotesPanelWidth = NotesPanelColumn.ActualWidth;
+        }
         App.SaveUserPrefs();
     }
 
@@ -723,6 +795,19 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         UpdateDetailPanelState();
     }
 
+    private void ToggleNotesPanelButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        _isNotesPanelOpen = !_isNotesPanelOpen;
+        UpdateNotesPanelState();
+    }
+
+    private void CloseNotesPanelButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (!_isNotesPanelOpen) return;
+        _isNotesPanelOpen = false;
+        UpdateNotesPanelState();
+    }
+
     private void DecreaseUiScaleButton_OnClick(object sender, RoutedEventArgs e)
     {
         ApplyUiScaleLevel(CurrentUiScaleLevel - 1);
@@ -782,7 +867,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         _workingList = CloneList(list);
         RebuildCurrentParticipants();
         DetailPanel.Clear();
-        _selectedParticipant = null;
+        ClearSelectedParticipant();
         UpdateStatus($"Liste geladen: {list.Name}");
     }
 
@@ -891,7 +976,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         App.SaveConfig();
 
         App.UserPrefs.ShowMiniSchedule = dialog.Result.ShowMiniSchedule;
+        _isNotesPanelOpen = dialog.Result.ShowNotesPanel;
+        App.UserPrefs.IsNotesPanelCollapsed = !_isNotesPanelOpen;
         App.ApplyTheme(dialog.Result.IsDarkTheme);
+        UpdateNotesPanelState();
         UpdateDetailPanelState();
         App.SaveUserPrefs();
         DataContext = null;
@@ -920,7 +1008,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             _workingListLabel = "Temporäre Liste";
             RebuildCurrentParticipants();
             DetailPanel.Clear();
-            _selectedParticipant = null;
+            ClearSelectedParticipant();
             ListsListBox.SelectedItem = null;
             UpdateStatus($"Import: {result.MatchedCount}/{result.ParsedLineCount} gematcht.");
             if (result.UnmatchedLines.Count > 0)
@@ -1055,7 +1143,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             string.Equals(_selectedParticipant.ParticipantKey, participantKey, StringComparison.OrdinalIgnoreCase))
         {
             DetailPanel.Clear();
-            _selectedParticipant = null;
+            ClearSelectedParticipant();
         }
 
         UpdateStatus("Teilnehmender entfernt.");
@@ -1374,6 +1462,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         App.SaveUserPrefs();
         UpdateUiScaleButtons();
         UpdateListPanelState();
+        UpdateNotesPanelState();
         UpdateDetailPanelState();
         UpdateWindowWidthConstraints();
         UpdateWorkingListHeader();
@@ -1404,6 +1493,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
     {
+        NotesPanel.FlushPendingAutosave();
         PersistWindowState();
     }
 

@@ -459,6 +459,13 @@
                             Margin="0,0,6,0"
                             ToolTip="Detailbereich ein-/ausblenden"
                             Click="ToggleDetailPanelButton_OnClick" />
+                    <Button x:Name="ToggleNotesPanelButton"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Content="Notizen"
+                            Padding="10,4"
+                            Margin="0,0,6,0"
+                            ToolTip="Notizspalte ein-/ausblenden"
+                            Click="ToggleNotesPanelButton_OnClick" />
                     <Button x:Name="RefreshIndexButton"
                             Style="{StaticResource GhostButtonStyle}"
                             Content="⟳"
@@ -481,6 +488,8 @@
                 <ColumnDefinition x:Name="ListPanelColumn" Width="200" MinWidth="132" />
                 <ColumnDefinition x:Name="ListPanelSplitterColumn" Width="6" />
                 <ColumnDefinition x:Name="MainContentColumn" Width="*" MinWidth="180" />
+                <ColumnDefinition x:Name="NotesPanelSplitterColumn" Width="0" />
+                <ColumnDefinition x:Name="NotesPanelColumn" Width="0" MinWidth="0" />
                 <ColumnDefinition x:Name="DetailPanelSplitterColumn" Width="6" />
                 <ColumnDefinition x:Name="DetailPanelColumn" Width="220" MinWidth="220" />
             </Grid.ColumnDefinitions>
@@ -749,7 +758,54 @@
                     </Grid>
                 </Border>
             </Grid>
-<GridSplitter x:Name="DetailPanelSplitter" Grid.Column="3"
+            <GridSplitter x:Name="NotesPanelSplitter"
+                          Grid.Column="3"
+                          Width="6"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          Background="Transparent"
+                          ResizeBehavior="PreviousAndNext"
+                          ResizeDirection="Columns"
+                          ShowsPreview="False"
+                          Visibility="Collapsed" />
+
+            <Border x:Name="NotesPanelBorder"
+                    Grid.Column="4"
+                    Style="{StaticResource PanelBorderStyle}"
+                    MinWidth="400"
+                    Visibility="Collapsed">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Notizen"
+                                   FontSize="{DynamicResource Ui.Font.SectionTitle}"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="1"
+                                x:Name="CloseNotesPanelButton"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Content="×"
+                                Width="{DynamicResource Ui.Size.IconButton}"
+                                Height="{DynamicResource Ui.Size.IconButton}"
+                                Padding="0"
+                                ToolTip="Notizspalte schliessen"
+                                Click="CloseNotesPanelButton_OnClick" />
+                    </Grid>
+
+                    <controls:ParticipantNotesPanel x:Name="NotesPanel" Grid.Row="1" />
+                </Grid>
+            </Border>
+
+            <GridSplitter x:Name="DetailPanelSplitter"
+                          Grid.Column="5"
                           Width="6"
                           HorizontalAlignment="Stretch"
                           VerticalAlignment="Stretch"
@@ -758,7 +814,7 @@
                           ResizeDirection="Columns"
                           ShowsPreview="False" />
 
-            <Border x:Name="DetailPanelBorder" Grid.Column="4" Style="{StaticResource PanelBorderStyle}">
+            <Border x:Name="DetailPanelBorder" Grid.Column="6" Style="{StaticResource PanelBorderStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />

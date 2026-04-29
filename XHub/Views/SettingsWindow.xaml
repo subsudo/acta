@@ -323,6 +323,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -416,6 +417,27 @@
                                               Checked="MiniScheduleToggleCheckBox_OnChanged"
                                               Unchecked="MiniScheduleToggleCheckBox_OnChanged" />
                                     <TextBlock x:Name="MiniScheduleModeTextBlock"
+                                               Margin="8,0,0,0"
+                                               VerticalAlignment="Center"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource Brush.SecondaryText}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid Grid.Row="2" Grid.Column="0" MinHeight="60" Margin="0,10,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="Notizspalte"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Margin="0,0,0,8" />
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                                    <CheckBox x:Name="NotesPanelToggleCheckBox"
+                                              Style="{StaticResource ToggleSwitchStyle}"
+                                              Checked="NotesPanelToggleCheckBox_OnChanged"
+                                              Unchecked="NotesPanelToggleCheckBox_OnChanged" />
+                                    <TextBlock x:Name="NotesPanelModeTextBlock"
                                                Margin="8,0,0,0"
                                                VerticalAlignment="Center"
                                                FontWeight="SemiBold"

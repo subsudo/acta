@@ -72,6 +72,7 @@ public partial class App : Application
     public static string WeeklyScheduleCacheBackupPath { get; private set; } = string.Empty;
     public static string WeeklyScheduleDiagnosticsPath { get; private set; } = string.Empty;
     public static string WeeklyScheduleDiagnosticsBackupPath { get; private set; } = string.Empty;
+    public static string NotesDirectoryPath { get; private set; } = string.Empty;
     public static string DisplayVersion { get; } = ResolveDisplayVersion();
     public static AppConfig Config { get; private set; } = new();
     public static UserPrefs UserPrefs { get; private set; } = new();
@@ -101,6 +102,7 @@ public partial class App : Application
         HeaderMetadataCacheBackupPath = Path.Combine(AppDataDirectoryPath, "header-metadata-cache.bak");
         WeeklyScheduleCachePath = Path.Combine(AppDataDirectoryPath, "weekly-schedule-cache.json");
         WeeklyScheduleCacheBackupPath = Path.Combine(AppDataDirectoryPath, "weekly-schedule-cache.bak");
+        NotesDirectoryPath = Path.Combine(AppDataDirectoryPath, "participant-notes");
         var diagnosticsDirectory = Path.Combine(AppDataDirectoryPath, "diagnostics");
         Directory.CreateDirectory(diagnosticsDirectory);
         WeeklyScheduleDiagnosticsPath = Path.Combine(diagnosticsDirectory, "weekly-schedule-diagnostics.json");
@@ -438,6 +440,10 @@ public partial class App : Application
         }
 
         prefs.UiScaleLevel = NormalizeUiScaleLevel(prefs.UiScaleLevel);
+        if (prefs.NotesPanelWidth is <= 0)
+        {
+            prefs.NotesPanelWidth = null;
+        }
     }
 
     private static void TryDisposeWordStaHost()

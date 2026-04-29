@@ -34,6 +34,7 @@ XHub ist eine WPF-App mit pragmatischer Service-Struktur und zentraler UI-Orches
 - [DocxHeaderMetadataService.cs](../XHub/Services/DocxHeaderMetadataService.cs): Header-Metadaten direkt aus DOCX
 - [WeeklyScheduleService.cs](../XHub/Services/WeeklyScheduleService.cs): Stundenplan-Parsing, Matching, Cache, Diagnose
 - [AttendanceImportService.cs](../XHub/Services/AttendanceImportService.cs): textbasierter Listenimport
+- [ParticipantNotesService.cs](../XHub/Services/ParticipantNotesService.cs): lokale RichText-Notizen pro Teilnehmer als WPF-XAMLPackage
 - Platzhalter-Services ohne produktive Funktion:
   - [OdooSyncService.cs](../XHub/Services/OdooSyncService.cs)
   - [ScheduleService.cs](../XHub/Services/ScheduleService.cs)
@@ -43,6 +44,7 @@ XHub ist eine WPF-App mit pragmatischer Service-Struktur und zentraler UI-Orches
 - [SettingsWindow.xaml](../XHub/Views/SettingsWindow.xaml): Einstellungen, inklusive Datenaktionen und direktem Log-Ordner-Zugriff
 - [AppUpdateWindow.xaml](../XHub/AppUpdateWindow.xaml): modaler Update-Dialog im Scola-Muster
 - [ParticipantDetailPanel.xaml](../XHub/Controls/ParticipantDetailPanel.xaml): eingebetteter Detailbereich im Hauptfenster
+- [ParticipantNotesPanel.xaml](../XHub/Controls/ParticipantNotesPanel.xaml): optionale angedockte Notizspalte mit RichText-Toolbar und Autosave
 - [ParticipantDetailWindow.xaml.cs](../XHub/Views/ParticipantDetailWindow.xaml.cs): separates Detailfenster als historische/alternative View, aktuell nicht der Primaerpfad
 - [ModuleSettingsWindow.xaml.cs](../XHub/Views/ModuleSettingsWindow.xaml.cs): Reihenfolge und Sichtbarkeit der Detailmodule
 - weitere kleine Dialogfenster fuer Import, Texteingaben und Hinweise
@@ -58,6 +60,9 @@ Dateisystem -> `ParticipantIndexService` -> `ParticipantIndexEntry[]` -> `Partic
 
 ### 2. Lokale Listen
 UI -> `ListRepository` -> `lists.json` / `lists.bak`
+
+### 2b. Lokale Teilnehmernotizen
+UI -> `ParticipantNotesPanel` -> `ParticipantNotesService` -> `participant-notes\SHA256(ParticipantKey).xamlpackage`
 
 ### 3. Odoo- und Header-Metadaten
 Detailansicht -> `DocxHeaderMetadataService` -> DOCX ZIP/XML -> lokaler Cache -> UI
@@ -84,6 +89,7 @@ Wichtige Dateien:
 - `header-metadata-cache.json`
 - `weekly-schedule-cache.json`
 - `update-state.json`
+- `participant-notes\*.xamlpackage`
 - `logs\app-YYYY-MM-DD.log`
 
 Diagnose:
