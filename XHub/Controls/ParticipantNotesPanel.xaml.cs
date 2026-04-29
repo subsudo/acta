@@ -21,7 +21,6 @@ public partial class ParticipantNotesPanel : UserControl
     private string? _participantKey;
     private string _currentHighlightColor = "#FFF2B8";
     private bool _isLoading;
-    private bool _isDirty;
     private bool _isUpdatingToolbar;
 
     public ParticipantNotesPanel()
@@ -60,7 +59,6 @@ public partial class ParticipantNotesPanel : UserControl
         finally
         {
             _isLoading = false;
-            _isDirty = false;
             UpdateEnabledState();
             UpdateToolbarState();
         }
@@ -69,7 +67,7 @@ public partial class ParticipantNotesPanel : UserControl
     public void FlushPendingAutosave()
     {
         _autosaveTimer.Stop();
-        if (_isDirty && !string.IsNullOrWhiteSpace(_participantKey))
+        if (!string.IsNullOrWhiteSpace(_participantKey))
         {
             SaveCurrentNote();
         }
@@ -85,12 +83,10 @@ public partial class ParticipantNotesPanel : UserControl
     {
         if (string.IsNullOrWhiteSpace(_participantKey))
         {
-            _isDirty = false;
             return;
         }
 
         _notesService.SaveOrDelete(_participantKey, Editor.Document);
-        _isDirty = false;
     }
 
     private void BoldButton_OnClick(object sender, RoutedEventArgs e) =>
@@ -218,7 +214,6 @@ public partial class ParticipantNotesPanel : UserControl
             return;
         }
 
-        _isDirty = true;
         _autosaveTimer.Stop();
         _autosaveTimer.Start();
     }

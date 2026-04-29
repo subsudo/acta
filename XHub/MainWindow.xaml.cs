@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
@@ -42,6 +43,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private bool _isListPanelOpen = true;
     private bool _isDetailPanelOpen;
     private bool _isNotesPanelOpen;
+    private double? _detailPanelWidthBeforeNotesResize;
     private bool _suppressSearchResultsUntilTyping;
     private DateTime? _lastRefreshAt;
     private bool _isUpdateShutdownRequested;
@@ -50,8 +52,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private const double BaseListPanelWindowMinWidth = 520;
     private const double BaseDetailPanelWindowMinWidth = 680;
     private const double BaseFullPanelsWindowMinWidth = 860;
-    private const double NotesPanelMinWidth = 400;
-    private const double NotesPanelDefaultWidth = 460;
+    private const double NotesPanelMinWidth = 320;
+    private const double NotesPanelDefaultWidth = 340;
     private const double NotesPanelWidthContribution = NotesPanelMinWidth + 6;
 
     private int CurrentUiScaleLevel => App.NormalizeUiScaleLevel(App.UserPrefs.UiScaleLevel);
@@ -438,8 +440,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void UpdateWindowWidthConstraints()
     {
-        var targetMinWidth = GetRequestedWindowMinWidth() +
-                             (_isNotesPanelOpen ? NotesPanelWidthContribution : 0);
+        var targetMinWidth = Math.Max(
+            GetRequestedWindowMinWidth() + (_isNotesPanelOpen ? NotesPanelWidthContribution : 0),
+            GetPanelBasedWindowMinWidth());
 
         MinWidth = targetMinWidth;
         if (Width < targetMinWidth)
@@ -448,6 +451,30 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         UpdateLayoutAlignment();
+    }
+
+    private double GetPanelBasedWindowMinWidth()
+    {
+        const double rootMargin = 20;
+        const double layoutBuffer = 28;
+        var minimum = rootMargin + layoutBuffer + GetMainContentMinWidth();
+
+        if (_isListPanelOpen)
+        {
+            minimum += GetListPanelMinWidth() + 6 + 16;
+        }
+
+        if (_isNotesPanelOpen)
+        {
+            minimum += NotesPanelMinWidth + 6;
+        }
+
+        if (_isDetailPanelOpen)
+        {
+            minimum += GetDetailPanelPreferredWidth() + (_isNotesPanelOpen ? 6 : 0);
+        }
+
+        return minimum;
     }
 
     private void UpdateLayoutAlignment()
@@ -806,6 +833,39 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (!_isNotesPanelOpen) return;
         _isNotesPanelOpen = false;
         UpdateNotesPanelState();
+    }
+
+    private void DetailPanelSplitter_OnDragStarted(object sender, DragStartedEventArgs e)
+    {
+        _detailPanelWidthBeforeNotesResize = _isNotesPanelOpen && _isDetailPanelOpen
+            ? Math.Max(DetailPanelColumn.ActualWidth, GetDetailPanelPreferredWidth())
+            : null;
+    }
+
+    private void DetailPanelSplitter_OnDragDelta(object sender, DragDeltaEventArgs e)
+    {
+        if (!_isNotesPanelOpen ||
+            !_isDetailPanelOpen ||
+            e.HorizontalChange <= 0 ||
+            _detailPanelWidthBeforeNotesResize is not { } detailWidth)
+        {
+            return;
+        }
+
+        var lostDetailWidth = detailWidth - DetailPanelColumn.ActualWidth;
+        if (lostDetailWidth <= 0.5)
+        {
+            return;
+        }
+
+        var workingAreaWidth = SystemParameters.WorkArea.Width;
+        Width = Math.Min(workingAreaWidth, Width + lostDetailWidth);
+        DetailPanelColumn.Width = new GridLength(detailWidth);
+    }
+
+    private void DetailPanelSplitter_OnDragCompleted(object sender, DragCompletedEventArgs e)
+    {
+        _detailPanelWidthBeforeNotesResize = null;
     }
 
     private void DecreaseUiScaleButton_OnClick(object sender, RoutedEventArgs e)
@@ -1439,11 +1499,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private double GetMainContentMinWidth() => CurrentUiScaleLevel switch
     {
-        1 => 152,
-        2 => 160,
-        3 => 168,
-        4 => 180,
-        _ => 205
+        1 => 300,
+        2 => 320,
+        3 => 340,
+        4 => 360,
+        _ => 390
     };
 
     private double GetDetailPanelPreferredWidth() => CurrentUiScaleLevel switch

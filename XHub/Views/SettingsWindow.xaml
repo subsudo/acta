@@ -319,19 +319,12 @@
                         <TextBlock Text="DARSTELLUNG"
                                    Style="{StaticResource SectionEyebrowStyle}"
                                    Margin="0,0,0,10" />
-                        <Grid Margin="0,0,0,2">
+                        <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="16" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
 
-                            <Grid Grid.Row="0" Grid.Column="0" MinHeight="60" Margin="0,0,0,10">
+                            <Grid Grid.Row="0" MinHeight="60">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
@@ -345,99 +338,6 @@
                                               Checked="ThemeToggleCheckBox_OnChanged"
                                               Unchecked="ThemeToggleCheckBox_OnChanged" />
                                     <TextBlock x:Name="ThemeModeTextBlock"
-                                               Margin="8,0,0,0"
-                                               VerticalAlignment="Center"
-                                               FontWeight="SemiBold"
-                                               Foreground="{DynamicResource Brush.SecondaryText}" />
-                                </StackPanel>
-                            </Grid>
-
-                            <Grid Grid.Row="0" Grid.Column="2" MinHeight="60" Margin="0,0,0,10">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-                                <TextBlock Text="Tags anzeigen"
-                                           Style="{StaticResource FieldLabelStyle}"
-                                           Margin="0,0,0,8" />
-                                <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                    <CheckBox x:Name="StatusTagsToggleCheckBox"
-                                              Style="{StaticResource ToggleSwitchStyle}"
-                                              Checked="StatusTagsToggleCheckBox_OnChanged"
-                                              Unchecked="StatusTagsToggleCheckBox_OnChanged" />
-                                    <TextBlock x:Name="StatusTagsModeTextBlock"
-                                               Margin="8,0,0,0"
-                                               VerticalAlignment="Center"
-                                               FontWeight="SemiBold"
-                                               Foreground="{DynamicResource Brush.SecondaryText}" />
-                                    <Button Style="{StaticResource InfoButtonStyle}"
-                                            Content="i"
-                                            Focusable="False"
-                                            ToolTipService.InitialShowDelay="150"
-                                            ToolTipService.ShowDuration="120000">
-                                        <Button.ToolTip>
-                                            <ToolTip Content="Zeigt den Status LV, LB, Start oder Austritt direkt bei Teilnehmenden an." />
-                                        </Button.ToolTip>
-                                    </Button>
-                                </StackPanel>
-                            </Grid>
-
-                            <Grid Grid.Row="1" Grid.Column="0" MinHeight="60">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-                                <TextBlock Text="TN-Foto"
-                                           Style="{StaticResource FieldLabelStyle}"
-                                           Margin="0,0,0,8" />
-                                <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                    <CheckBox x:Name="ParticipantPhotoToggleCheckBox"
-                                              Style="{StaticResource ToggleSwitchStyle}"
-                                              Checked="ParticipantPhotoToggleCheckBox_OnChanged"
-                                              Unchecked="ParticipantPhotoToggleCheckBox_OnChanged" />
-                                    <TextBlock x:Name="ParticipantPhotoModeTextBlock"
-                                               Margin="8,0,0,0"
-                                               VerticalAlignment="Center"
-                                               FontWeight="SemiBold"
-                                               Foreground="{DynamicResource Brush.SecondaryText}" />
-                                </StackPanel>
-                            </Grid>
-
-                            <Grid Grid.Row="1" Grid.Column="2" MinHeight="60">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-                                <TextBlock Text="Mini-Stundenplan"
-                                           Style="{StaticResource FieldLabelStyle}"
-                                           Margin="0,0,0,8" />
-                                <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                    <CheckBox x:Name="MiniScheduleToggleCheckBox"
-                                              Style="{StaticResource ToggleSwitchStyle}"
-                                              Checked="MiniScheduleToggleCheckBox_OnChanged"
-                                              Unchecked="MiniScheduleToggleCheckBox_OnChanged" />
-                                    <TextBlock x:Name="MiniScheduleModeTextBlock"
-                                               Margin="8,0,0,0"
-                                               VerticalAlignment="Center"
-                                               FontWeight="SemiBold"
-                                               Foreground="{DynamicResource Brush.SecondaryText}" />
-                                </StackPanel>
-                            </Grid>
-
-                            <Grid Grid.Row="2" Grid.Column="0" MinHeight="60" Margin="0,10,0,0">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-                                <TextBlock Text="Notizspalte"
-                                           Style="{StaticResource FieldLabelStyle}"
-                                           Margin="0,0,0,8" />
-                                <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                    <CheckBox x:Name="NotesPanelToggleCheckBox"
-                                              Style="{StaticResource ToggleSwitchStyle}"
-                                              Checked="NotesPanelToggleCheckBox_OnChanged"
-                                              Unchecked="NotesPanelToggleCheckBox_OnChanged" />
-                                    <TextBlock x:Name="NotesPanelModeTextBlock"
                                                Margin="8,0,0,0"
                                                VerticalAlignment="Center"
                                                FontWeight="SemiBold"
@@ -464,32 +364,15 @@
                             <ComboBoxItem Content="Alle 4 Stunden" Tag="4" />
                             <ComboBoxItem Content="Alle 8 Stunden" Tag="8" />
                         </ComboBox>
-
-                        <TextBlock Text="Word"
-                                   Style="{StaticResource FieldLabelStyle}"
-                                   Margin="0,12,0,8" />
-                        <TextBlock Text="Word verwaltet Fenstergröße und -position selbst."
-                                   Style="{StaticResource FieldLabelStyle}"
-                                   TextWrapping="Wrap" />
                     </StackPanel>
                 </Border>
 
                 <Border Grid.Column="4" Style="{StaticResource TileCardStyle}">
                     <StackPanel>
-                        <TextBlock Text="DATEN"
+                        <TextBlock Text="LOGS"
                                    Style="{StaticResource SectionEyebrowStyle}"
                                    Margin="0,0,0,10" />
-                        <Button Content="Listen exportieren"
-                                HorizontalAlignment="Stretch"
-                                Padding="10,6"
-                                Margin="0,0,0,6"
-                                Click="ExportButton_OnClick" />
-                        <Button Content="Listen importieren"
-                                HorizontalAlignment="Stretch"
-                                Padding="10,6"
-                                Margin="0,0,0,6"
-                                Click="ImportButton_OnClick" />
-                        <Button Content="Log-Ordner öffnen"
+                        <Button Content="Logordner öffnen"
                                 HorizontalAlignment="Stretch"
                                 Padding="10,6"
                                 Click="OpenLogFolderButton_OnClick" />

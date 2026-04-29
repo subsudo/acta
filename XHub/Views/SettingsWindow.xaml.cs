@@ -11,6 +11,10 @@ namespace XHub.Views;
 public partial class SettingsWindow : Window
 {
     private readonly bool _initialIsDarkTheme;
+    private readonly bool _showStatusTags;
+    private readonly bool _showParticipantPhoto;
+    private readonly bool _showMiniSchedule;
+    private readonly bool _showNotesPanel;
     private bool _persistThemeChange;
     private SettingsWindowAction _requestedAction = SettingsWindowAction.Save;
 
@@ -25,6 +29,10 @@ public partial class SettingsWindow : Window
         InitializeComponent();
 
         _initialIsDarkTheme = prefs.IsDarkTheme;
+        _showStatusTags = config.ShowStatusTags;
+        _showParticipantPhoto = config.ShowParticipantPhoto;
+        _showMiniSchedule = prefs.ShowMiniSchedule;
+        _showNotesPanel = !prefs.IsNotesPanelCollapsed;
 
         ServerPathTextBox.Text = string.IsNullOrWhiteSpace(config.LvBasePath)
             ? config.ServerBasePath
@@ -35,10 +43,6 @@ public partial class SettingsWindow : Window
         SchedulePathTextBox.Text = config.ScheduleRootPath;
 
         ThemeToggleCheckBox.IsChecked = prefs.IsDarkTheme;
-        StatusTagsToggleCheckBox.IsChecked = config.ShowStatusTags;
-        ParticipantPhotoToggleCheckBox.IsChecked = config.ShowParticipantPhoto;
-        MiniScheduleToggleCheckBox.IsChecked = prefs.ShowMiniSchedule;
-        NotesPanelToggleCheckBox.IsChecked = !prefs.IsNotesPanelCollapsed;
 
         FolderActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.Folder, StringComparer.OrdinalIgnoreCase);
         DocumentActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.Document, StringComparer.OrdinalIgnoreCase);
@@ -49,10 +53,6 @@ public partial class SettingsWindow : Window
 
         SetComboSelection(config.AutoRefreshHours);
         UpdateThemePreview();
-        UpdateStatusTagsPreview();
-        UpdateParticipantPhotoPreview();
-        UpdateMiniSchedulePreview();
-        UpdateNotesPanelPreview();
     }
 
     public SettingsWindowResult Result => new()
@@ -64,10 +64,10 @@ public partial class SettingsWindow : Window
         ExitPath = ExitPathTextBox.Text.Trim(),
         SchedulePath = SchedulePathTextBox.Text.Trim(),
         IsDarkTheme = ThemeToggleCheckBox.IsChecked == true,
-        ShowStatusTags = StatusTagsToggleCheckBox.IsChecked == true,
-        ShowParticipantPhoto = ParticipantPhotoToggleCheckBox.IsChecked == true,
-        ShowMiniSchedule = MiniScheduleToggleCheckBox.IsChecked == true,
-        ShowNotesPanel = NotesPanelToggleCheckBox.IsChecked == true,
+        ShowStatusTags = _showStatusTags,
+        ShowParticipantPhoto = _showParticipantPhoto,
+        ShowMiniSchedule = _showMiniSchedule,
+        ShowNotesPanel = _showNotesPanel,
         AutoRefreshHours = GetSelectedRefreshHours(),
         VisibleQuickActions = GetSelectedQuickActions(),
         RequestedAction = _requestedAction
@@ -145,51 +145,11 @@ public partial class SettingsWindow : Window
         UpdateThemePreview();
     }
 
-    private void StatusTagsToggleCheckBox_OnChanged(object sender, RoutedEventArgs e)
-    {
-        UpdateStatusTagsPreview();
-    }
-
-    private void ParticipantPhotoToggleCheckBox_OnChanged(object sender, RoutedEventArgs e)
-    {
-        UpdateParticipantPhotoPreview();
-    }
-
-    private void MiniScheduleToggleCheckBox_OnChanged(object sender, RoutedEventArgs e)
-    {
-        UpdateMiniSchedulePreview();
-    }
-
-    private void NotesPanelToggleCheckBox_OnChanged(object sender, RoutedEventArgs e)
-    {
-        UpdateNotesPanelPreview();
-    }
-
     private void UpdateThemePreview()
     {
         var isDark = ThemeToggleCheckBox.IsChecked == true;
         ThemeModeTextBlock.Text = isDark ? "Dunkel" : "Hell";
         App.ApplyTheme(isDark);
-    }
-
-    private void UpdateStatusTagsPreview()
-    {
-        StatusTagsModeTextBlock.Text = StatusTagsToggleCheckBox.IsChecked == true ? "Ein" : "Aus";
-    }
-
-    private void UpdateParticipantPhotoPreview()
-    {
-        ParticipantPhotoModeTextBlock.Text = ParticipantPhotoToggleCheckBox.IsChecked == true ? "Ein" : "Aus";
-    }
-
-    private void UpdateMiniSchedulePreview()
-    {
-        MiniScheduleModeTextBlock.Text = MiniScheduleToggleCheckBox.IsChecked == true ? "Ein" : "Aus";
-    }
-
-    private void UpdateNotesPanelPreview()
-    {
-        NotesPanelModeTextBlock.Text = NotesPanelToggleCheckBox.IsChecked == true ? "Ein" : "Aus";
     }
 
     private void SetComboSelection(int hours)

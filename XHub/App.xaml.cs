@@ -257,7 +257,7 @@ public partial class App : Application
                 SetResource(resources, "Ui.Padding.QuickAction", new Thickness(6, 2, 6, 2));
                 SetResource(resources, "Ui.Margin.SidebarItemBottom", new Thickness(0, 0, 0, 5));
                 SetResource(resources, "Ui.Margin.ParticipantItemBottom", new Thickness(0, 0, 0, 4));
-                SetResource(resources, "Ui.Margin.WorkingItemBottom", new Thickness(0, 0, 0, 5));
+                SetResource(resources, "Ui.Margin.WorkingItemBottom", new Thickness(0, 0, 6, 5));
                 SetResource(resources, "Ui.Size.IconButton", 26d);
                 SetResource(resources, "Ui.Size.QuickActionMinWidth", 36d);
                 SetResource(resources, "Ui.Size.StatusTagHeight", 17d);
@@ -295,7 +295,7 @@ public partial class App : Application
                 SetResource(resources, "Ui.Padding.QuickAction", new Thickness(6, 2, 6, 2));
                 SetResource(resources, "Ui.Margin.SidebarItemBottom", new Thickness(0, 0, 0, 5));
                 SetResource(resources, "Ui.Margin.ParticipantItemBottom", new Thickness(0, 0, 0, 4));
-                SetResource(resources, "Ui.Margin.WorkingItemBottom", new Thickness(0, 0, 0, 5));
+                SetResource(resources, "Ui.Margin.WorkingItemBottom", new Thickness(0, 0, 6, 5));
                 SetResource(resources, "Ui.Size.IconButton", 27d);
                 SetResource(resources, "Ui.Size.QuickActionMinWidth", 38d);
                 SetResource(resources, "Ui.Size.StatusTagHeight", 17d);
@@ -333,7 +333,7 @@ public partial class App : Application
                 SetResource(resources, "Ui.Padding.QuickAction", new Thickness(7, 2, 7, 2));
                 SetResource(resources, "Ui.Margin.SidebarItemBottom", new Thickness(0, 0, 0, 6));
                 SetResource(resources, "Ui.Margin.ParticipantItemBottom", new Thickness(0, 0, 0, 5));
-                SetResource(resources, "Ui.Margin.WorkingItemBottom", new Thickness(0, 0, 0, 6));
+                SetResource(resources, "Ui.Margin.WorkingItemBottom", new Thickness(0, 0, 6, 6));
                 SetResource(resources, "Ui.Size.IconButton", 28d);
                 SetResource(resources, "Ui.Size.QuickActionMinWidth", 40d);
                 SetResource(resources, "Ui.Size.StatusTagHeight", 18d);
@@ -371,7 +371,7 @@ public partial class App : Application
                 SetResource(resources, "Ui.Padding.QuickAction", new Thickness(8, 3, 8, 3));
                 SetResource(resources, "Ui.Margin.SidebarItemBottom", new Thickness(0, 0, 0, 8));
                 SetResource(resources, "Ui.Margin.ParticipantItemBottom", new Thickness(0, 0, 0, 6));
-                SetResource(resources, "Ui.Margin.WorkingItemBottom", new Thickness(0, 0, 0, 8));
+                SetResource(resources, "Ui.Margin.WorkingItemBottom", new Thickness(0, 0, 6, 8));
                 SetResource(resources, "Ui.Size.IconButton", 30d);
                 SetResource(resources, "Ui.Size.QuickActionMinWidth", 42d);
                 SetResource(resources, "Ui.Size.StatusTagHeight", 20d);
@@ -409,7 +409,7 @@ public partial class App : Application
                 SetResource(resources, "Ui.Padding.QuickAction", new Thickness(9, 4, 9, 4));
                 SetResource(resources, "Ui.Margin.SidebarItemBottom", new Thickness(0, 0, 0, 10));
                 SetResource(resources, "Ui.Margin.ParticipantItemBottom", new Thickness(0, 0, 0, 8));
-                SetResource(resources, "Ui.Margin.WorkingItemBottom", new Thickness(0, 0, 0, 10));
+                SetResource(resources, "Ui.Margin.WorkingItemBottom", new Thickness(0, 0, 6, 10));
                 SetResource(resources, "Ui.Size.IconButton", 32d);
                 SetResource(resources, "Ui.Size.QuickActionMinWidth", 46d);
                 SetResource(resources, "Ui.Size.StatusTagHeight", 22d);

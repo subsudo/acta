@@ -772,7 +772,7 @@
             <Border x:Name="NotesPanelBorder"
                     Grid.Column="4"
                     Style="{StaticResource PanelBorderStyle}"
-                    MinWidth="400"
+                    MinWidth="320"
                     Visibility="Collapsed">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -812,7 +812,10 @@
                           Background="Transparent"
                           ResizeBehavior="PreviousAndNext"
                           ResizeDirection="Columns"
-                          ShowsPreview="False" />
+                          ShowsPreview="False"
+                          DragStarted="DetailPanelSplitter_OnDragStarted"
+                          DragDelta="DetailPanelSplitter_OnDragDelta"
+                          DragCompleted="DetailPanelSplitter_OnDragCompleted" />
 
             <Border x:Name="DetailPanelBorder" Grid.Column="6" Style="{StaticResource PanelBorderStyle}">
                 <Grid>
