@@ -23,6 +23,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private readonly ListRepository _listRepository = new(App.ListsPath, App.ListsBackupPath);
     private readonly ExportService _exportService = new();
     private readonly ParticipantSearchService _searchService = new();
+    private readonly ParticipantArchiveService _archiveService = new();
     private readonly InitialsResolver _initialsResolver = new();
     private readonly DocxHeaderMetadataService _headerMetadataService;
     private readonly WeeklyScheduleService _weeklyScheduleService;
@@ -31,6 +32,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private ParticipantIndexService _indexService;
     private AttendanceImportService _attendanceImportService;
     private DispatcherTimer? _refreshTimer;
+    private IReadOnlyList<ParticipantIndexEntry> _mainIndexEntries = Array.Empty<ParticipantIndexEntry>();
+    private IReadOnlyList<ParticipantIndexEntry> _archiveIndexEntries = Array.Empty<ParticipantIndexEntry>();
     private IReadOnlyList<ParticipantIndexEntry> _indexEntries = Array.Empty<ParticipantIndexEntry>();
     private IReadOnlyDictionary<string, ParticipantIndexEntry> _indexEntriesByParticipantKey = new Dictionary<string, ParticipantIndexEntry>(StringComparer.OrdinalIgnoreCase);
     private SavedList _temporaryList = CreateWorkingList();
@@ -43,6 +46,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private bool _isDetailPanelOpen;
     private bool _isNotesPanelOpen;
     private double? _lastNotesPanelWidth;
+    private string? _archiveRootPath;
+    private string? _loadedArchiveRootPath;
+    private bool _isArchiveAvailable;
+    private bool _isArchiveSearchEnabled;
+    private bool _isArchiveLoading;
     private bool _suppressSearchResultsUntilTyping;
     private DateTime? _lastRefreshAt;
     private bool _isUpdateShutdownRequested;
@@ -86,9 +94,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         _isDetailPanelOpen = !App.UserPrefs.IsDetailPanelCollapsed;
         _isNotesPanelOpen = !App.UserPrefs.IsNotesPanelCollapsed;
         _lastNotesPanelWidth = App.UserPrefs.NotesPanelWidth;
+        _isArchiveSearchEnabled = App.UserPrefs.IsArchiveSearchEnabled;
 
         LoadLists();
         RestoreWindowState();
+        UpdateArchiveAvailability();
         ConfigureRefreshTimer();
         UpdateSearchUi();
         UpdateListPanelState();
@@ -121,6 +131,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     public bool ShowStatusTags => App.Config.ShowStatusTags;
     public bool IsDetailPanelOpen => _isDetailPanelOpen;
     public bool IsNotesPanelOpen => _isNotesPanelOpen;
+    public bool IsArchiveSearchEnabled => _isArchiveSearchEnabled;
+    public bool IsArchiveLoading => _isArchiveLoading;
+    public string ArchiveSearchButtonText => _isArchiveLoading ? "Archiv..." : "Archiv";
 
     private static SavedList CreateWorkingList()
     {
@@ -141,15 +154,21 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             SetRefreshBusy(true);
             UpdateStatus("Teilnehmenden-Index wird aktualisiert ...");
             var result = await _indexService.RebuildAsync();
-            _indexEntries = result.Entries;
-            _indexEntriesByParticipantKey = _indexEntries.ToDictionary(entry => entry.ParticipantKey, StringComparer.OrdinalIgnoreCase);
+            _mainIndexEntries = result.Entries;
+            UpdateArchiveAvailability();
+            RebuildCombinedIndex();
             _lastRefreshAt = DateTime.Now;
             RebuildCurrentParticipants();
             UpdateIndexState(result.Warnings);
             RefreshDetailPanel();
             UpdateStatus(showSuccessMessage
-                ? $"Index aktualisiert ({_indexEntries.Count} Teilnehmende)."
-                : $"Index bereit ({_indexEntries.Count} Teilnehmende).");
+                ? $"Index aktualisiert ({_mainIndexEntries.Count} Teilnehmende)."
+                : $"Index bereit ({_mainIndexEntries.Count} Teilnehmende).");
+
+            if (_isArchiveSearchEnabled)
+            {
+                _ = EnsureArchiveLoadedAsync();
+            }
         }
         catch (Exception ex)
         {
@@ -546,6 +565,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 continue;
             }
 
+            if (ParticipantArchiveService.IsArchivedParticipantPath(item.ParticipantKey, _archiveRootPath))
+            {
+                _currentParticipants.Add(ParticipantArchiveService.CreateArchiveFallbackEntry(item.ParticipantKey));
+                continue;
+            }
+
             _currentParticipants.Add(new ParticipantIndexEntry
             {
                 ParticipantKey = item.ParticipantKey,
@@ -566,7 +591,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             .Select(item => item.ParticipantKey)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var result in _searchService.Search(SearchTextBox.Text, _indexEntries))
+        var searchableEntries = _isArchiveSearchEnabled ? _indexEntries : _mainIndexEntries;
+        foreach (var result in _searchService.Search(SearchTextBox.Text, searchableEntries))
         {
             if (!workingKeys.Contains(result.ParticipantKey))
             {
@@ -626,15 +652,104 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void UpdateIndexState(IReadOnlyList<string> warnings)
     {
+        var count = _mainIndexEntries.Count + (_archiveIndexEntries.Count > 0 ? _archiveIndexEntries.Count : 0);
         var summary = _lastRefreshAt.HasValue
-            ? $"Index: {_indexEntries.Count} TN, {_lastRefreshAt:HH:mm:ss}"
-            : $"Index: {_indexEntries.Count} TN";
+            ? $"Index: {count} TN, {_lastRefreshAt:HH:mm:ss}"
+            : $"Index: {count} TN";
         if (warnings.Count > 0)
         {
             summary += $" | {warnings.Count} Warnungen";
         }
 
         IndexStateTextBlock.Text = summary;
+    }
+
+    private void UpdateArchiveAvailability()
+    {
+        _archiveRootPath = ParticipantArchiveService.TryGetArchiveRoot(App.Config.ExitBasePath);
+        if (!string.Equals(_archiveRootPath, _loadedArchiveRootPath, StringComparison.OrdinalIgnoreCase))
+        {
+            _archiveIndexEntries = Array.Empty<ParticipantIndexEntry>();
+            _loadedArchiveRootPath = null;
+        }
+
+        _isArchiveAvailable = !string.IsNullOrWhiteSpace(_archiveRootPath);
+        if (!_isArchiveAvailable)
+        {
+            _isArchiveSearchEnabled = false;
+            _isArchiveLoading = false;
+            _archiveIndexEntries = Array.Empty<ParticipantIndexEntry>();
+            App.UserPrefs.IsArchiveSearchEnabled = false;
+        }
+        else
+        {
+            _isArchiveSearchEnabled = App.UserPrefs.IsArchiveSearchEnabled;
+        }
+
+        RebuildCombinedIndex();
+        UpdateArchiveButtonState();
+    }
+
+    private void RebuildCombinedIndex()
+    {
+        var merged = _mainIndexEntries
+            .Concat(_archiveIndexEntries)
+            .DistinctBy(entry => entry.ParticipantKey, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        _indexEntries = merged;
+        _indexEntriesByParticipantKey = merged.ToDictionary(entry => entry.ParticipantKey, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private void UpdateArchiveButtonState()
+    {
+        if (ArchiveSearchButton is null)
+        {
+            return;
+        }
+
+        ArchiveSearchButton.Visibility = _isArchiveAvailable ? Visibility.Visible : Visibility.Collapsed;
+        ArchiveSearchButton.IsEnabled = _isArchiveAvailable && !_isArchiveLoading;
+        OnPropertyChanged(nameof(IsArchiveSearchEnabled));
+        OnPropertyChanged(nameof(IsArchiveLoading));
+        OnPropertyChanged(nameof(ArchiveSearchButtonText));
+    }
+
+    private async Task EnsureArchiveLoadedAsync()
+    {
+        if (!_isArchiveAvailable || string.IsNullOrWhiteSpace(_archiveRootPath) || _isArchiveLoading || _archiveIndexEntries.Count > 0)
+        {
+            return;
+        }
+
+        try
+        {
+            _isArchiveLoading = true;
+            UpdateArchiveButtonState();
+            UpdateStatus("Archiv wird geladen...");
+            var result = await _archiveService.BuildArchiveAsync(_archiveRootPath);
+            _archiveIndexEntries = result.Entries;
+            _loadedArchiveRootPath = _archiveRootPath;
+            RebuildCombinedIndex();
+            RebuildCurrentParticipants();
+            RefreshSearchResults();
+            RefreshDetailPanel();
+            UpdateIndexState(result.Warnings);
+            UpdateStatus(result.Warnings.Count > 0
+                ? $"Archiv geladen ({_archiveIndexEntries.Count} TN, {result.Warnings.Count} Warnungen)."
+                : $"Archiv geladen ({_archiveIndexEntries.Count} TN).");
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Error("XHub.Archive.Load", ex);
+            UpdateStatus("Archiv konnte nicht geladen werden.");
+            MessageBox.Show($"Das Archiv konnte nicht geladen werden:\n{ex.Message}", "Acta",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        finally
+        {
+            _isArchiveLoading = false;
+            UpdateArchiveButtonState();
+        }
     }
 
     private void UpdateStatus(string text) => StatusTextBlock.Text = text;
@@ -668,6 +783,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         App.UserPrefs.IsListPanelCollapsed = !_isListPanelOpen;
         App.UserPrefs.IsDetailPanelCollapsed = !_isDetailPanelOpen;
         App.UserPrefs.IsNotesPanelCollapsed = !_isNotesPanelOpen;
+        App.UserPrefs.IsArchiveSearchEnabled = _isArchiveSearchEnabled && _isArchiveAvailable;
         CaptureCurrentNotesPanelWidth();
         App.SaveUserPrefs();
     }
@@ -685,6 +801,25 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         SearchTextBox.Focus();
     }
 
+    private async void ArchiveSearchButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (!_isArchiveAvailable)
+        {
+            return;
+        }
+
+        _isArchiveSearchEnabled = !_isArchiveSearchEnabled;
+        App.UserPrefs.IsArchiveSearchEnabled = _isArchiveSearchEnabled;
+        App.SaveUserPrefs();
+        UpdateArchiveButtonState();
+        RefreshSearchResults();
+
+        if (_isArchiveSearchEnabled)
+        {
+            await EnsureArchiveLoadedAsync();
+        }
+    }
+
     private void SearchTextBox_OnGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
     {
         if (string.IsNullOrWhiteSpace(SearchTextBox.Text)) return;
@@ -697,6 +832,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (e.OriginalSource is not DependencyObject source) return;
         if (IsDescendantOf(source, SearchTextBox)) return;
         if (IsDescendantOf(source, ClearSearchButton)) return;
+        if (IsDescendantOf(source, ArchiveSearchButton)) return;
         if (string.IsNullOrWhiteSpace(SearchTextBox.Text)) return;
 
         _suppressSearchResultsUntilTyping = true;
@@ -1299,7 +1435,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void EnrichParticipantSchedule(ParticipantIndexEntry entry)
     {
-        if (!App.UserPrefs.ShowMiniSchedule)
+        if (entry.IsArchived || !App.UserPrefs.ShowMiniSchedule)
         {
             entry.MiniSchedule = new ParticipantMiniScheduleSummary
             {
@@ -1324,6 +1460,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     }
     private void EnrichParticipantHeaderMetadata(ParticipantIndexEntry entry)
     {
+        if (entry.IsArchived)
+        {
+            entry.OdooUrl = string.Empty;
+            entry.CounselorInitials = string.Empty;
+            return;
+        }
+
         try
         {
             var docPath = ResolveDocumentPath(entry, refreshDetailPanel: false);

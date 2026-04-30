@@ -27,6 +27,7 @@ XHub ist eine WPF-App mit pragmatischer Service-Struktur und zentraler UI-Orches
 - [SearchTextUtility.cs](../XHub/Services/SearchTextUtility.cs): Tokenisierung, Normalisierung und Suchhilfen
 - [InitialsResolver.cs](../XHub/Services/InitialsResolver.cs): Kuerzelableitung aus Akten-/Dateinamen
 - [ParticipantIndexService.cs](../XHub/Services/ParticipantIndexService.cs): Dateisystem-Scan und Indexaufbau
+- [ParticipantArchiveService.cs](../XHub/Services/ParticipantArchiveService.cs): On-demand-Scan des Austrittsarchivs unter A-Z-Ordnern
 - [ParticipantSearchService.cs](../XHub/Services/ParticipantSearchService.cs): Suche
 - [WordStaHost.cs](../XHub/Services/WordStaHost.cs): zentraler app-weiter STA-Worker fuer den COM-Bookmark-Pfad
 - [WordService.cs](../XHub/Services/WordService.cs): nativer Word-Open-Pfad, Word COM, Dokumente und Bookmarks
@@ -57,6 +58,11 @@ XHub ist eine WPF-App mit pragmatischer Service-Struktur und zentraler UI-Orches
 
 ### 1. TN-Index
 Dateisystem -> `ParticipantIndexService` -> `ParticipantIndexEntry[]` -> `ParticipantSearchService` -> UI
+
+`StartBasePath` -> direkte Start-Unterordner oder Elternmodus `01_Start`; im Elternmodus werden nur `012_Erstgespräch` direkt und `013_start` eine Ebene tiefer indexiert
+
+### 1b. Archivsuche
+`ExitBasePath\031_im Austritt` -> normaler Hauptindex; A-Z-Archivordner -> `ParticipantArchiveService` on demand -> Session-Cache -> kombinierter Such-/Lookup-Index
 
 ### 2. Lokale Listen
 UI -> `ListRepository` -> `lists.json` / `lists.bak`

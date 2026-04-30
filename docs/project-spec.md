@@ -43,11 +43,14 @@ XHub ist ein lokales Einzelplatz-Werkzeug fuer die Arbeit mit Teilnehmenden. Der
   - `SecondaryServerBasePath` als zusaetzlicher Suchpfad
 - DOCX-Akten in den TN-Ordnern
 - optional weiterer Wochenstundenplan als DOCX
+- Start-Elternpfad `01_Start` wird gezielt auf `012_Erstgespräch` und `013_start` reduziert; andere Unterordner werden nicht indexiert
+- Austrittsarchiv unter `ExitBasePath`, wenn dort `031_im Austritt` plus A-Z-Archivordner vorhanden sind; A-Z wird nur bei aktivierter Archivsuche on demand gelesen
 
 ## Konfigurationsrealitaet
 - Der produktiv wichtigste Pflichtpfad ist aktuell `LvBasePath`.
 - Weitere Pfade beeinflussen Tags, Zusatzbestande und Matchinglogik.
 - `AutoRefreshHours` steuert optional den Index-Refresh.
+- Archivsuche speichert nur den lokalen Aktiv-Zustand; der Archivindex selbst bleibt pro Session im Speicher.
 - Die App arbeitet nicht sinnvoll, wenn kein TN-Basispfad konfiguriert ist.
 
 ## Nicht-Ziele / bewusst nicht priorisiert

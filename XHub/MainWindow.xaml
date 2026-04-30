@@ -125,6 +125,25 @@
             </Setter>
         </Style>
 
+        <Style TargetType="Button" x:Key="ArchiveSearchButtonStyle" BasedOn="{StaticResource SecondaryButtonStyle}">
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="FontSize" Value="{DynamicResource Ui.Font.QuickAction}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.SecondaryText}" />
+            <Setter Property="MinWidth" Value="54" />
+            <Setter Property="Height" Value="22" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsArchiveSearchEnabled, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource Brush.AccentSubtle}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.PrimaryText}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsArchiveLoading, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                    <Setter Property="Opacity" Value="0.7" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style TargetType="Border" x:Key="StatusTagBadgeStyle">
             <Setter Property="Background" Value="{DynamicResource Brush.WindowBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
@@ -139,8 +158,22 @@
                 <DataTrigger Binding="{Binding StatusTag}" Value="">
                     <Setter Property="Visibility" Value="Collapsed" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding DataContext.ShowStatusTags, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding DataContext.ShowStatusTags, RelativeSource={RelativeSource AncestorType=Window}}" Value="False" />
+                        <Condition Binding="{Binding IsArchived}" Value="False" />
+                    </MultiDataTrigger.Conditions>
                     <Setter Property="Visibility" Value="Collapsed" />
+                </MultiDataTrigger>
+                <DataTrigger Binding="{Binding IsArchived}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource Brush.ArchiveBadgeBg}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.ArchiveBadgeBg}" />
+                    <Setter Property="MinWidth" Value="48" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding StatusTag}" Value="ST">
+                    <Setter Property="Background" Value="{DynamicResource Brush.StartBadgeBg}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.StartBadgeBg}" />
+                    <Setter Property="Visibility" Value="Visible" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -152,6 +185,14 @@
             <Setter Property="HorizontalAlignment" Value="Center" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="TextAlignment" Value="Center" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsArchived}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.ArchiveBadgeText}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding StatusTag}" Value="ST">
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.StartBadgeText}" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style TargetType="StackPanel" x:Key="StatusTextColumnStyle">
@@ -160,8 +201,15 @@
                 <DataTrigger Binding="{Binding StatusTag}" Value="">
                     <Setter Property="Margin" Value="-40,0,0,0" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding DataContext.ShowStatusTags, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding DataContext.ShowStatusTags, RelativeSource={RelativeSource AncestorType=Window}}" Value="False" />
+                        <Condition Binding="{Binding IsArchived}" Value="False" />
+                    </MultiDataTrigger.Conditions>
                     <Setter Property="Margin" Value="-40,0,0,0" />
+                </MultiDataTrigger>
+                <DataTrigger Binding="{Binding StatusTag}" Value="ST">
+                    <Setter Property="Margin" Value="0" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -347,15 +395,22 @@
                                VerticalAlignment="Center"
                                Margin="12,0,0,0"
                                FontSize="{DynamicResource Ui.Font.Search}" />
-                    <Button x:Name="ClearSearchButton"
-                            Width="22" Height="22"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Margin="0,0,8,0"
-                            Style="{StaticResource IconButtonStyle}"
-                            Content="×"
-                            Visibility="Collapsed"
-                            Click="ClearSearchButton_OnClick" />
+                    <StackPanel HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal"
+                                Margin="0,0,8,0">
+                        <Button x:Name="ArchiveSearchButton"
+                                Style="{StaticResource ArchiveSearchButtonStyle}"
+                                Content="{Binding ArchiveSearchButtonText, RelativeSource={RelativeSource AncestorType=Window}}"
+                                Visibility="Collapsed"
+                                Click="ArchiveSearchButton_OnClick" />
+                        <Button x:Name="ClearSearchButton"
+                                Width="22" Height="22"
+                                Style="{StaticResource IconButtonStyle}"
+                                Content="×"
+                                Visibility="Collapsed"
+                                Click="ClearSearchButton_OnClick" />
+                    </StackPanel>
                     <Popup x:Name="SearchResultsPopup"
                            PlacementTarget="{Binding ElementName=SearchTextBox}"
                            Placement="Bottom"

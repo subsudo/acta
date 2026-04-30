@@ -17,6 +17,10 @@
         <SolidColorBrush x:Key="Brush.SoftSurface" Color="#6C778A" />
         <SolidColorBrush x:Key="Brush.Success" Color="#34D399" />
         <SolidColorBrush x:Key="Brush.Warning" Color="#FBBF24" />
+        <SolidColorBrush x:Key="Brush.ArchiveBadgeBg" Color="#451A03" />
+        <SolidColorBrush x:Key="Brush.ArchiveBadgeText" Color="#FDE68A" />
+        <SolidColorBrush x:Key="Brush.StartBadgeBg" Color="#172554" />
+        <SolidColorBrush x:Key="Brush.StartBadgeText" Color="#BFDBFE" />
         <SolidColorBrush x:Key="Brush.Error" Color="#F87171" />
         <SolidColorBrush x:Key="Brush.Info" Color="#60A5FA" />
         <SolidColorBrush x:Key="Brush.ScrollTrack" Color="#E1E6ED" />

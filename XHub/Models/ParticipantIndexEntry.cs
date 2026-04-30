@@ -15,6 +15,7 @@ public class ParticipantIndexEntry
     public string ImagePath { get; set; } = string.Empty;
     public string SourceLabel { get; set; } = string.Empty;
     public string StatusTag { get; set; } = string.Empty;
+    public bool IsArchived { get; set; }
     public bool HasStatusTag => !string.IsNullOrWhiteSpace(StatusTag);
     public IReadOnlyList<string> SearchTokens { get; set; } = Array.Empty<string>();
     public IReadOnlyList<string> SearchTokensFallback { get; set; } = Array.Empty<string>();

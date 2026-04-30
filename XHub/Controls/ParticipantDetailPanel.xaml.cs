@@ -70,7 +70,15 @@ public partial class ParticipantDetailPanel : UserControl
             ResetPhotoVisuals();
         }
 
-        UpdateOdooLink(participant.OdooUrl);
+        if (participant.IsArchived)
+        {
+            OdooButton.Visibility = Visibility.Collapsed;
+            OdooFallbackTextBlock.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            UpdateOdooLink(participant.OdooUrl);
+        }
         UpdateSchedule(participant.MiniSchedule);
         UpdateDetailLayout();
     }

@@ -5,6 +5,9 @@ namespace XHub.Services;
 
 public class ParticipantIndexService
 {
+    private const string StartInterviewFolderName = "012_Erstgespräch";
+    private const string StartGroupedFolderName = "013_start";
+
     private readonly AppConfig _config;
     private readonly InitialsResolver _initialsResolver;
     private readonly object _sync = new();
@@ -51,7 +54,7 @@ public class ParticipantIndexService
 
         CollectDirectories(_config.LbBasePath, "LB", _config.VerlaufsakteKeyword, directories, warnings);
         CollectDirectories(_config.StartBasePath, "ST", _config.VerlaufsakteKeyword, directories, warnings);
-        CollectDirectories(_config.ExitBasePath, "AU", _config.VerlaufsakteKeyword, directories, warnings);
+        CollectDirectories(ParticipantArchiveService.GetIndexableExitPath(_config.ExitBasePath), "AU", _config.VerlaufsakteKeyword, directories, warnings);
 
         var entries = new List<ParticipantIndexEntry>();
         foreach (var item in directories.DistinctBy(x => x.Path, StringComparer.OrdinalIgnoreCase))
@@ -108,25 +111,7 @@ public class ParticipantIndexService
         {
             if (string.Equals(label, "ST", StringComparison.OrdinalIgnoreCase))
             {
-                foreach (var candidateDirectory in Directory.GetDirectories(basePath, "*", SearchOption.TopDirectoryOnly))
-                {
-                    if (LooksLikeParticipantDirectory(candidateDirectory, label, keyword))
-                    {
-                        target.Add((candidateDirectory, label));
-                        continue;
-                    }
-
-                    foreach (var participantDirectory in Directory.GetDirectories(candidateDirectory, "*", SearchOption.TopDirectoryOnly))
-                    {
-                        if (!LooksLikeParticipantDirectory(participantDirectory, label, keyword))
-                        {
-                            continue;
-                        }
-
-                        target.Add((participantDirectory, label));
-                    }
-                }
-
+                CollectStartDirectories(basePath, label, keyword, target, warnings);
                 return;
             }
 
@@ -144,6 +129,103 @@ public class ParticipantIndexService
         {
             warnings.Add($"Ordner konnten nicht gelesen werden: {basePath}");
             AppLogger.Warn($"XHub-Index: Ordner konnten nicht gelesen werden '{basePath}': {ex.Message}");
+        }
+    }
+
+    private static void CollectStartDirectories(
+        string basePath,
+        string label,
+        string keyword,
+        List<(string Path, string SourceLabel)> target,
+        List<string> warnings)
+    {
+        var groupedStartPath = Path.Combine(basePath, StartGroupedFolderName);
+        var interviewPath = Path.Combine(basePath, StartInterviewFolderName);
+        var hasGroupedStartPath = Directory.Exists(groupedStartPath);
+        var hasInterviewPath = Directory.Exists(interviewPath);
+
+        if (hasGroupedStartPath || hasInterviewPath)
+        {
+            if (hasInterviewPath)
+            {
+                AddDirectParticipantDirectories(interviewPath, label, keyword, target, warnings);
+            }
+
+            if (hasGroupedStartPath)
+            {
+                AddNestedParticipantDirectories(groupedStartPath, label, keyword, target, warnings);
+            }
+
+            return;
+        }
+
+        var directCount = AddDirectParticipantDirectories(basePath, label, keyword, target, warnings);
+        if (directCount > 0)
+        {
+            return;
+        }
+
+        AddNestedParticipantDirectories(basePath, label, keyword, target, warnings);
+    }
+
+    private static int AddDirectParticipantDirectories(
+        string basePath,
+        string label,
+        string keyword,
+        List<(string Path, string SourceLabel)> target,
+        List<string> warnings)
+    {
+        var count = 0;
+        foreach (var participantDirectory in EnumerateTopDirectories(basePath, warnings))
+        {
+            if (!LooksLikeParticipantDirectory(participantDirectory, label, keyword))
+            {
+                continue;
+            }
+
+            target.Add((participantDirectory, label));
+            count++;
+        }
+
+        return count;
+    }
+
+    private static int AddNestedParticipantDirectories(
+        string basePath,
+        string label,
+        string keyword,
+        List<(string Path, string SourceLabel)> target,
+        List<string> warnings)
+    {
+        var count = 0;
+        foreach (var groupDirectory in EnumerateTopDirectories(basePath, warnings))
+        {
+            foreach (var participantDirectory in EnumerateTopDirectories(groupDirectory, warnings))
+            {
+                if (!LooksLikeParticipantDirectory(participantDirectory, label, keyword))
+                {
+                    continue;
+                }
+
+                target.Add((participantDirectory, label));
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static IEnumerable<string> EnumerateTopDirectories(string basePath, List<string> warnings)
+    {
+        try
+        {
+            return Directory.GetDirectories(basePath, "*", SearchOption.TopDirectoryOnly);
+        }
+        catch (Exception ex)
+        {
+            warnings.Add($"Ordner konnten nicht gelesen werden: {basePath}");
+            AppLogger.Warn($"XHub-Index: Ordner konnten nicht gelesen werden '{basePath}': {ex.Message}");
+            return Array.Empty<string>();
         }
     }
 

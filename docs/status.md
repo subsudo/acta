@@ -1,7 +1,7 @@
 # Status
 
 ## Stand
-Stand dieser Doku: 2026-04-29
+Stand dieser Doku: 2026-04-30
 Aktueller sichtbarer Versionsstand: `Acta v0.9.7`
 
 ## Technischer Gesamtzustand
@@ -29,6 +29,7 @@ Aktueller sichtbarer Versionsstand: `Acta v0.9.7`
 - Refresh und Einstellungen sitzen wieder in der normalen oberen Aktionsleiste neben `Details`
 - Gespeicherte Listen speichern Inhaltsänderungen jetzt still im Hintergrund; die Header-Aktionen `Leeren` und `Als Liste speichern` bleiben nur noch für die temporäre Liste sichtbar
 - Optionale lokale Teilnehmernotizen sind als angedockte Notizspalte vorhanden; sie speichern pro Windows-User und Teilnehmer automatisch im lokalen XAMLPackage-Format.
+- Austrittsarchive koennen on demand durchsucht werden, wenn `ExitBasePath` auf den Elternordner mit `031_im Austritt` und A-Z-Archivordnern zeigt; Archiv-TN erhalten ein farbiges Archiv-Badge und werden nicht fuer Odoo/Stundenplan angereichert.
 - Der Detailbereich ist etwas kompakter gestellt: Foto sitzt leicht höher, der Fotorahmen ist enger gefasst, die Odoo-Karte entfällt und Foto/Odoo/Stundenplan rücken ruhiger zusammen; die Stundenplanfläche selbst bleibt unverändert
 - die fruehere Auto-fit- und Sonderlogik fuer Spalten-/Fensterbreiten ist wieder entfernt; Listen-, Haupt- und Detailspalte arbeiten wieder ueber die stabile Standard-Splitterlogik
 - UI-Skalierung arbeitet jetzt mit 5 Stufen; neue Nutzer starten kompakter und bestehende 4-Stufen-Werte werden einmalig auf die neue Logik migriert
@@ -46,7 +47,7 @@ Aktueller sichtbarer Versionsstand: `Acta v0.9.7`
 - Bei nativem `Akte`-Open gibt es nur einen kurzen UI-Cooldown gegen Doppelklicks; die eigentliche Sperr- und ReadOnly-Behandlung liegt dann komplett bei Word
 - `E BU` und `E BI` sind nicht mehr Teil von Acta-Quick-Actions
 - Bekannte harmlose Word-Sonderfälle bei `UserControl` und `Hwnd` werden defensiver geloggt, damit normale Öffnungen die Logs nicht mehr mit dauernden Warnungen füllen
-- Der `Start`-Pfad toleriert jetzt beide Realstrukturen: TN-Ordner direkt auf erster Ebene oder genau eine Zwischenebene tiefer; tiefer wird bewusst nicht rekursiv gesucht
+- Der `Start`-Pfad erkennt den Elternordner `01_Start` gezielt und indexiert dort nur `012_Erstgespräch` sowie `013_start`; Start-TN tragen ein sanft blaues `ST`-Badge
 - Der Mini-Stundenplan skaliert die LP-/Zimmerzeile bei kleineren UI-Stufen jetzt kompakter und mit etwas mehr Innenabstand, damit die kurzen Randtexte in den Zellen nicht mehr so leicht abgeschnitten werden
 - Odoo-Links aus DOCX-Headern werden vor dem Öffnen jetzt auf echte absolute `http/https`-URLs begrenzt; ungültige oder nicht erlaubte Ziele werden freundlich geblockt statt an `Process.Start(...)` durchgereicht
 - Die statischen Status-Brushes des Mini-Stundenplans sind eingefroren (`Freeze()`), damit der WPF-Pfad sauberer und günstiger bleibt
