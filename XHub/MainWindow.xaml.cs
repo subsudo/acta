@@ -1446,7 +1446,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         try
         {
-            entry.MiniSchedule = _weeklyScheduleService.GetParticipantSchedule(App.Config.ScheduleRootPath, entry, _indexEntries);
+            var scheduleParticipants = _indexEntries
+                .Where(candidate => !candidate.IsArchived)
+                .ToList();
+            entry.MiniSchedule = _weeklyScheduleService.GetParticipantSchedule(
+                App.Config.ScheduleRootPath,
+                entry,
+                scheduleParticipants);
         }
         catch (Exception ex)
         {
