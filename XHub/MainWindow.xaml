@@ -490,7 +490,7 @@
                 <ColumnDefinition x:Name="MainContentColumn" Width="*" MinWidth="180" />
                 <ColumnDefinition x:Name="NotesPanelSplitterColumn" Width="0" />
                 <ColumnDefinition x:Name="NotesPanelColumn" Width="0" MinWidth="0" />
-                <ColumnDefinition x:Name="DetailPanelSplitterColumn" Width="0" />
+                <ColumnDefinition x:Name="DetailPanelSplitterColumn" Width="6" />
                 <ColumnDefinition x:Name="DetailPanelColumn" Width="220" MinWidth="220" />
             </Grid.ColumnDefinitions>
 
@@ -772,7 +772,7 @@
             <Border x:Name="NotesPanelBorder"
                     Grid.Column="4"
                     Style="{StaticResource PanelBorderStyle}"
-                    MinWidth="430"
+                    MinWidth="364"
                     Visibility="Collapsed">
                 <controls:ParticipantNotesPanel x:Name="NotesPanel" />
             </Border>

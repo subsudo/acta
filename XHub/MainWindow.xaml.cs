@@ -42,6 +42,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private bool _isListPanelOpen = true;
     private bool _isDetailPanelOpen;
     private bool _isNotesPanelOpen;
+    private double? _lastNotesPanelWidth;
     private bool _suppressSearchResultsUntilTyping;
     private DateTime? _lastRefreshAt;
     private bool _isUpdateShutdownRequested;
@@ -50,8 +51,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private const double BaseListPanelWindowMinWidth = 520;
     private const double BaseDetailPanelWindowMinWidth = 680;
     private const double BaseFullPanelsWindowMinWidth = 860;
-    private const double NotesPanelMinWidth = 430;
-    private const double NotesPanelDefaultWidth = 450;
+    // Toolbar width is ~340 DIP; with the 12+12 panel padding the real column minimum is 364.
+    private const double NotesPanelMinWidth = 364;
+    private const double NotesPanelDefaultWidth = NotesPanelMinWidth;
     private const double NotesPanelWidthContribution = NotesPanelMinWidth + 6;
 
     private int CurrentUiScaleLevel => App.NormalizeUiScaleLevel(App.UserPrefs.UiScaleLevel);
@@ -83,6 +85,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         _isListPanelOpen = !App.UserPrefs.IsListPanelCollapsed;
         _isDetailPanelOpen = !App.UserPrefs.IsDetailPanelCollapsed;
         _isNotesPanelOpen = !App.UserPrefs.IsNotesPanelCollapsed;
+        _lastNotesPanelWidth = App.UserPrefs.NotesPanelWidth;
 
         LoadLists();
         RestoreWindowState();
@@ -390,9 +393,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         if (_isNotesPanelOpen)
         {
-            var notesWidth = NotesPanelColumn.ActualWidth >= NotesPanelMinWidth
-                ? NotesPanelColumn.ActualWidth
-                : Math.Max(App.UserPrefs.NotesPanelWidth ?? NotesPanelDefaultWidth, NotesPanelMinWidth);
+            var notesWidth = GetRequestedNotesPanelWidth();
             NotesPanelColumn.MinWidth = NotesPanelMinWidth;
             NotesPanelColumn.Width = new GridLength(notesWidth);
             NotesPanelSplitterColumn.Width = new GridLength(6);
@@ -405,6 +406,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
         else
         {
+            CaptureCurrentNotesPanelWidth();
             NotesPanel.FlushPendingAutosave();
             NotesPanel.SetParticipant(null);
             NotesPanelColumn.MinWidth = 0;
@@ -423,8 +425,40 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         UpdateLayoutAlignment();
     }
 
+    private double GetRequestedNotesPanelWidth()
+    {
+        var requestedWidth = _lastNotesPanelWidth ?? App.UserPrefs.NotesPanelWidth ?? NotesPanelDefaultWidth;
+        return Math.Max(requestedWidth, NotesPanelMinWidth);
+    }
+
+    private void CaptureCurrentNotesPanelWidth()
+    {
+        if (!_isNotesPanelOpen)
+        {
+            return;
+        }
+
+        var width = NotesPanelColumn.ActualWidth >= NotesPanelMinWidth
+            ? NotesPanelColumn.ActualWidth
+            : NotesPanelColumn.Width.Value;
+        if (width < NotesPanelMinWidth)
+        {
+            return;
+        }
+
+        _lastNotesPanelWidth = width;
+        App.UserPrefs.NotesPanelWidth = width;
+    }
+
     private void UpdateDetailSplitterState()
     {
+        if (_isDetailPanelOpen && _isNotesPanelOpen)
+        {
+            DetailPanelSplitterColumn.Width = new GridLength(6);
+            DetailPanelSplitter.Visibility = Visibility.Visible;
+            return;
+        }
+
         DetailPanelSplitterColumn.Width = new GridLength(0);
         DetailPanelSplitter.Visibility = Visibility.Collapsed;
     }
@@ -462,7 +496,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         if (_isDetailPanelOpen)
         {
-            minimum += GetDetailPanelPreferredWidth();
+            minimum += GetDetailPanelPreferredWidth() + (_isNotesPanelOpen ? 6 : 0);
         }
 
         return minimum;
@@ -634,10 +668,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         App.UserPrefs.IsListPanelCollapsed = !_isListPanelOpen;
         App.UserPrefs.IsDetailPanelCollapsed = !_isDetailPanelOpen;
         App.UserPrefs.IsNotesPanelCollapsed = !_isNotesPanelOpen;
-        if (_isNotesPanelOpen && NotesPanelColumn.ActualWidth >= NotesPanelMinWidth)
-        {
-            App.UserPrefs.NotesPanelWidth = NotesPanelColumn.ActualWidth;
-        }
+        CaptureCurrentNotesPanelWidth();
         App.SaveUserPrefs();
     }
 
@@ -815,6 +846,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void ToggleNotesPanelButton_OnClick(object sender, RoutedEventArgs e)
     {
+        if (_isNotesPanelOpen)
+        {
+            CaptureCurrentNotesPanelWidth();
+        }
+
         _isNotesPanelOpen = !_isNotesPanelOpen;
         UpdateNotesPanelState();
     }
