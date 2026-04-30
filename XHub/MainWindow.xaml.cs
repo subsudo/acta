@@ -165,7 +165,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 ? $"Index aktualisiert ({_mainIndexEntries.Count} Teilnehmende)."
                 : $"Index bereit ({_mainIndexEntries.Count} Teilnehmende).");
 
-            if (_isArchiveSearchEnabled)
+            if (_isArchiveAvailable)
             {
                 _ = EnsureArchiveLoadedAsync();
             }
@@ -708,7 +708,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         ArchiveSearchButton.Visibility = _isArchiveAvailable ? Visibility.Visible : Visibility.Collapsed;
-        ArchiveSearchButton.IsEnabled = _isArchiveAvailable && !_isArchiveLoading;
+        ArchiveSearchButton.IsEnabled = _isArchiveAvailable;
         OnPropertyChanged(nameof(IsArchiveSearchEnabled));
         OnPropertyChanged(nameof(IsArchiveLoading));
         OnPropertyChanged(nameof(ArchiveSearchButtonText));
@@ -1452,12 +1452,19 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             entry.MiniSchedule = _weeklyScheduleService.GetParticipantSchedule(
                 App.Config.ScheduleRootPath,
                 entry,
-                scheduleParticipants);
+                scheduleParticipants,
+                out var ambiguousLines,
+                out var scheduleMatches);
 
             if (entry.MiniSchedule.State == ParticipantMiniScheduleState.Unavailable)
             {
+                var details = ambiguousLines.Count > 0
+                    ? $" Details='{string.Join(" | ", ambiguousLines.Take(5))}'"
+                    : scheduleMatches.Count > 0
+                        ? $" Treffer={scheduleMatches.Count}"
+                        : string.Empty;
                 AppLogger.Info(
-                    $"Stundenplan: Kein Mini-Stundenplan fuer '{entry.DisplayName}'. Grund='{entry.MiniSchedule.Message}'.");
+                    $"Stundenplan: Kein Mini-Stundenplan fuer '{entry.DisplayName}'. Grund='{entry.MiniSchedule.Message}'.{details}");
             }
         }
         catch (Exception ex)

@@ -178,6 +178,13 @@
         </Style>
 
         <Style TargetType="TextBlock" x:Key="ParticipantNameWithInitialsTextStyle" BasedOn="{StaticResource ParticipantNameTextStyle}">
+        </Style>
+
+        <Style TargetType="TextBlock" x:Key="ParticipantNameWithoutInitialsTextStyle" BasedOn="{StaticResource ParticipantNameTextStyle}">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style TargetType="StackPanel" x:Key="ParticipantTextWithInitialsPanelStyle">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Initials}" Value="">
                     <Setter Property="Visibility" Value="Collapsed" />
@@ -185,9 +192,8 @@
             </Style.Triggers>
         </Style>
 
-        <Style TargetType="TextBlock" x:Key="ParticipantNameWithoutInitialsTextStyle" BasedOn="{StaticResource ParticipantNameTextStyle}">
+        <Style TargetType="TextBlock" x:Key="ParticipantTextWithoutInitialsStyle" BasedOn="{StaticResource ParticipantNameWithoutInitialsTextStyle}">
             <Setter Property="Visibility" Value="Collapsed" />
-            <Setter Property="VerticalAlignment" Value="Center" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Initials}" Value="">
                     <Setter Property="Visibility" Value="Visible" />
@@ -445,7 +451,7 @@
                                IsHitTestVisible="False"
                                Foreground="{DynamicResource Brush.SubtleText}"
                                VerticalAlignment="Center"
-                               Margin="34,0,0,0"
+                               Margin="30,0,0,0"
                                FontSize="{DynamicResource Ui.Font.Search}" />
                     <Button x:Name="ClearSearchButton"
                             Width="22" Height="22"
@@ -507,20 +513,15 @@
                                                 <Grid Grid.Column="1"
                                                       Style="{StaticResource StatusTextColumnStyle}"
                                                       VerticalAlignment="Center">
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto" />
-                                                        <RowDefinition Height="Auto" />
-                                                    </Grid.RowDefinitions>
-                                                    <TextBlock Grid.Row="0"
-                                                               Text="{Binding Initials}"
-                                                               Style="{StaticResource ParticipantInitialsTextStyle}" />
-                                                    <TextBlock Grid.Row="1"
-                                                               Text="{Binding DisplayName}"
-                                                               Style="{StaticResource ParticipantNameWithInitialsTextStyle}" />
-                                                    <TextBlock Grid.Row="0"
-                                                               Grid.RowSpan="2"
-                                                               Text="{Binding DisplayName}"
-                                                               Style="{StaticResource ParticipantNameWithoutInitialsTextStyle}" />
+                                                    <StackPanel VerticalAlignment="Center"
+                                                                Style="{StaticResource ParticipantTextWithInitialsPanelStyle}">
+                                                        <TextBlock Text="{Binding Initials}"
+                                                                   Style="{StaticResource ParticipantInitialsTextStyle}" />
+                                                        <TextBlock Text="{Binding DisplayName}"
+                                                                   Style="{StaticResource ParticipantNameWithInitialsTextStyle}" />
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding DisplayName}"
+                                                               Style="{StaticResource ParticipantTextWithoutInitialsStyle}" />
                                                 </Grid>
                                             </Grid>
                                             <WrapPanel Grid.Column="1"
@@ -594,6 +595,7 @@
                         <Image Source="Assets/Reload.secondary.png"
                                Width="15"
                                Height="15"
+                               Margin="0,-1,0,0"
                                Stretch="Uniform"
                                SnapsToDevicePixels="True"
                                RenderOptions.BitmapScalingMode="HighQuality" />
@@ -825,20 +827,15 @@
                                             <Grid Grid.Column="1"
                                                   Style="{StaticResource StatusTextColumnStyle}"
                                                   VerticalAlignment="Center">
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="Auto" />
-                                                </Grid.RowDefinitions>
-                                                <TextBlock Grid.Row="0"
-                                                           Text="{Binding Initials}"
-                                                           Style="{StaticResource ParticipantInitialsTextStyle}" />
-                                                <TextBlock Grid.Row="1"
-                                                           Text="{Binding DisplayName}"
-                                                           Style="{StaticResource ParticipantNameWithInitialsTextStyle}" />
-                                                <TextBlock Grid.Row="0"
-                                                           Grid.RowSpan="2"
-                                                           Text="{Binding DisplayName}"
-                                                           Style="{StaticResource ParticipantNameWithoutInitialsTextStyle}" />
+                                                <StackPanel VerticalAlignment="Center"
+                                                            Style="{StaticResource ParticipantTextWithInitialsPanelStyle}">
+                                                    <TextBlock Text="{Binding Initials}"
+                                                               Style="{StaticResource ParticipantInitialsTextStyle}" />
+                                                    <TextBlock Text="{Binding DisplayName}"
+                                                               Style="{StaticResource ParticipantNameWithInitialsTextStyle}" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding DisplayName}"
+                                                           Style="{StaticResource ParticipantTextWithoutInitialsStyle}" />
                                             </Grid>
                                         </Grid>
 

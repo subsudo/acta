@@ -34,7 +34,17 @@ public sealed class WeeklyScheduleService
         string schedulePath,
         ParticipantIndexEntry participant,
         IReadOnlyList<ParticipantIndexEntry> participants)
+        => GetParticipantSchedule(schedulePath, participant, participants, out _, out _);
+
+    public ParticipantMiniScheduleSummary GetParticipantSchedule(
+        string schedulePath,
+        ParticipantIndexEntry participant,
+        IReadOnlyList<ParticipantIndexEntry> participants,
+        out List<string> ambiguousLines,
+        out List<WeeklyScheduleParticipantSlotDiagnostics> matches)
     {
+        ambiguousLines = new List<string>();
+        matches = new List<WeeklyScheduleParticipantSlotDiagnostics>();
         var resolvedSchedulePath = ResolveScheduleDocumentPath(schedulePath);
         if (string.IsNullOrWhiteSpace(resolvedSchedulePath))
         {
@@ -48,7 +58,7 @@ public sealed class WeeklyScheduleService
         }
 
         var matcher = new ParticipantAliasMatcher(participants);
-        return BuildParticipantScheduleSummary(document, participant, matcher, out _, out _);
+        return BuildParticipantScheduleSummary(document, participant, matcher, out ambiguousLines, out matches);
     }
 
 
@@ -266,7 +276,11 @@ public sealed class WeeklyScheduleService
 
         if (hasMultipleMatchesPerHalfDay)
         {
-            ambiguousLines = new List<string>();
+            ambiguousLines = nonSupplementalMatches
+                .GroupBy(match => $"{match.DayKey}|{match.HalfDay}", StringComparer.OrdinalIgnoreCase)
+                .Where(group => group.Count() > 1)
+                .Select(group => $"{group.Key}: {string.Join(", ", group.Select(FormatMatchForDiagnostics))}")
+                .ToList();
             matches = new List<WeeklyScheduleParticipantSlotDiagnostics>();
             return new ParticipantMiniScheduleSummary
             {
@@ -278,7 +292,10 @@ public sealed class WeeklyScheduleService
 
         if (nonSupplementalMatches.Count > MaxDisplayMatchesPerWeek)
         {
-            ambiguousLines = new List<string>();
+            ambiguousLines = new List<string>
+            {
+                $"Zu viele Treffer: {nonSupplementalMatches.Count}/{MaxDisplayMatchesPerWeek}"
+            };
             matches = new List<WeeklyScheduleParticipantSlotDiagnostics>();
             return new ParticipantMiniScheduleSummary
             {
@@ -301,6 +318,13 @@ public sealed class WeeklyScheduleService
         }
 
         return summary;
+    }
+
+    private static string FormatMatchForDiagnostics(WeeklyScheduleParticipantSlotDiagnostics match)
+    {
+        var parts = new[] { match.Group, match.Teacher, match.Room }
+            .Where(part => !string.IsNullOrWhiteSpace(part));
+        return string.Join(" ", parts);
     }
 
     private static WeeklyScheduleLineDiagnostics BuildLineDiagnostics(WeeklyScheduleParticipantLine line, string group, ParticipantAliasMatcher matcher)
