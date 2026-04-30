@@ -24,6 +24,10 @@
   <ItemGroup>
     <Resource Include="Assets\icon.ico" />
     <Resource Include="Assets\icon.png" />
+    <Resource Include="Assets\Einstellungen.png" />
+    <Resource Include="Assets\Einstellungen.secondary.png" />
+    <Resource Include="Assets\Reload.png" />
+    <Resource Include="Assets\Reload.secondary.png" />
   </ItemGroup>
 
   <ItemGroup>

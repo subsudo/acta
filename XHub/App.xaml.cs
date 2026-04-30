@@ -254,7 +254,7 @@ public partial class App : Application
                 SetResource(resources, "Ui.Font.Control", 10d);
                 SetResource(resources, "Ui.Font.IconAction", 12d);
                 SetResource(resources, "Ui.Padding.SecondaryButton", new Thickness(5, 2, 5, 2));
-                SetResource(resources, "Ui.Padding.SearchTextBox", new Thickness(38, 5, 66, 5));
+                SetResource(resources, "Ui.Padding.SearchTextBox", new Thickness(34, 5, 66, 5));
                 SetResource(resources, "Ui.Padding.SidebarItem", new Thickness(6, 4, 6, 4));
                 SetResource(resources, "Ui.Padding.ParticipantItem", new Thickness(6, 4, 6, 4));
                 SetResource(resources, "Ui.Padding.WorkingItem", new Thickness(7, 5, 7, 5));
@@ -292,7 +292,7 @@ public partial class App : Application
                 SetResource(resources, "Ui.Font.Control", 10d);
                 SetResource(resources, "Ui.Font.IconAction", 13d);
                 SetResource(resources, "Ui.Padding.SecondaryButton", new Thickness(6, 2, 6, 2));
-                SetResource(resources, "Ui.Padding.SearchTextBox", new Thickness(38, 5, 68, 5));
+                SetResource(resources, "Ui.Padding.SearchTextBox", new Thickness(34, 5, 68, 5));
                 SetResource(resources, "Ui.Padding.SidebarItem", new Thickness(6, 5, 6, 5));
                 SetResource(resources, "Ui.Padding.ParticipantItem", new Thickness(6, 5, 6, 5));
                 SetResource(resources, "Ui.Padding.WorkingItem", new Thickness(7, 5, 7, 5));
@@ -330,7 +330,7 @@ public partial class App : Application
                 SetResource(resources, "Ui.Font.Control", 11d);
                 SetResource(resources, "Ui.Font.IconAction", 14d);
                 SetResource(resources, "Ui.Padding.SecondaryButton", new Thickness(6, 2, 6, 2));
-                SetResource(resources, "Ui.Padding.SearchTextBox", new Thickness(39, 6, 70, 6));
+                SetResource(resources, "Ui.Padding.SearchTextBox", new Thickness(35, 6, 70, 6));
                 SetResource(resources, "Ui.Padding.SidebarItem", new Thickness(7, 5, 7, 5));
                 SetResource(resources, "Ui.Padding.ParticipantItem", new Thickness(7, 5, 7, 5));
                 SetResource(resources, "Ui.Padding.WorkingItem", new Thickness(8, 6, 8, 6));
@@ -368,7 +368,7 @@ public partial class App : Application
                 SetResource(resources, "Ui.Font.Control", 12d);
                 SetResource(resources, "Ui.Font.IconAction", 15d);
                 SetResource(resources, "Ui.Padding.SecondaryButton", new Thickness(7, 3, 7, 3));
-                SetResource(resources, "Ui.Padding.SearchTextBox", new Thickness(40, 8, 74, 8));
+                SetResource(resources, "Ui.Padding.SearchTextBox", new Thickness(36, 8, 74, 8));
                 SetResource(resources, "Ui.Padding.SidebarItem", new Thickness(8, 6, 8, 6));
                 SetResource(resources, "Ui.Padding.ParticipantItem", new Thickness(8, 6, 8, 6));
                 SetResource(resources, "Ui.Padding.WorkingItem", new Thickness(10, 8, 10, 8));
@@ -406,7 +406,7 @@ public partial class App : Application
                 SetResource(resources, "Ui.Font.Control", 13d);
                 SetResource(resources, "Ui.Font.IconAction", 16d);
                 SetResource(resources, "Ui.Padding.SecondaryButton", new Thickness(8, 4, 8, 4));
-                SetResource(resources, "Ui.Padding.SearchTextBox", new Thickness(41, 9, 80, 9));
+                SetResource(resources, "Ui.Padding.SearchTextBox", new Thickness(37, 9, 80, 9));
                 SetResource(resources, "Ui.Padding.SidebarItem", new Thickness(9, 7, 9, 7));
                 SetResource(resources, "Ui.Padding.ParticipantItem", new Thickness(9, 7, 9, 7));
                 SetResource(resources, "Ui.Padding.WorkingItem", new Thickness(11, 9, 11, 9));

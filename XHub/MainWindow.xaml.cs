@@ -1453,6 +1453,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 App.Config.ScheduleRootPath,
                 entry,
                 scheduleParticipants);
+
+            if (entry.MiniSchedule.State == ParticipantMiniScheduleState.Unavailable)
+            {
+                AppLogger.Info(
+                    $"Stundenplan: Kein Mini-Stundenplan fuer '{entry.DisplayName}'. Grund='{entry.MiniSchedule.Message}'.");
+            }
         }
         catch (Exception ex)
         {

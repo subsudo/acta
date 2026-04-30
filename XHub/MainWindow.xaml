@@ -172,16 +172,25 @@
         </Style>
 
         <Style TargetType="TextBlock" x:Key="ParticipantNameTextStyle">
-            <Setter Property="Grid.Row" Value="1" />
             <Setter Property="FontSize" Value="{DynamicResource Ui.Font.ParticipantName}" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="{DynamicResource Brush.PrimaryText}" />
-            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+
+        <Style TargetType="TextBlock" x:Key="ParticipantNameWithInitialsTextStyle" BasedOn="{StaticResource ParticipantNameTextStyle}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Initials}" Value="">
-                    <Setter Property="Grid.Row" Value="0" />
-                    <Setter Property="Grid.RowSpan" Value="2" />
-                    <Setter Property="VerticalAlignment" Value="Center" />
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="TextBlock" x:Key="ParticipantNameWithoutInitialsTextStyle" BasedOn="{StaticResource ParticipantNameTextStyle}">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Initials}" Value="">
+                    <Setter Property="Visibility" Value="Visible" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -436,13 +445,13 @@
                                IsHitTestVisible="False"
                                Foreground="{DynamicResource Brush.SubtleText}"
                                VerticalAlignment="Center"
-                               Margin="38,0,0,0"
+                               Margin="34,0,0,0"
                                FontSize="{DynamicResource Ui.Font.Search}" />
                     <Button x:Name="ClearSearchButton"
                             Width="22" Height="22"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
-                            Margin="8,0,0,0"
+                            Margin="5,0,0,0"
                             Style="{StaticResource GhostButtonStyle}"
                             FontSize="{DynamicResource Ui.Font.IconAction}"
                             Padding="0"
@@ -505,8 +514,13 @@
                                                     <TextBlock Grid.Row="0"
                                                                Text="{Binding Initials}"
                                                                Style="{StaticResource ParticipantInitialsTextStyle}" />
-                                                    <TextBlock Text="{Binding DisplayName}"
-                                                               Style="{StaticResource ParticipantNameTextStyle}" />
+                                                    <TextBlock Grid.Row="1"
+                                                               Text="{Binding DisplayName}"
+                                                               Style="{StaticResource ParticipantNameWithInitialsTextStyle}" />
+                                                    <TextBlock Grid.Row="0"
+                                                               Grid.RowSpan="2"
+                                                               Text="{Binding DisplayName}"
+                                                               Style="{StaticResource ParticipantNameWithoutInitialsTextStyle}" />
                                                 </Grid>
                                             </Grid>
                                             <WrapPanel Grid.Column="1"
@@ -571,17 +585,33 @@
                             Click="ToggleDetailPanelButton_OnClick" />
                     <Button x:Name="RefreshIndexButton"
                             Style="{StaticResource GhostButtonStyle}"
-                            Content="⟳"
-                            FontSize="{DynamicResource Ui.Font.IconAction}"
                             ToolTip="Index aktualisieren"
                             Click="RefreshButton_OnClick"
-                            Margin="0,0,4,0" />
+                            Margin="0,0,4,0"
+                            Padding="0"
+                            Width="{DynamicResource Ui.Size.IconButton}"
+                            Height="{DynamicResource Ui.Size.IconButton}">
+                        <Image Source="Assets/Reload.secondary.png"
+                               Width="15"
+                               Height="15"
+                               Stretch="Uniform"
+                               SnapsToDevicePixels="True"
+                               RenderOptions.BitmapScalingMode="HighQuality" />
+                    </Button>
                     <Button x:Name="SettingsButton"
                             Style="{StaticResource GhostButtonStyle}"
-                            Content="⚙"
-                            FontSize="{DynamicResource Ui.Font.IconAction}"
                             ToolTip="Einstellungen"
-                            Click="SettingsButton_OnClick" />
+                            Click="SettingsButton_OnClick"
+                            Padding="0"
+                            Width="{DynamicResource Ui.Size.IconButton}"
+                            Height="{DynamicResource Ui.Size.IconButton}">
+                        <Image Source="Assets/Einstellungen.secondary.png"
+                               Width="15"
+                               Height="15"
+                               Stretch="Uniform"
+                               SnapsToDevicePixels="True"
+                               RenderOptions.BitmapScalingMode="HighQuality" />
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
@@ -802,8 +832,13 @@
                                                 <TextBlock Grid.Row="0"
                                                            Text="{Binding Initials}"
                                                            Style="{StaticResource ParticipantInitialsTextStyle}" />
-                                                <TextBlock Text="{Binding DisplayName}"
-                                                           Style="{StaticResource ParticipantNameTextStyle}" />
+                                                <TextBlock Grid.Row="1"
+                                                           Text="{Binding DisplayName}"
+                                                           Style="{StaticResource ParticipantNameWithInitialsTextStyle}" />
+                                                <TextBlock Grid.Row="0"
+                                                           Grid.RowSpan="2"
+                                                           Text="{Binding DisplayName}"
+                                                           Style="{StaticResource ParticipantNameWithoutInitialsTextStyle}" />
                                             </Grid>
                                         </Grid>
 
