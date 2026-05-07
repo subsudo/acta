@@ -202,7 +202,7 @@
         </Style>
 
         <Style TargetType="ItemsControl" x:Key="ParticipantHintMarkerItemsStyle">
-            <Setter Property="Margin" Value="6,0,0,0" />
+            <Setter Property="Margin" Value="6,-2,0,0" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Visibility" Value="Visible" />
             <Style.Triggers>

@@ -30,7 +30,7 @@ Aktueller sichtbarer Versionsstand: `Acta v0.9.7`
 - Refresh und Einstellungen sitzen wieder in der normalen oberen Aktionsleiste neben `Details`
 - Gespeicherte Listen speichern Inhaltsänderungen jetzt still im Hintergrund; die Header-Aktionen `Leeren` und `Als Liste speichern` bleiben nur noch für die temporäre Liste sichtbar
 - Optionale lokale Teilnehmernotizen sind als angedockte Notizspalte vorhanden; sie speichern pro Windows-User und Teilnehmer automatisch im lokalen XAMLPackage-Format.
-- Gemeinsame Scola-/Acta-Hinweise sind integriert: Acta nutzt dieselbe JSON-Datei, denselben kanonisierten DOCX-Aktenpfad-Key, zeigt aktive Hinweise als Punkte in TN-Kacheln und als Chips im Detailbereich, und bearbeitet Hinweise mit Hash-Konfliktschutz.
+- Gemeinsame Scola-/Acta-Hinweise sind integriert: Acta nutzt dieselbe JSON-Datei, denselben kanonisierten DOCX-Aktenpfad-Key, zeigt aktive Hinweise als Punkte in TN-Kacheln und als Chips im Detailbereich, bearbeitet Hinweise mit Hash-Konfliktschutz und aktualisiert sichtbare Hinweise alle drei Minuten bei geaenderter JSON-Datei.
 - Austrittsarchive koennen on demand durchsucht werden, wenn `ExitBasePath` auf den Elternordner mit `031_im Austritt` und A-Z-Archivordnern zeigt; Archiv-TN erhalten ein farbiges Archiv-Badge und werden nicht fuer Odoo/Stundenplan angereichert.
 - Der Detailbereich ist etwas kompakter gestellt: Foto sitzt leicht höher, der Fotorahmen ist enger gefasst, die Odoo-Karte entfällt und Foto/Odoo/Stundenplan rücken ruhiger zusammen; die Stundenplanfläche selbst bleibt unverändert
 - die fruehere Auto-fit- und Sonderlogik fuer Spalten-/Fensterbreiten ist wieder entfernt; Listen-, Haupt- und Detailspalte arbeiten wieder ueber die stabile Standard-Splitterlogik

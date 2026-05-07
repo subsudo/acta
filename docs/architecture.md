@@ -75,6 +75,8 @@ UI -> `ParticipantNotesPanel` -> `ParticipantNotesService` -> `participant-notes
 ### 2c. Gemeinsame Teilnehmerhinweise
 Scola/Acta-Hinweis-JSON -> `ParticipantHintsService` -> kanonisierter DOCX-Aktenpfad -> Punkte in TN-Kacheln und Chips im Detailbereich
 
+Acta prueft die gemeinsame Hinweisdatei leichtgewichtig alle drei Minuten ueber `LastWriteTimeUtc`. Nur bei geaenderter Datei werden die sichtbaren Hinweise fuer den geladenen Index neu gebunden; es gibt kein Live-Polling und keinen dauerhaften FileWatcher.
+
 ### 3. Odoo- und Header-Metadaten
 Detailansicht -> `DocxHeaderMetadataService` -> DOCX ZIP/XML -> lokaler Cache -> UI
 

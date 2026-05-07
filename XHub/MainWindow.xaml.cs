@@ -33,6 +33,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private ParticipantIndexService _indexService;
     private AttendanceImportService _attendanceImportService;
     private DispatcherTimer? _refreshTimer;
+    private DispatcherTimer? _participantHintsRefreshTimer;
     private IReadOnlyList<ParticipantIndexEntry> _mainIndexEntries = Array.Empty<ParticipantIndexEntry>();
     private IReadOnlyList<ParticipantIndexEntry> _archiveIndexEntries = Array.Empty<ParticipantIndexEntry>();
     private IReadOnlyList<ParticipantIndexEntry> _indexEntries = Array.Empty<ParticipantIndexEntry>();
@@ -54,6 +55,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private bool _isArchiveLoading;
     private bool _suppressSearchResultsUntilTyping;
     private DateTime? _lastRefreshAt;
+    private DateTime? _lastParticipantHintsWriteTimeUtc;
     private bool _isUpdateShutdownRequested;
 
     private const double BaseCompactWindowMinWidth = 400;
@@ -102,6 +104,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         RestoreWindowState();
         UpdateArchiveAvailability();
         ConfigureRefreshTimer();
+        ConfigureParticipantHintsRefreshTimer();
         UpdateSearchUi();
         UpdateListPanelState();
         UpdateNotesPanelState();
@@ -668,6 +671,14 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
+    private void RefreshParticipantHintsForLoadedEntries()
+    {
+        RefreshParticipantHintsForEntries(_indexEntries);
+        CurrentListParticipantsListBox.Items.Refresh();
+        SearchResultsListBox.Items.Refresh();
+        RefreshDetailPanel();
+    }
+
     private void RefreshParticipantHintsForParticipant(ParticipantIndexEntry entry)
     {
         if (string.IsNullOrWhiteSpace(entry.DocumentPath) || !File.Exists(entry.DocumentPath))
@@ -747,6 +758,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         RefreshParticipantHintsForParticipant(entry);
+        _lastParticipantHintsWriteTimeUtc = GetParticipantHintsLastWriteTimeUtc();
         CurrentListParticipantsListBox.Items.Refresh();
         SearchResultsListBox.Items.Refresh();
         RefreshDetailPanel();
@@ -890,6 +902,50 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(App.Config.AutoRefreshHours) };
         _refreshTimer.Tick += async (_, _) => await RefreshIndexAsync(false);
         _refreshTimer.Start();
+    }
+
+    private void ConfigureParticipantHintsRefreshTimer()
+    {
+        _participantHintsRefreshTimer?.Stop();
+        _participantHintsRefreshTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMinutes(3)
+        };
+        _participantHintsRefreshTimer.Tick += (_, _) => RefreshParticipantHintsIfStoreChanged();
+        _lastParticipantHintsWriteTimeUtc = GetParticipantHintsLastWriteTimeUtc();
+        _participantHintsRefreshTimer.Start();
+    }
+
+    private void RefreshParticipantHintsIfStoreChanged()
+    {
+        if (_isRefreshing)
+        {
+            return;
+        }
+
+        var currentWriteTime = GetParticipantHintsLastWriteTimeUtc();
+        if (currentWriteTime == _lastParticipantHintsWriteTimeUtc)
+        {
+            return;
+        }
+
+        _lastParticipantHintsWriteTimeUtc = currentWriteTime;
+        RefreshParticipantHintsForLoadedEntries();
+        UpdateStatus("Hinweise aktualisiert.");
+    }
+
+    private DateTime? GetParticipantHintsLastWriteTimeUtc()
+    {
+        try
+        {
+            var path = _participantHintsService.StorePath;
+            return File.Exists(path) ? File.GetLastWriteTimeUtc(path) : null;
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Info($"Hinweise: Änderungszeit konnte nicht geprüft werden: {ex.Message}");
+            return _lastParticipantHintsWriteTimeUtc;
+        }
     }
 
     private void RestoreWindowState()
@@ -1942,6 +1998,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void MainWindow_OnClosed(object? sender, EventArgs e)
     {
+        _participantHintsRefreshTimer?.Stop();
+        _participantHintsRefreshTimer = null;
         WordBusyGuard.BusyStateChanged -= WordBusyGuard_OnBusyStateChanged;
     }
 

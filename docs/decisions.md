@@ -177,6 +177,7 @@ Aktueller Stand:
 - gemappte Laufwerke werden nach UNC aufgeloest; bei Fehlern wird kein lokaler Ersatzkey geschrieben
 - `active` ist in Kachel und Detail sichtbar, `done` nur im Editor
 - Speichern nutzt Datei-Hash-Konfliktschutz statt blindem Ueberschreiben
+- Acta prueft die Datei alle drei Minuten per `LastWriteTimeUtc` und bindet Hinweise nur bei Aenderung neu
 
 **Folge:** Hinweise bleiben zwischen Scola und Acta kompatibel, solange beide Apps die gleiche Kanonisierungs- und JSON-Logik pflegen.
 
