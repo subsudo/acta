@@ -4,9 +4,9 @@
         Title="Einstellungen"
         Icon="pack://application:,,,/Assets/icon.ico"
         Width="720"
-        Height="610"
+        Height="690"
         MinWidth="560"
-        MinHeight="500"
+        MinHeight="660"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource Brush.WindowBg}"
         Foreground="{DynamicResource Brush.PrimaryText}">
@@ -98,26 +98,26 @@
                                 Background="{DynamicResource Brush.CardBg}"
                                 BorderBrush="{DynamicResource Brush.Border}"
                                 BorderThickness="1"
-                                CornerRadius="8"
-                                Padding="10,5"
-                                MinWidth="52">
+                                CornerRadius="7"
+                                Padding="10,6"
+                                MinWidth="104">
                             <DockPanel>
                                 <Border x:Name="Indicator"
-                                        DockPanel.Dock="Right"
-                                        Width="14"
-                                        Height="14"
-                                        CornerRadius="7"
+                                        DockPanel.Dock="Left"
+                                        Width="16"
+                                        Height="16"
+                                        CornerRadius="4"
                                         Background="Transparent"
                                         BorderBrush="{DynamicResource Brush.Border}"
                                         BorderThickness="1"
-                                        Margin="6,0,0,0">
+                                        Margin="0,0,8,0">
                                     <TextBlock x:Name="IndicatorText"
-                                               Text="+"
-                                               FontSize="8"
+                                               Text=""
+                                               FontSize="11"
                                                FontWeight="Bold"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"
-                                               Foreground="{DynamicResource Brush.SecondaryText}" />
+                                               Foreground="#FFFFFF" />
                                 </Border>
                                 <ContentPresenter VerticalAlignment="Center" />
                             </DockPanel>
@@ -127,10 +127,10 @@
                                 <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.CardHover}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.AccentSubtle}" />
+                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource Brush.CardBg}" />
                                 <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
-                                <Setter TargetName="Indicator" Property="Background" Value="{DynamicResource Brush.Accent}" />
-                                <Setter TargetName="Indicator" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                                <Setter TargetName="Indicator" Property="Background" Value="{DynamicResource Brush.SecondaryText}" />
+                                <Setter TargetName="Indicator" Property="BorderBrush" Value="{DynamicResource Brush.SecondaryText}" />
                                 <Setter TargetName="IndicatorText" Property="Text" Value="✓" />
                                 <Setter TargetName="IndicatorText" Property="Foreground" Value="#FFFFFF" />
                             </Trigger>
@@ -238,6 +238,7 @@
 
         <Grid Grid.Row="1" Margin="24,18,24,20">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -382,8 +383,12 @@
 
             <Border Grid.Row="2" Margin="0,12,0,0" Style="{StaticResource TileCardStyle}">
                 <StackPanel>
-                    <TextBlock Text="VERLINKUNGEN"
-                               Style="{StaticResource SectionEyebrowStyle}"
+                    <TextBlock Text="Aktionen"
+                               FontSize="17"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,2" />
+                    <TextBlock Text="Buttons und Hilfsfunktionen"
+                               Style="{StaticResource FieldLabelStyle}"
                                Margin="0,0,0,10" />
                     <WrapPanel>
                         <CheckBox x:Name="FolderActionCheckBox"   Style="{StaticResource ActionCheckBoxStyle}" Content="Ordner" />
@@ -397,41 +402,45 @@
                         <CheckBox x:Name="EntryBeActionCheckBox"  Style="{StaticResource ActionCheckBoxStyle}" Content="Eintrag BE" />
                         <CheckBox x:Name="EntryLbActionCheckBox"  Style="{StaticResource ActionCheckBoxStyle}" Content="Eintrag LB" />
                     </WrapPanel>
+                </StackPanel>
+            </Border>
 
-                    <Border Height="1"
-                            Margin="0,4,0,12"
-                            Background="{DynamicResource Brush.Border}" />
-
-                    <TextBlock Text="EINTRÄGE"
-                               Style="{StaticResource SectionEyebrowStyle}"
+            <Border Grid.Row="3" Margin="0,12,0,0" Style="{StaticResource TileCardStyle}">
+                <StackPanel>
+                    <TextBlock Text="Eintrag-Vorfüllung"
+                               FontSize="17"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,2" />
+                    <TextBlock Text="Nur bei leerem Clipboard"
+                               Style="{StaticResource FieldLabelStyle}"
                                Margin="0,0,0,10" />
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="150" />
                         </Grid.ColumnDefinitions>
 
                         <CheckBox x:Name="AutoPrefillEntryCheckBox"
                                   Grid.Column="0"
                                   Style="{StaticResource ActionCheckBoxStyle}"
-                                  Content="Leere Eintragszeile mit Datum/Kürzel vorbereiten"
+                                  MinWidth="0"
+                                  Content="BU-, BI-, BE- und LB-Einträge mit Datum und Kürzel vorfüllen"
                                   VerticalAlignment="Center" />
+                    </Grid>
 
-                        <Grid Grid.Column="2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       Text="Kürzel"
-                                       Style="{StaticResource FieldLabelStyle}"
-                                       Margin="0,0,8,0" />
-                            <TextBox x:Name="DefaultEntryInitialsTextBox"
-                                     Grid.Column="1"
-                                     Style="{StaticResource SettingsInputStyle}"
-                                     IsEnabled="{Binding IsChecked, ElementName=AutoPrefillEntryCheckBox}" />
-                        </Grid>
+                    <Grid Margin="0,6,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="140" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="Kürzel"
+                                   Style="{StaticResource FieldLabelStyle}"
+                                   VerticalAlignment="Center" />
+                        <TextBox x:Name="DefaultEntryInitialsTextBox"
+                                 Grid.Column="2"
+                                 Style="{StaticResource SettingsInputStyle}"
+                                 IsEnabled="{Binding IsChecked, ElementName=AutoPrefillEntryCheckBox}" />
                     </Grid>
                 </StackPanel>
             </Border>
