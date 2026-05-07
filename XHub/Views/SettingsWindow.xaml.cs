@@ -50,6 +50,12 @@ public partial class SettingsWindow : Window
         BiActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.Bi, StringComparer.OrdinalIgnoreCase);
         BeActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.Be, StringComparer.OrdinalIgnoreCase);
         LbActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.Lb, StringComparer.OrdinalIgnoreCase);
+        EntryBuActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.EntryBu, StringComparer.OrdinalIgnoreCase);
+        EntryBiActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.EntryBi, StringComparer.OrdinalIgnoreCase);
+        EntryBeActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.EntryBe, StringComparer.OrdinalIgnoreCase);
+        EntryLbActionCheckBox.IsChecked = config.VisibleQuickActions.Contains(QuickActionKeys.EntryLb, StringComparer.OrdinalIgnoreCase);
+        AutoPrefillEntryCheckBox.IsChecked = prefs.AutoPrefillOnEmptyClipboard;
+        DefaultEntryInitialsTextBox.Text = prefs.DefaultEntryInitials ?? string.Empty;
 
         SetComboSelection(config.AutoRefreshHours);
         UpdateThemePreview();
@@ -70,6 +76,8 @@ public partial class SettingsWindow : Window
         ShowNotesPanel = _showNotesPanel,
         AutoRefreshHours = GetSelectedRefreshHours(),
         VisibleQuickActions = GetSelectedQuickActions(),
+        AutoPrefillOnEmptyClipboard = AutoPrefillEntryCheckBox.IsChecked == true,
+        DefaultEntryInitials = DefaultEntryInitialsTextBox.Text.Trim(),
         RequestedAction = _requestedAction
     };
 
@@ -92,6 +100,10 @@ public partial class SettingsWindow : Window
         if (BiActionCheckBox.IsChecked == true) actions.Add(QuickActionKeys.Bi);
         if (BeActionCheckBox.IsChecked == true) actions.Add(QuickActionKeys.Be);
         if (LbActionCheckBox.IsChecked == true) actions.Add(QuickActionKeys.Lb);
+        if (EntryBuActionCheckBox.IsChecked == true) actions.Add(QuickActionKeys.EntryBu);
+        if (EntryBiActionCheckBox.IsChecked == true) actions.Add(QuickActionKeys.EntryBi);
+        if (EntryBeActionCheckBox.IsChecked == true) actions.Add(QuickActionKeys.EntryBe);
+        if (EntryLbActionCheckBox.IsChecked == true) actions.Add(QuickActionKeys.EntryLb);
         return actions;
     }
 
@@ -189,6 +201,8 @@ public class SettingsWindowResult
     public bool ShowNotesPanel { get; set; }
     public int AutoRefreshHours { get; set; }
     public List<string> VisibleQuickActions { get; set; } = QuickActionKeys.CreateDefaults().ToList();
+    public bool AutoPrefillOnEmptyClipboard { get; set; }
+    public string DefaultEntryInitials { get; set; } = string.Empty;
     public SettingsWindowAction RequestedAction { get; set; } = SettingsWindowAction.Save;
 }
 

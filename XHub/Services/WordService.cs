@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
+using System.Windows;
 
 namespace XHub.Services;
 
@@ -9,6 +11,8 @@ public class WordService
 {
     private const string DocumentLockedMessage = "Akte ist bereits offen oder gesperrt (evtl. durch anderen Benutzer). Bitte später erneut versuchen.";
     private const int WordForegroundRetryDelayMs = 80;
+    private const int ClipboardReadRetryCount = 3;
+    private const int ClipboardReadRetryBaseDelayMs = 60;
     public const int NativeOpenCooldownMs = 400;
 
     public static bool IsWordAvailable => Type.GetTypeFromProgID("Word.Application") is not null;
@@ -65,6 +69,38 @@ public class WordService
         {
             throw new InvalidOperationException("Die Akte konnte nicht an Word übergeben werden.", ex);
         }
+    }
+
+    public static string ReadClipboardTextWithRetry()
+    {
+        Exception? lastException = null;
+
+        for (var attempt = 1; attempt <= ClipboardReadRetryCount; attempt++)
+        {
+            try
+            {
+                return Clipboard.ContainsText() ? Clipboard.GetText() : string.Empty;
+            }
+            catch (COMException ex)
+            {
+                lastException = ex;
+                AppLogger.Warn($"XHub.Word.Clipboard COM-Zugriff fehlgeschlagen (Attempt {attempt}/{ClipboardReadRetryCount}): {ex.Message}");
+            }
+            catch (ExternalException ex)
+            {
+                lastException = ex;
+                AppLogger.Warn($"XHub.Word.Clipboard Zugriff fehlgeschlagen (Attempt {attempt}/{ClipboardReadRetryCount}): {ex.Message}");
+            }
+
+            if (attempt < ClipboardReadRetryCount)
+            {
+                Thread.Sleep(ClipboardReadRetryBaseDelayMs * (1 << (attempt - 1)));
+            }
+        }
+
+        throw new InvalidOperationException(
+            "Zwischenablage ist momentan blockiert. Bitte kurz warten und erneut versuchen.",
+            lastException);
     }
 
     public void OpenDocumentAtBookmark(string docPath, string bookmarkName)
@@ -134,6 +170,157 @@ public class WordService
         }
         finally
         {
+            if (!operationSucceeded && openedHere && !shouldQuitCreatedApp)
+            {
+                TryCloseDocument(doc);
+            }
+
+            ReleaseComObject(doc);
+            if (shouldQuitCreatedApp)
+            {
+                TryQuitWordApplication(app);
+            }
+
+            ReleaseComObject(app);
+        }
+    }
+
+    public bool InsertClipboardToStructuredEntryTable(
+        string docPath,
+        StructuredEntryTarget target,
+        string[]? fallbackFieldsWhenClipboardInvalid,
+        string? preReadClipboardText,
+        bool bringToForeground = true)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        AppLogger.Info($"XHub.Word.InsertStructuredEntry start. Doc='{docPath}', Target='{target.Key}', Bookmark='{target.TableBookmarkName}'");
+
+        if (!IsWordAvailable)
+        {
+            throw new InvalidOperationException("Microsoft Word wurde nicht gefunden");
+        }
+
+        if (!File.Exists(docPath))
+        {
+            throw new FileNotFoundException("Dokumentdatei nicht gefunden", docPath);
+        }
+
+        if (target.FirstDataRowIndex < 2)
+        {
+            throw new ArgumentOutOfRangeException(nameof(target), "FirstDataRowIndex muss >= 2 sein.");
+        }
+
+        if (IsFileLocked(docPath))
+        {
+            throw new DocumentLockedException(BuildDocumentLockedMessage());
+        }
+
+        dynamic? app = null;
+        dynamic? doc = null;
+        dynamic? targetTable = null;
+        var shouldQuitCreatedApp = false;
+        var openedHere = false;
+        var operationSucceeded = false;
+
+        try
+        {
+            var wordApp = CreateOrAttachWordApplication();
+            app = wordApp.App;
+            shouldQuitCreatedApp = wordApp.WasCreatedHere;
+
+            AppLogger.Info($"XHub.Word.Entry instance attached={!wordApp.WasCreatedHere}, initialUnsaved={wordApp.InitialUnsavedDocumentCount}");
+
+            doc = OpenOrGetDocument(app, docPath, out openedHere);
+            AppLogger.Info($"XHub.Word.Entry document openedHere={openedHere}. Doc='{docPath}'");
+
+            CloseTransientEmptyDocuments(app, docPath, wordApp.InitialUnsavedDocumentCount);
+            EnsureWordVisibleForEntry(app);
+            EnsureDocumentIsWritableForBookmark(doc);
+
+            targetTable = ResolveStructuredEntryTableForWrite(doc, target);
+            var clipboardText = preReadClipboardText ?? string.Empty;
+            var hasClipboardContent = !string.IsNullOrWhiteSpace(clipboardText);
+            string[] clipboardFields = Array.Empty<string>();
+            var hasValidClipboardRow = hasClipboardContent &&
+                                       TryParseClipboardFields(clipboardText, target.ExpectedColumnCount, out clipboardFields);
+            if (hasClipboardContent && !hasValidClipboardRow)
+            {
+                AppLogger.Warn($"XHub.Word.Entry: Clipboard-Format ungueltig fuer Target='{target.Key}', leere/vorbereitete Zeile wird eingefuegt.");
+            }
+
+            var hasFallbackFields = fallbackFieldsWhenClipboardInvalid is not null &&
+                                    fallbackFieldsWhenClipboardInvalid.Length == target.ExpectedColumnCount;
+            if (fallbackFieldsWhenClipboardInvalid is not null && !hasFallbackFields)
+            {
+                AppLogger.Warn($"XHub.Word.Entry: fallbackFields hat {fallbackFieldsWhenClipboardInvalid.Length} statt {target.ExpectedColumnCount} Spalten und wird ignoriert.");
+            }
+
+            dynamic? insertedRow = null;
+            try
+            {
+                insertedRow = InsertRowAtTopOfDataArea(targetTable, target.FirstDataRowIndex);
+                var rowIndex = (int)insertedRow.Index;
+                var fields = hasValidClipboardRow
+                    ? clipboardFields
+                    : hasFallbackFields
+                        ? fallbackFieldsWhenClipboardInvalid!
+                        : Array.Empty<string>();
+
+                for (var column = 1; column <= target.ExpectedColumnCount; column++)
+                {
+                    var value = column <= fields.Length ? fields[column - 1] ?? string.Empty : string.Empty;
+                    SetTableCellText(targetTable, rowIndex, column, value);
+                }
+            }
+            catch
+            {
+                TryDeleteRow(insertedRow);
+                throw;
+            }
+
+            var preferredEditColumn = hasValidClipboardRow
+                ? target.ValidClipboardFocusColumn
+                : target.FallbackFocusColumn;
+            var editColumn = GetSafeEditColumn(targetTable, preferredEditColumn);
+            dynamic? editCell = null;
+            dynamic? editRange = null;
+            try
+            {
+                editCell = targetTable.Cell((int)insertedRow!.Index, editColumn);
+                editRange = editCell.Range;
+                FocusRangeAtTop(app, editRange, bringToForeground && target.BringToForeground, docPath);
+            }
+            finally
+            {
+                ReleaseComObject(editRange);
+                ReleaseComObject(editCell);
+                ReleaseComObject(targetTable);
+                targetTable = null;
+            }
+
+            operationSucceeded = true;
+            shouldQuitCreatedApp = false;
+            AppLogger.Info($"XHub.Word.InsertStructuredEntry ok. Doc='{docPath}', Target='{target.Key}', ClipboardUsed={hasValidClipboardRow}, FocusColumn={editColumn}");
+            return hasValidClipboardRow;
+        }
+        catch (COMException ex) when ((uint)ex.HResult == 0x80040154)
+        {
+            AppLogger.Error("XHub.Word.InsertStructuredEntry COM Class not registered", ex);
+            throw new InvalidOperationException("Microsoft Word wurde nicht gefunden");
+        }
+        catch (COMException ex) when (IsLockRelatedHResult((uint)ex.HResult))
+        {
+            AppLogger.Info($"XHub.Word.InsertStructuredEntry Lock-COM-Fehler. Doc='{docPath}', Target='{target.Key}', Message='{ex.Message}'");
+            throw new DocumentLockedException(BuildDocumentLockedMessage(), ex);
+        }
+        catch (COMException ex)
+        {
+            AppLogger.Error("XHub.Word.InsertStructuredEntry COM Fehler", ex);
+            throw new InvalidOperationException($"Fehler beim Zugriff auf Word: {ex.Message}", ex);
+        }
+        finally
+        {
+            ReleaseComObject(targetTable);
             if (!operationSucceeded && openedHere && !shouldQuitCreatedApp)
             {
                 TryCloseDocument(doc);
@@ -277,6 +464,51 @@ public class WordService
 
         app.Visible = true;
         TryBringWordToForeground(app);
+    }
+
+    private static void EnsureWordVisibleForEntry(dynamic app)
+    {
+        try
+        {
+            app.UserControl = true;
+        }
+        catch (COMException ex)
+        {
+            if (ex.Message.Contains("schreibgeschützte Eigenschaft", StringComparison.OrdinalIgnoreCase))
+            {
+                AppLogger.Info("XHub.Word.Entry.UserControl ist in dieser Word-Variante nicht beschreibbar.");
+            }
+            else
+            {
+                AppLogger.Warn($"XHub.Word.Entry.UserControl konnte nicht gesetzt werden: {ex.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Warn($"XHub.Word.Entry.UserControl konnte nicht gesetzt werden ({ex.GetType().Name}): {ex.Message}");
+        }
+
+        try
+        {
+            var isVisible = false;
+            try
+            {
+                isVisible = (bool)app.Visible;
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Info($"XHub.Word.Entry.Visible-Status konnte nicht gelesen werden ({ex.GetType().Name}): {ex.Message}");
+            }
+
+            if (!isVisible)
+            {
+                app.Visible = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Warn($"XHub.Word.Entry.Visible konnte nicht gesetzt werden ({ex.GetType().Name}): {ex.Message}");
+        }
     }
 
     private static int CountUnsavedDocuments(dynamic app)
@@ -489,6 +721,44 @@ public class WordService
         TryBringWordToForeground(app);
     }
 
+    private static void FocusRangeAtTop(dynamic app, dynamic range, bool bringToForeground, string docPath)
+    {
+        try
+        {
+            TryActivateWordWindow(app);
+            app.Activate();
+            var start = (int)range.Start;
+            app.Selection.SetRange(start, start);
+            app.ActiveWindow?.ScrollIntoView(app.Selection.Range, true);
+            if (bringToForeground)
+            {
+                TryBringTargetWordWindowToForeground(docPath);
+            }
+
+            return;
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Warn($"XHub.Word.Entry.Range-Fokus fehlgeschlagen ({ex.GetType().Name}): {ex.Message}");
+        }
+
+        try
+        {
+            TryActivateWordWindow(app);
+            range.Select();
+            app.ActiveWindow?.ScrollIntoView(range, true);
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Warn($"XHub.Word.Entry.Range.Select fallback fehlgeschlagen ({ex.GetType().Name}): {ex.Message}");
+        }
+
+        if (bringToForeground)
+        {
+            TryBringTargetWordWindowToForeground(docPath);
+        }
+    }
+
     private static void FocusDocument(dynamic app, dynamic doc)
     {
         try
@@ -572,6 +842,206 @@ public class WordService
         }
     }
 
+    private static void TryBringTargetWordWindowToForeground(string docPath)
+    {
+        try
+        {
+            var processIds = Process
+                .GetProcessesByName("WINWORD")
+                .Select(process => process.Id)
+                .ToHashSet();
+            if (processIds.Count == 0)
+            {
+                AppLogger.Info("XHub.Word.Entry.Foreground: Keine WINWORD-Prozesse gefunden.");
+                return;
+            }
+
+            var windows = SnapshotWordTopLevelWindows(processIds)
+                .Where(window => NativeMethods.IsWindowVisible(window.Hwnd))
+                .ToArray();
+            var match = TryFindTargetWordWindow(windows, docPath);
+            if (match is null)
+            {
+                return;
+            }
+
+            TryForceForegroundWindow(match.Value.Hwnd, match.Value.ProcessId);
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Warn($"XHub.Word.Entry.Foreground fehlgeschlagen ({ex.GetType().Name}): {ex.Message}");
+        }
+    }
+
+    private static IReadOnlyList<WordWindowSnapshot> SnapshotWordTopLevelWindows(IReadOnlySet<int> processIds)
+    {
+        var windows = new List<WordWindowSnapshot>();
+        NativeMethods.EnumWindows((hwnd, _) =>
+        {
+            NativeMethods.GetWindowThreadProcessId(hwnd, out var processId);
+            if (processId == 0 || !processIds.Contains((int)processId))
+            {
+                return true;
+            }
+
+            var title = ReadWindowTitle(hwnd);
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                windows.Add(new WordWindowSnapshot(hwnd, (int)processId, title));
+            }
+
+            return true;
+        }, IntPtr.Zero);
+
+        return windows;
+    }
+
+    private static WordWindowSnapshot? TryFindTargetWordWindow(IReadOnlyList<WordWindowSnapshot> windows, string docPath)
+    {
+        var fileName = Path.GetFileName(docPath);
+        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(docPath);
+        var fullNameMatches = FindWordWindowTitleMatches(windows, fileName);
+        if (fullNameMatches.Count == 1)
+        {
+            AppLogger.Info($"XHub.Word.Entry.Foreground: Fenster ueber Dateiname gefunden. Title='{fullNameMatches[0].Title}'");
+            return fullNameMatches[0];
+        }
+
+        var stemMatches = FindWordWindowTitleMatches(windows, fileNameWithoutExtension);
+        if (stemMatches.Count == 1)
+        {
+            AppLogger.Info($"XHub.Word.Entry.Foreground: Fenster ueber Dateistamm gefunden. Title='{stemMatches[0].Title}'");
+            return stemMatches[0];
+        }
+
+        var candidateCount = fullNameMatches.Count > 0 ? fullNameMatches.Count : stemMatches.Count;
+        AppLogger.Info(candidateCount == 0
+            ? $"XHub.Word.Entry.Foreground: Kein eindeutiges Word-Fenster fuer '{docPath}' gefunden. WindowCount={windows.Count}."
+            : $"XHub.Word.Entry.Foreground: Mehrere Kandidaten fuer '{docPath}' gefunden. CandidateCount={candidateCount}; Fokus wird nicht erzwungen.");
+        return null;
+    }
+
+    private static IReadOnlyList<WordWindowSnapshot> FindWordWindowTitleMatches(
+        IReadOnlyList<WordWindowSnapshot> windows,
+        string? alias)
+    {
+        if (string.IsNullOrWhiteSpace(alias))
+        {
+            return Array.Empty<WordWindowSnapshot>();
+        }
+
+        return windows
+            .Where(window => window.Title.Contains(alias.Trim(), StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+    }
+
+    private static void TryForceForegroundWindow(IntPtr hwnd, int processId)
+    {
+        try
+        {
+            if (NativeMethods.IsIconic(hwnd))
+            {
+                NativeMethods.ShowWindowAsync(hwnd, NativeMethods.SW_RESTORE);
+            }
+
+            NativeMethods.AllowSetForegroundWindow((uint)processId);
+            var foregroundSet = NativeMethods.SetForegroundWindow(hwnd);
+            Thread.Sleep(WordForegroundRetryDelayMs);
+            if (!foregroundSet)
+            {
+                foregroundSet = TrySetForegroundWindowWithThreadInput(hwnd);
+            }
+
+            if (!foregroundSet)
+            {
+                AppLogger.Info($"XHub.Word.Entry.Foreground: SetForegroundWindow wurde nicht akzeptiert. Hwnd={hwnd}, Pid={processId}.");
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Warn($"XHub.Word.Entry.Foreground-Fallback fehlgeschlagen ({ex.GetType().Name}): {ex.Message}");
+        }
+    }
+
+    private static bool TrySetForegroundWindowWithThreadInput(IntPtr hwnd)
+    {
+        uint targetThreadId = 0;
+        uint foregroundThreadId = 0;
+        var currentThreadId = NativeMethods.GetCurrentThreadId();
+        var attachedTarget = false;
+        var attachedForeground = false;
+
+        try
+        {
+            targetThreadId = NativeMethods.GetWindowThreadProcessId(hwnd, out _);
+            var foregroundWindow = NativeMethods.GetForegroundWindow();
+            if (foregroundWindow != IntPtr.Zero)
+            {
+                foregroundThreadId = NativeMethods.GetWindowThreadProcessId(foregroundWindow, out _);
+            }
+
+            if (targetThreadId != 0 && targetThreadId != currentThreadId)
+            {
+                attachedTarget = NativeMethods.AttachThreadInput(currentThreadId, targetThreadId, true);
+            }
+
+            if (foregroundThreadId != 0 &&
+                foregroundThreadId != currentThreadId &&
+                foregroundThreadId != targetThreadId)
+            {
+                attachedForeground = NativeMethods.AttachThreadInput(currentThreadId, foregroundThreadId, true);
+            }
+
+            if (NativeMethods.IsIconic(hwnd))
+            {
+                NativeMethods.ShowWindowAsync(hwnd, NativeMethods.SW_RESTORE);
+            }
+            else
+            {
+                NativeMethods.ShowWindowAsync(hwnd, NativeMethods.SW_SHOW);
+            }
+
+            return NativeMethods.SetForegroundWindow(hwnd);
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Info($"XHub.Word.Entry.Foreground AttachThreadInput fehlgeschlagen ({ex.GetType().Name}): {ex.Message}");
+            return false;
+        }
+        finally
+        {
+            if (attachedForeground)
+            {
+                NativeMethods.AttachThreadInput(currentThreadId, foregroundThreadId, false);
+            }
+
+            if (attachedTarget)
+            {
+                NativeMethods.AttachThreadInput(currentThreadId, targetThreadId, false);
+            }
+        }
+    }
+
+    private static string ReadWindowTitle(IntPtr hwnd)
+    {
+        try
+        {
+            var length = NativeMethods.GetWindowTextLength(hwnd);
+            if (length <= 0)
+            {
+                return string.Empty;
+            }
+
+            var builder = new StringBuilder(length + 1);
+            _ = NativeMethods.GetWindowText(hwnd, builder, builder.Capacity);
+            return builder.ToString();
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
     private static bool GetDocumentReadOnlyOrThrow(dynamic doc)
     {
         try
@@ -588,6 +1058,278 @@ public class WordService
             AppLogger.Warn($"XHub.Word.ReadOnly-Status konnte nicht gelesen werden ({ex.GetType().Name}): {ex.Message}");
             throw new InvalidOperationException("Der Schreibstatus der Akte konnte nicht geprüft werden. Bitte erneut versuchen.", ex);
         }
+    }
+
+    private static bool TryParseClipboardFields(string clipboardText, int expectedColumnCount, out string[] fields)
+    {
+        fields = Array.Empty<string>();
+
+        if (string.IsNullOrWhiteSpace(clipboardText))
+        {
+            return false;
+        }
+
+        var normalized = clipboardText
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Trim('\n');
+        var lines = normalized.Split('\n', StringSplitOptions.None);
+        if (lines.Length != 1)
+        {
+            return false;
+        }
+
+        var parts = lines[0].Split('\t');
+        if (parts.Length != expectedColumnCount)
+        {
+            return false;
+        }
+
+        fields = parts;
+        return true;
+    }
+
+    private static dynamic ResolveStructuredEntryTableForWrite(dynamic doc, StructuredEntryTarget target)
+    {
+        var bookmarkName = target.TableBookmarkName;
+        if (!doc.Bookmarks.Exists(bookmarkName))
+        {
+            throw CreateBookmarkMissingException(bookmarkName);
+        }
+
+        dynamic? bookmark = null;
+        dynamic? bookmarkRange = null;
+        int bookmarkStart;
+        try
+        {
+            bookmark = doc.Bookmarks[bookmarkName];
+            bookmarkRange = bookmark.Range;
+            bookmarkStart = (int)bookmarkRange.Start;
+
+            var currentTable = GetContainingBookmarkTable(bookmarkRange);
+            var returnedCurrentTable = false;
+            try
+            {
+                if (currentTable is not null && IsStructuredEntryTable(currentTable, target.ExpectedColumnCount))
+                {
+                    returnedCurrentTable = true;
+                    return currentTable!;
+                }
+            }
+            finally
+            {
+                if (!returnedCurrentTable)
+                {
+                    ReleaseComObject(currentTable);
+                }
+            }
+        }
+        finally
+        {
+            ReleaseComObject(bookmarkRange);
+            ReleaseComObject(bookmark);
+        }
+
+        var tableCount = (int)doc.Tables.Count;
+        for (var tableIndex = 1; tableIndex <= tableCount; tableIndex++)
+        {
+            dynamic? table = null;
+            try
+            {
+                table = doc.Tables[tableIndex];
+                var tableStart = GetTableStart(table);
+                if (tableStart < bookmarkStart)
+                {
+                    continue;
+                }
+
+                if (IsStructuredEntryTable(table, target.ExpectedColumnCount))
+                {
+                    var result = table;
+                    table = null;
+                    return result;
+                }
+            }
+            finally
+            {
+                ReleaseComObject(table);
+            }
+        }
+
+        throw CreateStructuredEntryTableInvalidException(bookmarkName, target.Key);
+    }
+
+    private static object? GetContainingBookmarkTable(dynamic bookmarkRange)
+    {
+        if ((int)bookmarkRange.Tables.Count <= 0)
+        {
+            return null;
+        }
+
+        return bookmarkRange.Tables[1];
+    }
+
+    private static bool IsStructuredEntryTable(dynamic table, int expectedColumnCount)
+    {
+        try
+        {
+            if ((int)table.Rows.Count < 1 || (int)table.Columns.Count != expectedColumnCount)
+            {
+                return false;
+            }
+
+            var expectedHeaders = new[] { "datum", "eintrag von", "thematik", "beschreibung" };
+            if (expectedHeaders.Length != expectedColumnCount)
+            {
+                return false;
+            }
+
+            for (var column = 1; column <= expectedHeaders.Length; column++)
+            {
+                dynamic? cell = null;
+                dynamic? range = null;
+                try
+                {
+                    cell = table.Cell(1, column);
+                    range = cell.Range;
+                    var text = NormalizeTableCellText((string)range.Text);
+                    if (!string.Equals(text, expectedHeaders[column - 1], StringComparison.OrdinalIgnoreCase))
+                    {
+                        return false;
+                    }
+                }
+                finally
+                {
+                    ReleaseComObject(range);
+                    ReleaseComObject(cell);
+                }
+            }
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static int GetTableStart(dynamic table)
+    {
+        dynamic? range = null;
+        try
+        {
+            range = table.Range;
+            return (int)range.Start;
+        }
+        catch
+        {
+            return int.MaxValue;
+        }
+        finally
+        {
+            ReleaseComObject(range);
+        }
+    }
+
+    private static string NormalizeTableCellText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return string.Empty;
+        }
+
+        var cleaned = text
+            .Replace("\r", " ", StringComparison.Ordinal)
+            .Replace("\n", " ", StringComparison.Ordinal)
+            .Replace("\a", " ", StringComparison.Ordinal)
+            .Trim();
+
+        return string.Join(" ", cleaned
+                .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+            .Trim()
+            .ToLowerInvariant();
+    }
+
+    private static dynamic InsertRowAtTopOfDataArea(dynamic targetTable, int firstDataRowIndex)
+    {
+        var existingRowCount = (int)targetTable.Rows.Count;
+        if (existingRowCount < firstDataRowIndex)
+        {
+            while ((int)targetTable.Rows.Count < firstDataRowIndex)
+            {
+                targetTable.Rows.Add();
+            }
+
+            return targetTable.Rows[firstDataRowIndex];
+        }
+
+        return targetTable.Rows.Add(targetTable.Rows[firstDataRowIndex]);
+    }
+
+    private static void SetTableCellText(dynamic table, int rowIndex, int columnIndex, string value)
+    {
+        dynamic? cell = null;
+        dynamic? range = null;
+        try
+        {
+            cell = table.Cell(rowIndex, columnIndex);
+            range = cell.Range;
+            range.Text = value;
+        }
+        finally
+        {
+            ReleaseComObject(range);
+            ReleaseComObject(cell);
+        }
+    }
+
+    private static void TryDeleteRow(dynamic? row)
+    {
+        if (row is null)
+        {
+            return;
+        }
+
+        try
+        {
+            row.Delete();
+            AppLogger.Info("XHub.Word.Entry: Teilweise befuellte Zeile nach Fehler entfernt.");
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Warn($"XHub.Word.Entry: Zeile konnte nach Fehler nicht entfernt werden: {ex.Message}");
+        }
+    }
+
+    private static int GetSafeEditColumn(dynamic targetTable, int preferredColumn)
+    {
+        try
+        {
+            var columnCount = (int)targetTable.Columns.Count;
+            return columnCount <= 0 ? 1 : Math.Clamp(preferredColumn, 1, columnCount);
+        }
+        catch
+        {
+            return Math.Max(1, preferredColumn);
+        }
+    }
+
+    private static WordTemplateValidationException CreateBookmarkMissingException(string bookmarkName)
+    {
+        return new WordTemplateValidationException(
+            WordTemplateValidationErrorKind.BookmarkMissing,
+            bookmarkName,
+            $"Bookmark '{bookmarkName}' nicht gefunden. Bitte Vorlage prüfen.");
+    }
+
+    private static WordTemplateValidationException CreateStructuredEntryTableInvalidException(
+        string bookmarkName,
+        string targetKey)
+    {
+        return new WordTemplateValidationException(
+            WordTemplateValidationErrorKind.StructuredEntryTableInvalid,
+            bookmarkName,
+            $"{targetKey}-Verlaufstabelle hat nicht das erwartete Format. Bitte Vorlage prüfen.");
     }
 
     private static bool IsFileLocked(string path)
@@ -655,8 +1397,12 @@ public class WordService
         }
     }
 
+    private readonly record struct WordWindowSnapshot(IntPtr Hwnd, int ProcessId, string Title);
+
     private static class NativeMethods
     {
+        public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
         public const int SW_SHOW = 5;
         public const int SW_RESTORE = 9;
 
@@ -673,7 +1419,38 @@ public class WordService
 
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool AllowSetForegroundWindow(uint dwProcessId);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetForegroundWindow();
+
+        [DllImport("kernel32.dll")]
+        public static extern uint GetCurrentThreadId();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool IsIconic(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern int GetWindowTextLength(IntPtr hWnd);
     }
 
     private sealed class WordApplicationHandle

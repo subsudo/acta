@@ -14,4 +14,6 @@ public class UserPrefs
     public int UiScaleLevel { get; set; } = 2;
     public int UiScaleSchemaVersion { get; set; }
     public bool ShowMiniSchedule { get; set; } = true;
+    public bool AutoPrefillOnEmptyClipboard { get; set; }
+    public string DefaultEntryInitials { get; set; } = string.Empty;
 }

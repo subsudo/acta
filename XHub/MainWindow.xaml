@@ -550,6 +550,22 @@
                                                         IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
                                                         Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=lb}"
                                                         PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
+                                                <Button Style="{StaticResource QuickActionButtonStyle}" Content="Eintrag BU" Tag="entry_bu"
+                                                        IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
+                                                        Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=entry_bu}"
+                                                        PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
+                                                <Button Style="{StaticResource QuickActionButtonStyle}" Content="Eintrag BI" Tag="entry_bi"
+                                                        IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
+                                                        Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=entry_bi}"
+                                                        PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
+                                                <Button Style="{StaticResource QuickActionButtonStyle}" Content="Eintrag BE" Tag="entry_be"
+                                                        IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
+                                                        Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=entry_be}"
+                                                        PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
+                                                <Button Style="{StaticResource QuickActionButtonStyle}" Content="Eintrag LB" Tag="entry_lb"
+                                                        IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
+                                                        Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=entry_lb}"
+                                                        PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
                                             </WrapPanel>
                                         </Grid>
                                     </DataTemplate>
@@ -866,6 +882,22 @@
                                             <Button Style="{StaticResource QuickActionButtonStyle}" Content="LB" Tag="lb"
                                                     IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
                                                     Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=lb}"
+                                                    PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
+                                            <Button Style="{StaticResource QuickActionButtonStyle}" Content="Eintrag BU" Tag="entry_bu"
+                                                    IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
+                                                    Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=entry_bu}"
+                                                    PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
+                                            <Button Style="{StaticResource QuickActionButtonStyle}" Content="Eintrag BI" Tag="entry_bi"
+                                                    IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
+                                                    Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=entry_bi}"
+                                                    PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
+                                            <Button Style="{StaticResource QuickActionButtonStyle}" Content="Eintrag BE" Tag="entry_be"
+                                                    IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
+                                                    Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=entry_be}"
+                                                    PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
+                                            <Button Style="{StaticResource QuickActionButtonStyle}" Content="Eintrag LB" Tag="entry_lb"
+                                                    IsEnabled="{Binding DataContext.IsWordActionRunning, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
+                                                    Visibility="{Binding DataContext.VisibleQuickActions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource QuickActionVisibilityConverter}, ConverterParameter=entry_lb}"
                                                     PreviewMouseLeftButtonDown="QuickActionButton_OnPreviewMouseLeftButtonDown" />
                                         </WrapPanel>
 

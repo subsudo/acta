@@ -53,6 +53,10 @@ public partial class ParticipantDetailWindow : Window
                 QuickActionKeys.Bi => CreateActionButton("BI", (_, _) => OpenBookmark(_participant, App.Config.WordBiBookmarkName), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
                 QuickActionKeys.Be => CreateActionButton("BE", (_, _) => OpenBookmark(_participant, App.Config.WordBeBookmarkName), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
                 QuickActionKeys.Lb => CreateActionButton("LB", (_, _) => OpenBookmark(_participant, App.Config.WordLbBookmarkName), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
+                QuickActionKeys.EntryBu => CreateActionButton("Eintrag BU", (_, _) => InsertStructuredEntry(_participant, StructuredEntryTarget.Bu), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
+                QuickActionKeys.EntryBi => CreateActionButton("Eintrag BI", (_, _) => InsertStructuredEntry(_participant, StructuredEntryTarget.Bi), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
+                QuickActionKeys.EntryBe => CreateActionButton("Eintrag BE", (_, _) => InsertStructuredEntry(_participant, StructuredEntryTarget.Be), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
+                QuickActionKeys.EntryLb => CreateActionButton("Eintrag LB", (_, _) => InsertStructuredEntry(_participant, StructuredEntryTarget.Lb), HasDocumentOrFolder(_participant) && WordService.IsWordAvailable),
                 _ => null
             };
             if (button is not null) QuickActionPanel.Children.Add(button);
@@ -158,6 +162,81 @@ public partial class ParticipantDetailWindow : Window
         TryWordAction(entry, path => App.WordStaHost.RunAsync(
             $"OpenDocumentAtBookmark:{bookmark}",
             service => service.OpenDocumentAtBookmark(path, bookmark)));
+
+    private async void InsertStructuredEntry(ParticipantIndexEntry entry, StructuredEntryTarget target)
+    {
+        if (!WordBusyGuard.TryEnter())
+        {
+            return;
+        }
+
+        var previousCursor = Mouse.OverrideCursor;
+
+        try
+        {
+            var documentPath = ResolveDocumentPath(entry);
+            var fallbackFields = BuildFallbackEntryFieldsIfEnabled();
+            var clipboardText = WordService.ReadClipboardTextWithRetry();
+
+            Mouse.OverrideCursor = Cursors.AppStarting;
+            Dispatcher.Invoke(() => { }, DispatcherPriority.Render);
+
+            await App.WordStaHost.RunAsync(
+                $"InsertStructuredEntry:{target.Key}",
+                service => service.InsertClipboardToStructuredEntryTable(
+                    documentPath,
+                    target,
+                    fallbackFields,
+                    clipboardText,
+                    bringToForeground: true));
+        }
+        catch (WordTemplateValidationException ex) when (ex.Kind == WordTemplateValidationErrorKind.BookmarkMissing)
+        {
+            MessageBox.Show(
+                $"Der {target.Label} konnte nicht eingefügt werden.\n\nDie erwartete Textmarke '{ex.BookmarkName}' wurde in der Akte nicht gefunden.",
+                "Acta",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+        catch (WordTemplateValidationException ex) when (ex.Kind == WordTemplateValidationErrorKind.StructuredEntryTableInvalid)
+        {
+            MessageBox.Show(
+                $"Der {target.Label} konnte nicht eingefügt werden.\n\n{ex.UserMessage}",
+                "Acta",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+        catch (DocumentLockedException ex)
+        {
+            MessageBox.Show(
+                $"Die Akte von {entry.DisplayName} ist aktuell nicht schreibbar.\n\n{ex.Message}",
+                "Acta",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Error($"XHub.DetailWindow.StructuredEntry '{entry.DisplayName}', Target='{target.Key}'", ex);
+            MessageBox.Show(ex.Message, "Acta", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            Mouse.OverrideCursor = previousCursor;
+            WordBusyGuard.Exit();
+        }
+    }
+
+    private static string[]? BuildFallbackEntryFieldsIfEnabled()
+    {
+        if (!App.UserPrefs.AutoPrefillOnEmptyClipboard)
+        {
+            return null;
+        }
+
+        var date = DateTime.Now.ToString("dd.MM.yy");
+        var initials = (App.UserPrefs.DefaultEntryInitials ?? string.Empty).Trim();
+        return new[] { date, initials, string.Empty, string.Empty };
+    }
 
     private async void TryWordAction(ParticipantIndexEntry entry, Func<string, Task> action)
     {

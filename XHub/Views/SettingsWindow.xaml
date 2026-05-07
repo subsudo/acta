@@ -392,7 +392,47 @@
                         <CheckBox x:Name="BiActionCheckBox"       Style="{StaticResource ActionCheckBoxStyle}" Content="BI" />
                         <CheckBox x:Name="BeActionCheckBox"       Style="{StaticResource ActionCheckBoxStyle}" Content="BE" />
                         <CheckBox x:Name="LbActionCheckBox"       Style="{StaticResource ActionCheckBoxStyle}" Content="LB" />
+                        <CheckBox x:Name="EntryBuActionCheckBox"  Style="{StaticResource ActionCheckBoxStyle}" Content="Eintrag BU" />
+                        <CheckBox x:Name="EntryBiActionCheckBox"  Style="{StaticResource ActionCheckBoxStyle}" Content="Eintrag BI" />
+                        <CheckBox x:Name="EntryBeActionCheckBox"  Style="{StaticResource ActionCheckBoxStyle}" Content="Eintrag BE" />
+                        <CheckBox x:Name="EntryLbActionCheckBox"  Style="{StaticResource ActionCheckBoxStyle}" Content="Eintrag LB" />
                     </WrapPanel>
+
+                    <Border Height="1"
+                            Margin="0,4,0,12"
+                            Background="{DynamicResource Brush.Border}" />
+
+                    <TextBlock Text="EINTRÄGE"
+                               Style="{StaticResource SectionEyebrowStyle}"
+                               Margin="0,0,0,10" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="150" />
+                        </Grid.ColumnDefinitions>
+
+                        <CheckBox x:Name="AutoPrefillEntryCheckBox"
+                                  Grid.Column="0"
+                                  Style="{StaticResource ActionCheckBoxStyle}"
+                                  Content="Leere Eintragszeile mit Datum/Kürzel vorbereiten"
+                                  VerticalAlignment="Center" />
+
+                        <Grid Grid.Column="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="Kürzel"
+                                       Style="{StaticResource FieldLabelStyle}"
+                                       Margin="0,0,8,0" />
+                            <TextBox x:Name="DefaultEntryInitialsTextBox"
+                                     Grid.Column="1"
+                                     Style="{StaticResource SettingsInputStyle}"
+                                     IsEnabled="{Binding IsChecked, ElementName=AutoPrefillEntryCheckBox}" />
+                        </Grid>
+                    </Grid>
                 </StackPanel>
             </Border>
         </Grid>

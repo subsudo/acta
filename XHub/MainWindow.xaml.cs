@@ -1159,6 +1159,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         App.SaveConfig();
 
         App.UserPrefs.ShowMiniSchedule = dialog.Result.ShowMiniSchedule;
+        App.UserPrefs.AutoPrefillOnEmptyClipboard = dialog.Result.AutoPrefillOnEmptyClipboard;
+        App.UserPrefs.DefaultEntryInitials = dialog.Result.DefaultEntryInitials;
         _isNotesPanelOpen = dialog.Result.ShowNotesPanel;
         App.UserPrefs.IsNotesPanelCollapsed = !_isNotesPanelOpen;
         App.ApplyTheme(dialog.Result.IsDarkTheme);
@@ -1354,6 +1356,18 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             case QuickActionKeys.Lb:
                 OpenBookmark(entry, App.Config.WordLbBookmarkName);
                 break;
+            case QuickActionKeys.EntryBu:
+                InsertStructuredEntry(entry, StructuredEntryTarget.Bu);
+                break;
+            case QuickActionKeys.EntryBi:
+                InsertStructuredEntry(entry, StructuredEntryTarget.Bi);
+                break;
+            case QuickActionKeys.EntryBe:
+                InsertStructuredEntry(entry, StructuredEntryTarget.Be);
+                break;
+            case QuickActionKeys.EntryLb:
+                InsertStructuredEntry(entry, StructuredEntryTarget.Lb);
+                break;
         }
     }
 
@@ -1383,6 +1397,100 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         TryWordAction(entry, path => App.WordStaHost.RunAsync(
             $"OpenDocumentAtBookmark:{bookmark}",
             service => service.OpenDocumentAtBookmark(path, bookmark)));
+
+    private async void InsertStructuredEntry(ParticipantIndexEntry entry, StructuredEntryTarget target)
+    {
+        if (!WordBusyGuard.TryEnter())
+        {
+            UpdateStatus("Eine Word-Aktion läuft bereits...");
+            return;
+        }
+
+        var operationStatus = $"{target.Label} wird eingefügt...";
+        var previousStatus = StatusTextBlock.Text;
+        var previousCursor = Mouse.OverrideCursor;
+
+        try
+        {
+            var documentPath = ResolveDocumentPath(entry);
+            var fallbackFields = BuildFallbackEntryFieldsIfEnabled();
+            var clipboardText = WordService.ReadClipboardTextWithRetry();
+
+            UpdateStatus(operationStatus);
+            Mouse.OverrideCursor = Cursors.AppStarting;
+            Dispatcher.Invoke(() => { }, DispatcherPriority.Render);
+
+            var insertedFromClipboard = await App.WordStaHost.RunAsync(
+                $"InsertStructuredEntry:{target.Key}",
+                service => service.InsertClipboardToStructuredEntryTable(
+                    documentPath,
+                    target,
+                    fallbackFields,
+                    clipboardText,
+                    bringToForeground: true));
+
+            var status = insertedFromClipboard
+                ? $"{target.Label} eingefügt: {entry.DisplayName}"
+                : fallbackFields is not null
+                    ? $"{target.Key}-Zeile mit Datum/Kürzel vorbereitet: {entry.DisplayName}"
+                    : $"Leere {target.Key}-Zeile vorbereitet: {entry.DisplayName}";
+            UpdateStatus(status);
+        }
+        catch (WordTemplateValidationException ex) when (ex.Kind == WordTemplateValidationErrorKind.BookmarkMissing)
+        {
+            UpdateStatus($"{target.Label}: Bookmark fehlt");
+            MessageBox.Show(
+                $"Der {target.Label} konnte nicht eingefügt werden.\n\nDie erwartete Textmarke '{ex.BookmarkName}' wurde in der Akte nicht gefunden.",
+                "Acta",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+        catch (WordTemplateValidationException ex) when (ex.Kind == WordTemplateValidationErrorKind.StructuredEntryTableInvalid)
+        {
+            UpdateStatus($"{target.Label}: Tabelle ungültig");
+            MessageBox.Show(
+                $"Der {target.Label} konnte nicht eingefügt werden.\n\n{ex.UserMessage}",
+                "Acta",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+        catch (DocumentLockedException ex)
+        {
+            UpdateStatus($"{target.Label}: Akte nicht schreibbar");
+            MessageBox.Show(
+                $"Die Akte von {entry.DisplayName} ist aktuell nicht schreibbar.\n\n{ex.Message}",
+                "Acta",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Error($"XHub.MainWindow.StructuredEntry '{entry.DisplayName}', Target='{target.Key}'", ex);
+            MessageBox.Show(ex.Message, "Acta", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            Mouse.OverrideCursor = previousCursor;
+            if (StatusTextBlock.Text == operationStatus)
+            {
+                UpdateStatus(previousStatus);
+            }
+
+            WordBusyGuard.Exit();
+        }
+    }
+
+    private static string[]? BuildFallbackEntryFieldsIfEnabled()
+    {
+        if (!App.UserPrefs.AutoPrefillOnEmptyClipboard)
+        {
+            return null;
+        }
+
+        var date = DateTime.Now.ToString("dd.MM.yy");
+        var initials = (App.UserPrefs.DefaultEntryInitials ?? string.Empty).Trim();
+        return new[] { date, initials, string.Empty, string.Empty };
+    }
 
     private async void TryWordAction(ParticipantIndexEntry entry, Func<string, Task> action)
     {

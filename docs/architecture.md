@@ -79,6 +79,7 @@ Stundenplan-DOCX -> `WeeklyScheduleService` -> Wochen-Cache + Diagnose + `Partic
 ### 5. Word
 - `Akte`: UI-Aktion -> Pfadauflösung im UI -> nativer Shell-Open (`Process.Start(... UseShellExecute = true)`) -> Word uebernimmt Oeffnen und Sperrhandling
 - `BU`/`BI`/`BE`/`LB`: UI-Aktion -> Pfadauflösung im UI -> `WordStaHost.RunAsync(...)` -> `WordService` auf dediziertem STA-Thread -> bestehende oder neue Word-Instanz -> Dokument/Bookmark
+- `Eintrag BU`/`Eintrag BI`/`Eintrag BE`/`Eintrag LB`: UI liest Clipboard und Pfad vor -> `WordStaHost.RunAsync(...)` -> `WordService` validiert Ziel-Tabelle und fuegt eine Zeile ein -> Cursor/Fokus in Word
 - Sperrfall bei Bookmark-Aktionen: COM-Pfad signalisiert Lock/ReadOnly -> nativer Shell-Open ohne Bookmark-Sprung
 
 ### 6. App-Update

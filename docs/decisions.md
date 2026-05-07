@@ -138,6 +138,11 @@ Aktueller Stand:
 
 **Folge:** weniger Thread-/COM-Stoerfaelle bei Word, wieder nativer Word-Sperrdialog fuer gesperrte Akten und ein klar akzeptierter Edge Case: im Lock-Fall entfällt der Bookmark-Sprung.
 
+### 15. Word-Eintraege sind optionale Schreibaktionen, nicht Bookmark-Spruenge
+`Eintrag BU`, `Eintrag BI`, `Eintrag BE` und `Eintrag LB` sind eigene QuickActions. Sie laufen ueber denselben zentralen `WordStaHost`, lesen Clipboard vor dem Dispatch im UI-Thread und schreiben nur in validierte 4-Spalten-Verlaufstabellen.
+
+**Folge:** Die normalen `BU`/`BI`/`BE`/`LB`-Sprungbuttons bleiben unveraendert; Schreibaktionen sind bewusst separat sichtbar schaltbar und fail-closed bei gesperrten Akten.
+
 ### 15. Native Windows-Titelleiste ist wieder bevorzugt
 Die sichtbare Produktversion soll oben links sichtbar bleiben, aber ohne dafuer eine eigene Titelleiste und zusaetzliche Fensterlogik mitzuschleppen.
 

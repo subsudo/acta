@@ -19,6 +19,7 @@ Aktueller sichtbarer Versionsstand: `Acta v0.9.7`
 - Odoo-Link aus DOCX-Header
 - Mini-Stundenplan aus `KW_*.docx`
 - Word-Aktionen inkl. Bookmark-Spruengen
+- Optionale Word-Eintragsaktionen `Eintrag BU`, `Eintrag BI`, `Eintrag BE`, `Eintrag LB` schreiben interaktiv in die bestaetigten Verlaufstabellen und koennen mit Datum/Kuerzel vorbefuellt werden
 - `Akte` oeffnet jetzt Word-nativ ueber die Shell; Bookmark-Aktionen (`BU`/`BI`/`BE`/`LB`) laufen weiter seriell ueber einen zentralen `WordStaHost` auf einem dedizierten STA-Thread
 - Single-Instance-Start: zweite Starts holen die laufende App nach vorne statt eine zweite Instanz zu oeffnen
 - Log-Zugang direkt ueber die Einstellungen
