@@ -27,6 +27,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private readonly InitialsResolver _initialsResolver = new();
     private readonly DocxHeaderMetadataService _headerMetadataService;
     private readonly WeeklyScheduleService _weeklyScheduleService;
+    private readonly ParticipantHintsService _participantHintsService;
     private readonly AppUpdateService _appUpdateService;
 
     private ParticipantIndexService _indexService;
@@ -81,6 +82,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         _workingList = _temporaryList;
         _headerMetadataService = new DocxHeaderMetadataService(App.HeaderMetadataCachePath, App.HeaderMetadataCacheBackupPath);
         _weeklyScheduleService = new WeeklyScheduleService(App.WeeklyScheduleCachePath, App.WeeklyScheduleCacheBackupPath);
+        _participantHintsService = new ParticipantHintsService(App.Config.ParticipantHintsStorePath);
         _appUpdateService = new AppUpdateService();
 
         _indexService = new ParticipantIndexService(App.Config, _initialsResolver);
@@ -121,6 +123,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         MainAreaBorder.SizeChanged += (_, _) => UpdateLayoutAlignment();
         DetailPanelBorder.SizeChanged += (_, _) => UpdateLayoutAlignment();
         ListPanelBorder.SizeChanged += (_, _) => UpdateLayoutAlignment();
+        DetailPanel.EditHintsRequested += (_, args) => EditParticipantHints(args.Participant);
         Deactivated += MainWindow_OnDeactivated;
         Closing += MainWindow_OnClosing;
         Closed += MainWindow_OnClosed;
@@ -155,6 +158,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             UpdateStatus("Teilnehmenden-Index wird aktualisiert ...");
             var result = await _indexService.RebuildAsync();
             _mainIndexEntries = result.Entries;
+            RefreshParticipantHintsForEntries(_mainIndexEntries);
             UpdateArchiveAvailability();
             RebuildCombinedIndex();
             _lastRefreshAt = DateTime.Now;
@@ -618,6 +622,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         _selectedParticipant = FindParticipantByKey(_selectedParticipant.ParticipantKey) ?? _selectedParticipant;
         EnrichParticipantDetailMetadata(_selectedParticipant);
+        RefreshParticipantHintsForParticipant(_selectedParticipant);
         if (_isDetailPanelOpen)
         {
             DetailPanel.UpdateParticipant(_selectedParticipant, GetActiveModules());
@@ -629,10 +634,130 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
+    private void RefreshParticipantHintsForEntries(IEnumerable<ParticipantIndexEntry> entries)
+    {
+        var entriesWithDocuments = entries
+            .Where(entry => !string.IsNullOrWhiteSpace(entry.DocumentPath) && File.Exists(entry.DocumentPath))
+            .ToList();
+
+        foreach (var entry in entries)
+        {
+            entry.ActiveHints = Array.Empty<ParticipantHintDisplay>();
+        }
+
+        if (entriesWithDocuments.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            var displaysByPath = _participantHintsService.LoadActiveDisplaysByDocumentPath(
+                entriesWithDocuments.Select(entry => entry.DocumentPath));
+
+            foreach (var entry in entriesWithDocuments)
+            {
+                entry.ActiveHints = displaysByPath.TryGetValue(entry.DocumentPath, out var displays)
+                    ? displays
+                    : Array.Empty<ParticipantHintDisplay>();
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Warn($"Hinweise konnten nicht gebündelt geladen werden: {ex.Message}");
+        }
+    }
+
+    private void RefreshParticipantHintsForParticipant(ParticipantIndexEntry entry)
+    {
+        if (string.IsNullOrWhiteSpace(entry.DocumentPath) || !File.Exists(entry.DocumentPath))
+        {
+            entry.ActiveHints = Array.Empty<ParticipantHintDisplay>();
+            return;
+        }
+
+        try
+        {
+            entry.ActiveHints = _participantHintsService.LoadActiveDisplays(entry.DocumentPath);
+        }
+        catch (Exception ex)
+        {
+            entry.ActiveHints = Array.Empty<ParticipantHintDisplay>();
+            AppLogger.Warn($"Hinweise konnten für '{entry.DisplayName}' nicht geladen werden: {ex.Message}");
+        }
+    }
+
+    private void EditParticipantHints(ParticipantIndexEntry entry)
+    {
+        string documentPath;
+        try
+        {
+            documentPath = ResolveDocumentPath(entry, refreshDetailPanel: false);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Für diesen Teilnehmer ist noch keine Akte verfügbar.\n\n{ex.Message}",
+                "Hinweise nicht verfügbar",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(documentPath) || !File.Exists(documentPath))
+        {
+            MessageBox.Show(
+                "Für diesen Teilnehmer ist noch keine Akte zugeordnet.",
+                "Hinweise nicht verfügbar",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var session = _participantHintsService.LoadEditorSession(documentPath);
+        if (!session.IsAvailable)
+        {
+            MessageBox.Show(
+                session.ErrorMessage,
+                "Hinweise nicht verfügbar",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        var dialog = new ParticipantHintsWindow(entry.DisplayName, session.Record.Hints)
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var result = _participantHintsService.SaveEditorSession(session, dialog.GetAllItems());
+        if (!result.Success)
+        {
+            MessageBox.Show(
+                result.ErrorMessage,
+                result.Conflict ? "Hinweise wurden geändert" : "Hinweise konnten nicht gespeichert werden",
+                MessageBoxButton.OK,
+                result.Conflict ? MessageBoxImage.Warning : MessageBoxImage.Error);
+            return;
+        }
+
+        RefreshParticipantHintsForParticipant(entry);
+        CurrentListParticipantsListBox.Items.Refresh();
+        SearchResultsListBox.Items.Refresh();
+        RefreshDetailPanel();
+        UpdateStatus($"Hinweise gespeichert: {entry.DisplayName}");
+    }
+
     private void ShowParticipantDetails(ParticipantIndexEntry entry)
     {
         _selectedParticipant = entry;
         EnrichParticipantDetailMetadata(entry);
+        RefreshParticipantHintsForParticipant(entry);
         if (_isNotesPanelOpen)
         {
             NotesPanel.SetParticipant(entry);
@@ -728,6 +853,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             UpdateStatus("Archiv wird geladen...");
             var result = await _archiveService.BuildArchiveAsync(_archiveRootPath);
             _archiveIndexEntries = result.Entries;
+            RefreshParticipantHintsForEntries(_archiveIndexEntries);
             _loadedArchiveRootPath = _archiveRootPath;
             RebuildCombinedIndex();
             RebuildCurrentParticipants();

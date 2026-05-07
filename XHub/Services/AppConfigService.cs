@@ -36,6 +36,7 @@ public class AppConfigService
             LbBasePath = source.LbBasePath,
             StartBasePath = source.StartBasePath,
             ExitBasePath = source.ExitBasePath,
+            ParticipantHintsStorePath = source.ParticipantHintsStorePath,
             VerlaufsakteKeyword = source.VerlaufsakteKeyword,
             WordBuBookmarkName = source.WordBuBookmarkName,
             WordBiBookmarkName = source.WordBiBookmarkName,

@@ -44,6 +44,7 @@ public partial class ParticipantDetailPanel : UserControl
     }
 
     public ParticipantIndexEntry? CurrentParticipant => _participant;
+    public event EventHandler<ParticipantHintsRequestedEventArgs>? EditHintsRequested;
 
     public void UpdateParticipant(ParticipantIndexEntry? participant, IReadOnlyList<DetailModuleConfig> modules)
     {
@@ -80,6 +81,7 @@ public partial class ParticipantDetailPanel : UserControl
             UpdateOdooLink(participant.OdooUrl);
         }
         UpdateSchedule(participant.MiniSchedule);
+        UpdateHints(participant.ActiveHints);
         UpdateDetailLayout();
     }
 
@@ -97,12 +99,33 @@ public partial class ParticipantDetailPanel : UserControl
         ScheduleCardBorder.Visibility = Visibility.Collapsed;
         ScheduleGrid.Visibility = Visibility.Collapsed;
         ScheduleMessageTextBlock.Visibility = Visibility.Collapsed;
+        HintsCardBorder.Visibility = Visibility.Collapsed;
+        HintsItemsControl.ItemsSource = null;
+        HintsItemsControl.Visibility = Visibility.Collapsed;
+        HintsEmptyTextBlock.Visibility = Visibility.Collapsed;
         UpdateDetailLayout();
     }
 
     private void OdooButton_OnClick(object sender, RoutedEventArgs e)
     {
         OpenExternalUrl(_participant?.OdooUrl);
+    }
+
+    private void EditHintsButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_participant is not null)
+        {
+            EditHintsRequested?.Invoke(this, new ParticipantHintsRequestedEventArgs(_participant));
+        }
+    }
+
+    private void UpdateHints(IReadOnlyList<ParticipantHintDisplay> hints)
+    {
+        HintsCardBorder.Visibility = Visibility.Visible;
+        HintsItemsControl.ItemsSource = hints;
+        var hasHints = hints.Count > 0;
+        HintsItemsControl.Visibility = hasHints ? Visibility.Visible : Visibility.Collapsed;
+        HintsEmptyTextBlock.Visibility = hasHints ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void UpdatePhoto(string? imagePath, string? initials)
@@ -603,6 +626,16 @@ public partial class ParticipantDetailPanel : UserControl
 
     private sealed record CachedPhoto(DateTime LastWriteTimeUtc, BitmapImage Bitmap);
     private sealed record ScheduleCellVisual(TextBlock Primary, TextBlock Room, TextBlock Teacher, TextBlock Additional);
+}
+
+public sealed class ParticipantHintsRequestedEventArgs : EventArgs
+{
+    public ParticipantHintsRequestedEventArgs(ParticipantIndexEntry participant)
+    {
+        Participant = participant;
+    }
+
+    public ParticipantIndexEntry Participant { get; }
 }
 
 

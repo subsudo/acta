@@ -14,6 +14,7 @@ namespace XHub.Views;
 public partial class ParticipantDetailWindow : Window
 {
     private readonly InitialsResolver _initialsResolver = new();
+    private readonly ParticipantHintsService _participantHintsService = new(App.Config.ParticipantHintsStorePath);
     private ParticipantIndexEntry? _participant;
     private IReadOnlyList<DetailModuleConfig> _modules = ListRepository.NormalizeModules(null);
 
@@ -31,6 +32,10 @@ public partial class ParticipantDetailWindow : Window
         DetailTitleTextBlock.Text = participant?.DisplayName ?? "Keine Auswahl";
         InitialsTextBlock.Text = participant?.Initials ?? string.Empty;
         Title = participant is null ? "Teilnehmerdetails" : $"{participant.DisplayName} - Acta";
+        if (participant is not null)
+        {
+            RefreshParticipantHintsForParticipant(participant);
+        }
         RebuildActions();
         RebuildModules();
     }
@@ -79,6 +84,8 @@ public partial class ParticipantDetailWindow : Window
             if (module.Key == DetailModuleKeys.Image) DetailModuleHost.Children.Add(CreateImageModule(_participant));
             if (module.Key == DetailModuleKeys.Initials) DetailModuleHost.Children.Add(CreateInitialsModule(_participant));
         }
+
+        DetailModuleHost.Children.Add(CreateHintsModule(_participant));
     }
 
     private Border CreateOverviewModule(ParticipantIndexEntry entry)
@@ -105,6 +112,60 @@ public partial class ParticipantDetailWindow : Window
         return CreateModuleCard("Kürzel", wrapper);
     }
 
+    private Border CreateHintsModule(ParticipantIndexEntry entry)
+    {
+        var wrapper = new StackPanel();
+        var hints = entry.ActiveHints;
+        if (hints.Count == 0)
+        {
+            wrapper.Children.Add(new TextBlock { Text = "Keine aktiven Hinweise", Foreground = (Brush)FindResource("Brush.SecondaryText"), TextWrapping = TextWrapping.Wrap });
+        }
+        else
+        {
+            var panel = new WrapPanel();
+            foreach (var hint in hints)
+            {
+                panel.Children.Add(CreateHintPill(hint));
+            }
+
+            wrapper.Children.Add(panel);
+        }
+
+        var editButton = new Button
+        {
+            Content = "Bearbeiten",
+            Style = (Style)FindResource("SecondaryButtonStyle"),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Margin = new Thickness(0, 8, 0, 0)
+        };
+        editButton.Click += (_, _) => EditParticipantHints(entry);
+        wrapper.Children.Add(editButton);
+
+        return CreateModuleCard("Hinweise", wrapper);
+    }
+
+    private static Border CreateHintPill(ParticipantHintDisplay hint)
+    {
+        var content = new TextBlock
+        {
+            Text = string.IsNullOrWhiteSpace(hint.Code) ? hint.Value : $"{hint.Code} {hint.Value}",
+            FontSize = 10,
+            FontWeight = string.IsNullOrWhiteSpace(hint.Code) ? FontWeights.Normal : FontWeights.SemiBold,
+            Foreground = CreateFrozenBrush(hint.PillForeground),
+            TextWrapping = TextWrapping.Wrap
+        };
+
+        return new Border
+        {
+            Background = CreateFrozenBrush(hint.PillBackground),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(8, 4, 8, 4),
+            Margin = new Thickness(0, 0, 6, 6),
+            Child = content,
+            ToolTip = hint.Text
+        };
+    }
+
     private Border CreateModuleCard(string title, UIElement content)
     {
         var stack = new StackPanel();
@@ -119,6 +180,80 @@ public partial class ParticipantDetailWindow : Window
         text.Inlines.Add(new Run($"{label}: ") { Foreground = (Brush)FindResource("Brush.SecondaryText") });
         text.Inlines.Add(new Run(string.IsNullOrWhiteSpace(value) ? "-" : value));
         return text;
+    }
+
+    private void RefreshParticipantHintsForParticipant(ParticipantIndexEntry entry)
+    {
+        if (string.IsNullOrWhiteSpace(entry.DocumentPath) || !File.Exists(entry.DocumentPath))
+        {
+            try
+            {
+                entry.DocumentPath = ResolveDocumentPath(entry);
+            }
+            catch
+            {
+                entry.ActiveHints = Array.Empty<ParticipantHintDisplay>();
+                return;
+            }
+        }
+
+        try
+        {
+            entry.ActiveHints = _participantHintsService.LoadActiveDisplays(entry.DocumentPath);
+        }
+        catch (Exception ex)
+        {
+            entry.ActiveHints = Array.Empty<ParticipantHintDisplay>();
+            AppLogger.Warn($"Hinweise konnten für '{entry.DisplayName}' nicht geladen werden: {ex.Message}");
+        }
+    }
+
+    private void EditParticipantHints(ParticipantIndexEntry entry)
+    {
+        string documentPath;
+        try
+        {
+            documentPath = ResolveDocumentPath(entry);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Für diesen Teilnehmer ist noch keine Akte verfügbar.\n\n{ex.Message}", "Hinweise nicht verfügbar", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var session = _participantHintsService.LoadEditorSession(documentPath);
+        if (!session.IsAvailable)
+        {
+            MessageBox.Show(session.ErrorMessage, "Hinweise nicht verfügbar", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var dialog = new ParticipantHintsWindow(entry.DisplayName, session.Record.Hints)
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var result = _participantHintsService.SaveEditorSession(session, dialog.GetAllItems());
+        if (!result.Success)
+        {
+            MessageBox.Show(result.ErrorMessage, result.Conflict ? "Hinweise wurden geändert" : "Hinweise konnten nicht gespeichert werden", MessageBoxButton.OK, result.Conflict ? MessageBoxImage.Warning : MessageBoxImage.Error);
+            return;
+        }
+
+        RefreshParticipantHintsForParticipant(entry);
+        RebuildModules();
+    }
+
+    private static Brush CreateFrozenBrush(string hexColor)
+    {
+        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hexColor));
+        brush.Freeze();
+        return brush;
     }
 
     private Button CreateActionButton(string label, RoutedEventHandler handler, bool isEnabled)

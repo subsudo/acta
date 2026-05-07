@@ -201,6 +201,28 @@
             </Style.Triggers>
         </Style>
 
+        <Style TargetType="ItemsControl" x:Key="ParticipantHintMarkerItemsStyle">
+            <Setter Property="Margin" Value="6,0,0,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Visibility" Value="Visible" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasActiveHints}" Value="False">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="StackPanel" x:Key="ParticipantTextWithoutInitialsPanelStyle">
+            <Setter Property="Orientation" Value="Horizontal" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Initials}" Value="">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style TargetType="Border" x:Key="StatusTagBadgeStyle">
             <Setter Property="Background" Value="{DynamicResource Brush.WindowBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
@@ -515,13 +537,52 @@
                                                       VerticalAlignment="Center">
                                                     <StackPanel VerticalAlignment="Center"
                                                                 Style="{StaticResource ParticipantTextWithInitialsPanelStyle}">
-                                                        <TextBlock Text="{Binding Initials}"
-                                                                   Style="{StaticResource ParticipantInitialsTextStyle}" />
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding Initials}"
+                                                                       Style="{StaticResource ParticipantInitialsTextStyle}" />
+                                                            <ItemsControl ItemsSource="{Binding HintMarkers}"
+                                                                          Style="{StaticResource ParticipantHintMarkerItemsStyle}">
+                                                                <ItemsControl.ItemsPanel>
+                                                                    <ItemsPanelTemplate>
+                                                                        <StackPanel Orientation="Horizontal" />
+                                                                    </ItemsPanelTemplate>
+                                                                </ItemsControl.ItemsPanel>
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <Ellipse Width="6"
+                                                                                 Height="6"
+                                                                                 Margin="0,0,4,0"
+                                                                                 Fill="{Binding MarkerColor}"
+                                                                                 ToolTip="{Binding Text}" />
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </StackPanel>
                                                         <TextBlock Text="{Binding DisplayName}"
                                                                    Style="{StaticResource ParticipantNameWithInitialsTextStyle}" />
                                                     </StackPanel>
-                                                    <TextBlock Text="{Binding DisplayName}"
-                                                               Style="{StaticResource ParticipantTextWithoutInitialsStyle}" />
+                                                    <StackPanel Style="{StaticResource ParticipantTextWithoutInitialsPanelStyle}">
+                                                        <TextBlock Text="{Binding DisplayName}"
+                                                                   Style="{StaticResource ParticipantNameTextStyle}"
+                                                                   VerticalAlignment="Center" />
+                                                        <ItemsControl ItemsSource="{Binding HintMarkers}"
+                                                                      Style="{StaticResource ParticipantHintMarkerItemsStyle}">
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <StackPanel Orientation="Horizontal" />
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Ellipse Width="6"
+                                                                             Height="6"
+                                                                             Margin="0,0,4,0"
+                                                                             Fill="{Binding MarkerColor}"
+                                                                             ToolTip="{Binding Text}" />
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </StackPanel>
                                                 </Grid>
                                             </Grid>
                                             <WrapPanel Grid.Column="1"
@@ -845,13 +906,52 @@
                                                   VerticalAlignment="Center">
                                                 <StackPanel VerticalAlignment="Center"
                                                             Style="{StaticResource ParticipantTextWithInitialsPanelStyle}">
-                                                    <TextBlock Text="{Binding Initials}"
-                                                               Style="{StaticResource ParticipantInitialsTextStyle}" />
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Initials}"
+                                                                   Style="{StaticResource ParticipantInitialsTextStyle}" />
+                                                        <ItemsControl ItemsSource="{Binding HintMarkers}"
+                                                                      Style="{StaticResource ParticipantHintMarkerItemsStyle}">
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <StackPanel Orientation="Horizontal" />
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Ellipse Width="6"
+                                                                             Height="6"
+                                                                             Margin="0,0,4,0"
+                                                                             Fill="{Binding MarkerColor}"
+                                                                             ToolTip="{Binding Text}" />
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </StackPanel>
                                                     <TextBlock Text="{Binding DisplayName}"
                                                                Style="{StaticResource ParticipantNameWithInitialsTextStyle}" />
                                                 </StackPanel>
-                                                <TextBlock Text="{Binding DisplayName}"
-                                                           Style="{StaticResource ParticipantTextWithoutInitialsStyle}" />
+                                                <StackPanel Style="{StaticResource ParticipantTextWithoutInitialsPanelStyle}">
+                                                    <TextBlock Text="{Binding DisplayName}"
+                                                               Style="{StaticResource ParticipantNameTextStyle}"
+                                                               VerticalAlignment="Center" />
+                                                    <ItemsControl ItemsSource="{Binding HintMarkers}"
+                                                                  Style="{StaticResource ParticipantHintMarkerItemsStyle}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <StackPanel Orientation="Horizontal" />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Ellipse Width="6"
+                                                                         Height="6"
+                                                                         Margin="0,0,4,0"
+                                                                         Fill="{Binding MarkerColor}"
+                                                                         ToolTip="{Binding Text}" />
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
                                             </Grid>
                                         </Grid>
 

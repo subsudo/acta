@@ -168,6 +168,18 @@ Aktueller Stand:
 
 **Folge:** gleiches Update-Verhalten wie Scola, ohne neue Updater-Architektur und ohne Migration des bestehenden lokalen XHub-AppData-Bestands.
 
+### 17. Teilnehmerhinweise teilen sich Scola-Keys und JSON
+Hinweise sind kurze kuratierte Arbeitsmarker, keine lokalen Notizen und kein freies Tag-System.
+
+Aktueller Stand:
+- Acta nutzt dieselbe `participant-hints.json` wie Scola
+- der Key ist der kanonisierte DOCX-Aktenpfad
+- gemappte Laufwerke werden nach UNC aufgeloest; bei Fehlern wird kein lokaler Ersatzkey geschrieben
+- `active` ist in Kachel und Detail sichtbar, `done` nur im Editor
+- Speichern nutzt Datei-Hash-Konfliktschutz statt blindem Ueberschreiben
+
+**Folge:** Hinweise bleiben zwischen Scola und Acta kompatibel, solange beide Apps die gleiche Kanonisierungs- und JSON-Logik pflegen.
+
 ## Noch offene Entscheidungen
 
 ### Stundenplan-Zuverlaessigkeit

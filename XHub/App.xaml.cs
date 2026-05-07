@@ -59,6 +59,7 @@ public partial class App : Application
     private const string DefaultServerBasePath = @"K:\FuturX\20_TNinnen";
     private const string DefaultLbBasePath = @"K:\FuturX\20_TNinnen\02_Lehrbegleitung";
     private const string DefaultScheduleRootPath = @"K:\FuturX\10_Arbeitsplanung\20_Planung\22_Wochenplanung\Einteilung TN";
+    private const string DefaultParticipantHintsStorePath = ParticipantHintsService.DefaultStorePath;
     public static string AppDataDirectoryPath { get; private set; } = string.Empty;
     public static string SettingsPath { get; private set; } = string.Empty;
     public static string SettingsBackupPath { get; private set; } = string.Empty;
@@ -156,6 +157,7 @@ public partial class App : Application
             LbBasePath = DefaultLbBasePath,
             StartBasePath = string.Empty,
             ExitBasePath = string.Empty,
+            ParticipantHintsStorePath = DefaultParticipantHintsStorePath,
             VerlaufsakteKeyword = "Verlaufsakte",
             WordBuBookmarkName = "_Bildung",
             WordBiBookmarkName = "_Berufsintegration",
@@ -490,6 +492,7 @@ public partial class App : Application
         config.LbBasePath ??= string.Empty;
         config.StartBasePath ??= string.Empty;
         config.ExitBasePath ??= string.Empty;
+        config.ParticipantHintsStorePath ??= string.Empty;
         config.ScheduleRootPath ??= string.Empty;
         config.WordLbBookmarkName ??= string.Empty;
         config.VisibleQuickActions ??= QuickActionKeys.CreateDefaults().ToList();
@@ -506,6 +509,9 @@ public partial class App : Application
         config.LbBasePath = config.LbBasePath.Trim();
         config.StartBasePath = config.StartBasePath.Trim();
         config.ExitBasePath = config.ExitBasePath.Trim();
+        config.ParticipantHintsStorePath = string.IsNullOrWhiteSpace(config.ParticipantHintsStorePath)
+            ? DefaultParticipantHintsStorePath
+            : config.ParticipantHintsStorePath.Trim();
         config.ScheduleRootPath = config.ScheduleRootPath.Trim();
 
         config.VerlaufsakteKeyword = string.IsNullOrWhiteSpace(config.VerlaufsakteKeyword)

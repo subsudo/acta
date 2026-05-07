@@ -28,6 +28,7 @@ XHub ist eine WPF-App mit pragmatischer Service-Struktur und zentraler UI-Orches
 - [InitialsResolver.cs](../XHub/Services/InitialsResolver.cs): Kuerzelableitung aus Akten-/Dateinamen
 - [ParticipantIndexService.cs](../XHub/Services/ParticipantIndexService.cs): Dateisystem-Scan und Indexaufbau
 - [ParticipantArchiveService.cs](../XHub/Services/ParticipantArchiveService.cs): On-demand-Scan des Austrittsarchivs unter A-Z-Ordnern
+- [ParticipantHintsService.cs](../XHub/Services/ParticipantHintsService.cs): gemeinsame Scola-/Acta-Hinweise ueber kanonisierte DOCX-Aktenpfade
 - [ParticipantSearchService.cs](../XHub/Services/ParticipantSearchService.cs): Suche
 - [WordStaHost.cs](../XHub/Services/WordStaHost.cs): zentraler app-weiter STA-Worker fuer den COM-Bookmark-Pfad
 - [WordService.cs](../XHub/Services/WordService.cs): nativer Word-Open-Pfad, Word COM, Dokumente und Bookmarks
@@ -46,6 +47,7 @@ XHub ist eine WPF-App mit pragmatischer Service-Struktur und zentraler UI-Orches
 - [AppUpdateWindow.xaml](../XHub/AppUpdateWindow.xaml): modaler Update-Dialog im Scola-Muster
 - [ParticipantDetailPanel.xaml](../XHub/Controls/ParticipantDetailPanel.xaml): eingebetteter Detailbereich im Hauptfenster
 - [ParticipantNotesPanel.xaml](../XHub/Controls/ParticipantNotesPanel.xaml): optionale angedockte Notizspalte mit RichText-Toolbar und Autosave
+- [ParticipantHintsWindow.xaml](../XHub/Views/ParticipantHintsWindow.xaml): Editor fuer kurze gemeinsame Scola-/Acta-Hinweise
 - [ParticipantDetailWindow.xaml.cs](../XHub/Views/ParticipantDetailWindow.xaml.cs): separates Detailfenster als historische/alternative View, aktuell nicht der Primaerpfad
 - [ModuleSettingsWindow.xaml.cs](../XHub/Views/ModuleSettingsWindow.xaml.cs): Reihenfolge und Sichtbarkeit der Detailmodule
 - weitere kleine Dialogfenster fuer Import, Texteingaben und Hinweise
@@ -69,6 +71,9 @@ UI -> `ListRepository` -> `lists.json` / `lists.bak`
 
 ### 2b. Lokale Teilnehmernotizen
 UI -> `ParticipantNotesPanel` -> `ParticipantNotesService` -> `participant-notes\SHA256(ParticipantKey).xamlpackage`
+
+### 2c. Gemeinsame Teilnehmerhinweise
+Scola/Acta-Hinweis-JSON -> `ParticipantHintsService` -> kanonisierter DOCX-Aktenpfad -> Punkte in TN-Kacheln und Chips im Detailbereich
 
 ### 3. Odoo- und Header-Metadaten
 Detailansicht -> `DocxHeaderMetadataService` -> DOCX ZIP/XML -> lokaler Cache -> UI

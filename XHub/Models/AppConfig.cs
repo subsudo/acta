@@ -9,6 +9,7 @@ public class AppConfig
     public string LbBasePath { get; set; } = string.Empty;
     public string StartBasePath { get; set; } = string.Empty;
     public string ExitBasePath { get; set; } = string.Empty;
+    public string ParticipantHintsStorePath { get; set; } = string.Empty;
     public string VerlaufsakteKeyword { get; set; } = "Verlaufsakte";
     public string WordBuBookmarkName { get; set; } = "_Bildung";
     public string WordBiBookmarkName { get; set; } = "_Berufsintegration";

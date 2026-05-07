@@ -236,7 +236,11 @@
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1" Margin="24,18,24,20">
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      CanContentScroll="False">
+        <Grid Margin="24,18,24,20">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -445,6 +449,7 @@
                 </StackPanel>
             </Border>
         </Grid>
+        </ScrollViewer>
     </Grid>
 </Window>
 
