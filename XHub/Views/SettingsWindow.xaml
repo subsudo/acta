@@ -4,9 +4,9 @@
         Title="Einstellungen"
         Icon="pack://application:,,,/Assets/icon.ico"
         Width="720"
-        Height="790"
+        Height="700"
         MinWidth="560"
-        MinHeight="740"
+        MinHeight="660"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource Brush.WindowBg}"
         Foreground="{DynamicResource Brush.PrimaryText}">
@@ -374,13 +374,29 @@
 
                 <Border Grid.Column="4" Style="{StaticResource TileCardStyle}">
                     <StackPanel>
-                        <TextBlock Text="LOGS"
+                        <TextBlock Text="EINTRÄGE"
                                    Style="{StaticResource SectionEyebrowStyle}"
-                                   Margin="0,0,0,10" />
-                        <Button Content="Logordner öffnen"
-                                HorizontalAlignment="Stretch"
-                                Padding="10,6"
-                                Click="OpenLogFolderButton_OnClick" />
+                                   Margin="0,0,0,8" />
+                        <CheckBox x:Name="AutoPrefillEntryCheckBox"
+                                  Style="{StaticResource ActionCheckBoxStyle}"
+                                  MinWidth="0"
+                                  Margin="0,0,0,8"
+                                  Content="Datum/Kürzel vorfüllen" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="Kürzel"
+                                       Style="{StaticResource FieldLabelStyle}"
+                                       VerticalAlignment="Center" />
+                            <TextBox x:Name="DefaultEntryInitialsTextBox"
+                                     Grid.Column="2"
+                                     Style="{StaticResource SettingsInputStyle}"
+                                     IsEnabled="{Binding IsChecked, ElementName=AutoPrefillEntryCheckBox}" />
+                        </Grid>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -409,45 +425,13 @@
                 </StackPanel>
             </Border>
 
-            <Border Grid.Row="3" Margin="0,12,0,0" Style="{StaticResource TileCardStyle}">
-                <StackPanel>
-                    <TextBlock Text="Eintrag-Vorfüllung"
-                               FontSize="17"
-                               FontWeight="SemiBold"
-                               Margin="0,0,0,2" />
-                    <TextBlock Text="Nur bei leerem Clipboard"
-                               Style="{StaticResource FieldLabelStyle}"
-                               Margin="0,0,0,10" />
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <CheckBox x:Name="AutoPrefillEntryCheckBox"
-                                  Grid.Column="0"
-                                  Style="{StaticResource ActionCheckBoxStyle}"
-                                  MinWidth="0"
-                                  Content="BU-, BI-, BE- und LB-Einträge mit Datum und Kürzel vorfüllen"
-                                  VerticalAlignment="Center" />
-                    </Grid>
-
-                    <Grid Margin="0,6,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="14" />
-                            <ColumnDefinition Width="140" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0"
-                                   Text="Kürzel"
-                                   Style="{StaticResource FieldLabelStyle}"
-                                   VerticalAlignment="Center" />
-                        <TextBox x:Name="DefaultEntryInitialsTextBox"
-                                 Grid.Column="2"
-                                 Style="{StaticResource SettingsInputStyle}"
-                                 IsEnabled="{Binding IsChecked, ElementName=AutoPrefillEntryCheckBox}" />
-                    </Grid>
-                </StackPanel>
-            </Border>
+            <Button Grid.Row="3"
+                    Content="Logs"
+                    HorizontalAlignment="Right"
+                    Margin="0,8,0,0"
+                    Padding="10,3"
+                    FontSize="11"
+                    Click="OpenLogFolderButton_OnClick" />
         </Grid>
         </ScrollViewer>
     </Grid>

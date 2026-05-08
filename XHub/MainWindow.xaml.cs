@@ -1324,8 +1324,15 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 return;
             case SettingsWindowAction.Import:
                 ExecuteImport();
-                return;
+            return;
         }
+
+        var indexPathsChanged =
+            !StringEqualsPath(App.Config.LvBasePath, dialog.Result.LvPath)
+            || !StringEqualsPath(App.Config.LbBasePath, dialog.Result.LbPath)
+            || !StringEqualsPath(App.Config.StartBasePath, dialog.Result.StartPath)
+            || !StringEqualsPath(App.Config.ExitBasePath, dialog.Result.ExitPath);
+        var schedulePathChanged = !StringEqualsPath(App.Config.ScheduleRootPath, dialog.Result.SchedulePath);
 
         App.Config.ServerBasePath = dialog.Result.LvPath;
         App.Config.LvBasePath = dialog.Result.LvPath;
@@ -1354,9 +1361,27 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         _indexService = new ParticipantIndexService(App.Config, _initialsResolver);
         _attendanceImportService = new AttendanceImportService(_searchService);
         ConfigureRefreshTimer();
-        RefreshDetailPanel();
         RefreshSearchResults();
-        await RefreshIndexAsync(true);
+        if (indexPathsChanged)
+        {
+            await RefreshIndexAsync(true);
+            return;
+        }
+
+        if (schedulePathChanged)
+        {
+            _weeklyScheduleService.ClearCache();
+        }
+
+        RefreshDetailPanel();
+        UpdateStatus(schedulePathChanged
+            ? "Einstellungen gespeichert. Stundenplan wird beim nächsten Detailaufruf neu geladen."
+            : "Einstellungen gespeichert.");
+    }
+
+    private static bool StringEqualsPath(string? left, string? right)
+    {
+        return string.Equals((left ?? string.Empty).Trim(), (right ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase);
     }
 
     private void ImportAttendanceButton_OnClick(object sender, RoutedEventArgs e)

@@ -30,6 +30,18 @@ public sealed class WeeklyScheduleService
         _cache = LoadCache();
     }
 
+    public void ClearCache()
+    {
+        WeeklyScheduleCacheDocument? documentToPersist;
+        lock (_syncRoot)
+        {
+            _cache.Clear();
+            documentToPersist = CreateCacheDocumentUnsafe();
+        }
+
+        PersistCache(documentToPersist);
+    }
+
     public ParticipantMiniScheduleSummary GetParticipantSchedule(
         string schedulePath,
         ParticipantIndexEntry participant,
