@@ -97,6 +97,7 @@ public sealed class ParticipantHintDisplay
     public string Type { get; init; } = ParticipantHintTypes.Free;
     public string Text { get; init; } = string.Empty;
     public string Code { get; init; } = "N";
+    public string DetailLabel { get; init; } = string.Empty;
     public string Value { get; init; } = string.Empty;
     public string MarkerColor { get; init; } = "#A8A29A";
     public string PillBackground { get; init; } = "#E7E5E4";

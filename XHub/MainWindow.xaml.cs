@@ -282,7 +282,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             ? (isSaved ? "Gespeicherte Liste — leer" : "Keine Teilnehmenden")
             : $"{count} Teilnehmende";
 
-        SavedBadge.Visibility = isSaved ? Visibility.Visible : Visibility.Collapsed;
         SaveWorkingListButton.Content = "Als Liste speichern";
         SaveWorkingListButton.Visibility = !isSaved && count > 0 ? Visibility.Visible : Visibility.Collapsed;
         ClearWorkingListButton.Visibility = !isSaved && count > 0 ? Visibility.Visible : Visibility.Collapsed;

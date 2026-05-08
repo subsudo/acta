@@ -565,22 +565,20 @@
                                 <DataTemplate>
                                     <Border x:Name="HintPillBorder"
                                             Style="{StaticResource ParticipantHintPillStyle}"
-                                            MinWidth="86"
                                             Background="{Binding PillBackground}"
                                             ToolTip="{Binding Text}">
                                         <Grid>
                                             <Grid x:Name="CodedHintContent">
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="24" />
+                                                    <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="6" />
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Grid.Column="0"
-                                                           Text="{Binding Code}"
+                                                           Text="{Binding DetailLabel}"
                                                            FontSize="9.5"
                                                            FontWeight="Bold"
-                                                           Foreground="{Binding PillForeground}"
-                                                           HorizontalAlignment="Right" />
+                                                           Foreground="{Binding PillForeground}" />
                                                 <TextBlock Grid.Column="2"
                                                            Text="{Binding Value}"
                                                            FontSize="9.5"

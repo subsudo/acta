@@ -834,16 +834,8 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Name="CurrentListTitleTextBlock" FontSize="{DynamicResource Ui.Font.CurrentListTitle}" FontWeight="SemiBold"
-                                           Text="Temporäre Liste" VerticalAlignment="Center" />
-                                <Border x:Name="SavedBadge" Background="{DynamicResource Brush.AccentSubtle}"
-                                        CornerRadius="4" Padding="6,2" Margin="8,0,0,0"
-                                        VerticalAlignment="Center" Visibility="Collapsed">
-                                    <TextBlock Text="Gespeichert" FontSize="{DynamicResource Ui.Font.StatusTag}"
-                                               Foreground="{DynamicResource Brush.Accent}" FontWeight="SemiBold" />
-                                </Border>
-                            </StackPanel>
+                            <TextBlock x:Name="CurrentListTitleTextBlock" FontSize="{DynamicResource Ui.Font.CurrentListTitle}" FontWeight="SemiBold"
+                                       Text="Temporäre Liste" VerticalAlignment="Center" />
                             <TextBlock x:Name="CurrentListSubtitleTextBlock" Margin="0,2,0,0"
                                        Foreground="{DynamicResource Brush.SecondaryText}" FontSize="{DynamicResource Ui.Font.CurrentListSubtitle}" />
                         </StackPanel>

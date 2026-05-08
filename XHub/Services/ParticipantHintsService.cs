@@ -299,6 +299,7 @@ public sealed class ParticipantHintsService
     {
         var details = entry.Details;
         var code = ResolveDisplayCode(entry.Type);
+        var detailLabel = ResolveDetailLabel(entry.Type);
         var value = entry.Type switch
         {
             ParticipantHintTypes.Exit => FormatDate(details.Date),
@@ -314,6 +315,7 @@ public sealed class ParticipantHintsService
             Type = entry.Type,
             Text = text,
             Code = entry.Type == ParticipantHintTypes.Free ? string.Empty : code,
+            DetailLabel = detailLabel,
             Value = value,
             MarkerColor = ResolveMarkerColor(entry.Type),
             PillBackground = ResolvePillBackground(entry.Type),
@@ -341,6 +343,17 @@ public sealed class ParticipantHintsService
             ParticipantHintTypes.AmReport => "AM",
             ParticipantHintTypes.StellwerkTest => "STW",
             _ => "N"
+        };
+    }
+
+    private static string ResolveDetailLabel(string type)
+    {
+        return type switch
+        {
+            ParticipantHintTypes.Exit => "Austritt",
+            ParticipantHintTypes.AmReport => "Abklärungsmonat",
+            ParticipantHintTypes.StellwerkTest => "Stellwerktest",
+            _ => string.Empty
         };
     }
 
