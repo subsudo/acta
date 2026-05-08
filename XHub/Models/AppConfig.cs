@@ -14,7 +14,7 @@ public class AppConfig
     public string WordBuBookmarkName { get; set; } = "_Bildung";
     public string WordBiBookmarkName { get; set; } = "_Berufsintegration";
     public string WordBeBookmarkName { get; set; } = "_Beratung";
-    public string WordLbBookmarkName { get; set; } = "_Lehrbetrieb";
+    public string WordLbBookmarkName { get; set; } = "_Lehrbegleitung";
     public List<string> VisibleQuickActions { get; set; } = QuickActionKeys.CreateDefaults().ToList();
     public int AutoRefreshHours { get; set; }
     public bool ShowStatusTags { get; set; } = true;

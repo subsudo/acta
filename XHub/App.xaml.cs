@@ -162,7 +162,7 @@ public partial class App : Application
             WordBuBookmarkName = "_Bildung",
             WordBiBookmarkName = "_Berufsintegration",
             WordBeBookmarkName = "_Beratung",
-            WordLbBookmarkName = "_Lehrbetrieb",
+            WordLbBookmarkName = "_Lehrbegleitung",
             VisibleQuickActions = QuickActionKeys.CreateDefaults().ToList(),
             AutoRefreshHours = 0,
             ShowStatusTags = true,
@@ -527,8 +527,12 @@ public partial class App : Application
             ? "_Beratung"
             : config.WordBeBookmarkName.Trim();
         config.WordLbBookmarkName = string.IsNullOrWhiteSpace(config.WordLbBookmarkName)
-            ? "_Lehrbetrieb"
+            ? "_Lehrbegleitung"
             : config.WordLbBookmarkName.Trim();
+        if (string.Equals(config.WordLbBookmarkName, "_Lehrbetrieb", StringComparison.OrdinalIgnoreCase))
+        {
+            config.WordLbBookmarkName = "_Lehrbegleitung";
+        }
         config.VisibleQuickActions = config.VisibleQuickActions
             .Where(key => QuickActionKeys.All.Any(definition => string.Equals(definition.Key, key, StringComparison.OrdinalIgnoreCase)))
             .Distinct(StringComparer.OrdinalIgnoreCase)
