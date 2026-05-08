@@ -132,14 +132,15 @@
                                Margin="0,2,0,0"
                                TextWrapping="Wrap"
                                MaxHeight="{DynamicResource Ui.Size.DetailTitleMaxHeight}" />
-                    <TextBlock x:Name="CounselorTextBlock"
-                               Grid.Row="2"
-                               FontSize="{DynamicResource Ui.Font.DetailMeta}"
-                               Foreground="{DynamicResource Brush.Accent}"
-                               Margin="0,8,0,0"
-                               VerticalAlignment="Top"
-                               TextWrapping="Wrap"
-                               Text="Beratungsperson:" />
+                    <TextBox x:Name="CounselorTextBlock"
+                             Style="{StaticResource CopyableHeaderTextBoxStyle}"
+                             Grid.Row="2"
+                             FontSize="{DynamicResource Ui.Font.DetailMeta}"
+                             Foreground="{DynamicResource Brush.Accent}"
+                             Margin="0,8,0,0"
+                             VerticalAlignment="Top"
+                             TextWrapping="Wrap"
+                             Text="Beratungsperson:" />
                 </Grid>
 
                 <Grid x:Name="DetailsBodyGrid"
@@ -523,17 +524,13 @@
                         BorderThickness="1"
                         Visibility="Collapsed">
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,7">
-                            <TextBlock Text="Hinweise"
-                                       FontSize="{DynamicResource Ui.Font.DetailMeta}"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource Brush.SecondaryText}"
-                                       VerticalAlignment="Center" />
+                        <DockPanel Margin="0,0,0,7">
                             <Button x:Name="EditHintsButton"
+                                    DockPanel.Dock="Right"
                                     Width="18"
                                     Height="18"
                                     Padding="0"
-                                    Margin="5,1,0,0"
+                                    Margin="5,0,0,0"
                                     Background="Transparent"
                                     BorderBrush="Transparent"
                                     BorderThickness="0"
@@ -544,7 +541,12 @@
                                        Height="12"
                                        Stretch="Uniform" />
                             </Button>
-                        </StackPanel>
+                            <TextBlock Text="Hinweise"
+                                       FontSize="{DynamicResource Ui.Font.DetailMeta}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Brush.SecondaryText}"
+                                       VerticalAlignment="Center" />
+                        </DockPanel>
 
                         <TextBlock x:Name="HintsEmptyTextBlock"
                                    Text="Keine aktiven Hinweise"

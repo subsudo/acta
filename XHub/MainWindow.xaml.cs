@@ -1343,8 +1343,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         App.UserPrefs.ShowMiniSchedule = dialog.Result.ShowMiniSchedule;
         App.UserPrefs.AutoPrefillOnEmptyClipboard = dialog.Result.AutoPrefillOnEmptyClipboard;
         App.UserPrefs.DefaultEntryInitials = dialog.Result.DefaultEntryInitials;
-        _isNotesPanelOpen = dialog.Result.ShowNotesPanel;
         App.UserPrefs.IsNotesPanelCollapsed = !_isNotesPanelOpen;
+        CaptureCurrentNotesPanelWidth();
         App.ApplyTheme(dialog.Result.IsDarkTheme);
         UpdateNotesPanelState();
         UpdateDetailPanelState();

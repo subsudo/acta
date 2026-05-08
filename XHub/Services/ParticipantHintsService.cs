@@ -476,6 +476,11 @@ public sealed class ParticipantHintsService
         var uncRoot = ResolveUncRoot(root);
         if (string.IsNullOrWhiteSpace(uncRoot))
         {
+            if (TryResolveUniversalPath(fullPath, root, out canonicalPath))
+            {
+                return true;
+            }
+
             error = $"Laufwerk '{root}' konnte nicht nach UNC aufgelöst werden.";
             return false;
         }
@@ -496,6 +501,37 @@ public sealed class ParticipantHintsService
                        ?? TryResolveUniversalName(root.TrimEnd('\\') + "\\");
         _uncRootCache[root] = resolved;
         return resolved;
+    }
+
+    private bool TryResolveUniversalPath(string fullPath, string root, out string canonicalPath)
+    {
+        canonicalPath = string.Empty;
+
+        var universalPath = TryResolveUniversalName(fullPath);
+        if (string.IsNullOrWhiteSpace(universalPath) || !universalPath.StartsWith(@"\\", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        canonicalPath = NormalizePath(universalPath);
+        CacheUncRootFromUniversalPath(root, fullPath, canonicalPath);
+        return true;
+    }
+
+    private void CacheUncRootFromUniversalPath(string root, string fullPath, string universalPath)
+    {
+        var relativePath = NormalizePath(fullPath[root.Length..]);
+        if (string.IsNullOrWhiteSpace(relativePath)
+            || !universalPath.EndsWith(relativePath, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var resolvedRoot = universalPath[..^relativePath.Length].TrimEnd('\\');
+        if (!string.IsNullOrWhiteSpace(resolvedRoot) && resolvedRoot.StartsWith(@"\\", StringComparison.Ordinal))
+        {
+            _uncRootCache[root] = resolvedRoot;
+        }
     }
 
     private static string? TryResolveMappedDriveRoot(string driveName)

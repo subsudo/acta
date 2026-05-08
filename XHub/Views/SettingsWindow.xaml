@@ -4,9 +4,9 @@
         Title="Einstellungen"
         Icon="pack://application:,,,/Assets/icon.ico"
         Width="720"
-        Height="690"
+        Height="790"
         MinWidth="560"
-        MinHeight="660"
+        MinHeight="740"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource Brush.WindowBg}"
         Foreground="{DynamicResource Brush.PrimaryText}">

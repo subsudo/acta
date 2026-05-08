@@ -27,6 +27,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(AppConfig config, UserPrefs prefs)
     {
         InitializeComponent();
+        Loaded += SettingsWindow_OnLoaded;
 
         _initialIsDarkTheme = prefs.IsDarkTheme;
         _showStatusTags = config.ShowStatusTags;
@@ -59,6 +60,16 @@ public partial class SettingsWindow : Window
 
         SetComboSelection(config.AutoRefreshHours);
         UpdateThemePreview();
+    }
+
+    private void SettingsWindow_OnLoaded(object sender, RoutedEventArgs e)
+    {
+        var maxHeight = Math.Max(MinHeight, SystemParameters.WorkArea.Height - 24);
+        MaxHeight = maxHeight;
+        if (Height > maxHeight)
+        {
+            Height = maxHeight;
+        }
     }
 
     public SettingsWindowResult Result => new()
