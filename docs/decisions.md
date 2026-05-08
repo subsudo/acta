@@ -74,10 +74,10 @@ Historische Handover-Dateien bleiben erhalten, aber der aktuelle Projektkontext 
 
 **Folge:** alte Dateien dienen als Referenz, neue Wahrheit liegt gebuendelt.
 
-### 10. Index-Auto-Refresh bleibt konfigurierbar und optional
-`AutoRefreshHours` existiert bewusst als einfache Betriebsoption, nicht als komplexer Hintergrunddienst.
+### 10. Index-Auto-Refresh laeuft fix im Hintergrund
+Der Index wird nach dem Start automatisch alle vier Stunden plus kleinem Jitter im Hintergrund erneuert. Die fruehere Nutzeroption `AutoRefreshHours` bleibt nur noch aus Kompatibilitaetsgruenden im Config-Modell, wird aber nicht mehr in den Einstellungen angeboten.
 
-**Folge:** der Index kann bei Bedarf automatisch erneuert werden, bleibt aber eine lokale, kontrollierbare Funktion.
+**Folge:** Nutzer muessen keine technische Refresh-Option pflegen; der manuelle Refresh bleibt fuer sofortige Aktualisierung erhalten.
 
 ### 10a. Der `Start`-Pfad bleibt flach und kontrollierbar
 Beim `Start`-Bestand sollen sowohl direkte TN-Ordner auf erster Ebene als auch genau eine Zwischenebene tiefer unterstuetzt werden. Eine tiefere rekursive Suche ist bewusst nicht gewollt.

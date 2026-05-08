@@ -66,6 +66,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private const double NotesPanelMinWidth = 364;
     private const double NotesPanelDefaultWidth = NotesPanelMinWidth;
     private const double NotesPanelWidthContribution = NotesPanelMinWidth + 6;
+    private static readonly TimeSpan AutoRefreshBaseInterval = TimeSpan.FromHours(4);
+    private static readonly TimeSpan AutoRefreshJitterMax = TimeSpan.FromMinutes(5);
 
     private int CurrentUiScaleLevel => App.NormalizeUiScaleLevel(App.UserPrefs.UiScaleLevel);
     public bool IsWordActionRunning => WordBusyGuard.IsBusy;
@@ -151,7 +153,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         };
     }
 
-    private async Task RefreshIndexAsync(bool showSuccessMessage)
+    private async Task RefreshIndexAsync(bool showSuccessMessage, bool showErrorDialog = true, string? completionStatus = null)
     {
         if (_isRefreshing) return;
 
@@ -168,9 +170,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             RebuildCurrentParticipants();
             UpdateIndexState(result.Warnings);
             RefreshDetailPanel();
-            UpdateStatus(showSuccessMessage
+            UpdateStatus(completionStatus ?? (showSuccessMessage
                 ? $"Index aktualisiert ({_mainIndexEntries.Count} Teilnehmende)."
-                : $"Index bereit ({_mainIndexEntries.Count} Teilnehmende).");
+                : $"Index bereit ({_mainIndexEntries.Count} Teilnehmende)."));
 
             if (_isArchiveAvailable)
             {
@@ -181,8 +183,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         {
             AppLogger.Error("XHub.RefreshIndexAsync", ex);
             UpdateStatus("Index-Aktualisierung fehlgeschlagen.");
-            MessageBox.Show($"Der Index konnte nicht aktualisiert werden:\n{ex.Message}", "Acta",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            if (showErrorDialog)
+            {
+                MessageBox.Show($"Der Index konnte nicht aktualisiert werden:\n{ex.Message}", "Acta",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
         finally
         {
@@ -894,13 +899,41 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private void ConfigureRefreshTimer()
     {
         _refreshTimer?.Stop();
-        _refreshTimer = null;
-
-        if (App.Config.AutoRefreshHours <= 0) return;
-
-        _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(App.Config.AutoRefreshHours) };
-        _refreshTimer.Tick += async (_, _) => await RefreshIndexAsync(false);
+        _refreshTimer = new DispatcherTimer { Interval = CreateAutoRefreshInterval() };
+        _refreshTimer.Tick += RefreshTimer_OnTick;
         _refreshTimer.Start();
+    }
+
+    private async void RefreshTimer_OnTick(object? sender, EventArgs e)
+    {
+        _refreshTimer?.Stop();
+
+        try
+        {
+            if (WordBusyGuard.IsBusy || _isRefreshing)
+            {
+                AppLogger.Info("Index-Auto-Refresh verschoben, weil Acta gerade beschäftigt ist.");
+                return;
+            }
+
+            await RefreshIndexAsync(
+                showSuccessMessage: false,
+                showErrorDialog: false,
+                completionStatus: $"Index im Hintergrund aktualisiert ({_mainIndexEntries.Count} Teilnehmende).");
+        }
+        finally
+        {
+            if (_refreshTimer is not null)
+            {
+                _refreshTimer.Interval = CreateAutoRefreshInterval();
+                _refreshTimer.Start();
+            }
+        }
+    }
+
+    private static TimeSpan CreateAutoRefreshInterval()
+    {
+        return AutoRefreshBaseInterval + TimeSpan.FromSeconds(Random.Shared.NextDouble() * AutoRefreshJitterMax.TotalSeconds);
     }
 
     private void ConfigureParticipantHintsRefreshTimer()
@@ -1340,7 +1373,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         App.Config.StartBasePath = dialog.Result.StartPath;
         App.Config.ExitBasePath = dialog.Result.ExitPath;
         App.Config.ScheduleRootPath = dialog.Result.SchedulePath;
-        App.Config.AutoRefreshHours = dialog.Result.AutoRefreshHours;
         App.Config.ShowStatusTags = dialog.Result.ShowStatusTags;
         App.Config.ShowParticipantPhoto = dialog.Result.ShowParticipantPhoto;
         App.Config.VisibleQuickActions = dialog.Result.VisibleQuickActions.ToList();

@@ -58,7 +58,6 @@ public partial class SettingsWindow : Window
         AutoPrefillEntryCheckBox.IsChecked = prefs.AutoPrefillOnEmptyClipboard;
         DefaultEntryInitialsTextBox.Text = prefs.DefaultEntryInitials ?? string.Empty;
 
-        SetComboSelection(config.AutoRefreshHours);
         UpdateThemePreview();
     }
 
@@ -85,7 +84,6 @@ public partial class SettingsWindow : Window
         ShowParticipantPhoto = _showParticipantPhoto,
         ShowMiniSchedule = _showMiniSchedule,
         ShowNotesPanel = _showNotesPanel,
-        AutoRefreshHours = GetSelectedRefreshHours(),
         VisibleQuickActions = GetSelectedQuickActions(),
         AutoPrefillOnEmptyClipboard = AutoPrefillEntryCheckBox.IsChecked == true,
         DefaultEntryInitials = DefaultEntryInitialsTextBox.Text.Trim(),
@@ -175,26 +173,6 @@ public partial class SettingsWindow : Window
         App.ApplyTheme(isDark);
     }
 
-    private void SetComboSelection(int hours)
-    {
-        foreach (var item in AutoRefreshComboBox.Items.OfType<ComboBoxItem>())
-        {
-            if (int.TryParse(item.Tag?.ToString(), out var value) && value == hours)
-            {
-                AutoRefreshComboBox.SelectedItem = item;
-                return;
-            }
-        }
-
-        AutoRefreshComboBox.SelectedIndex = 0;
-    }
-
-    private int GetSelectedRefreshHours()
-    {
-        return AutoRefreshComboBox.SelectedItem is ComboBoxItem item && int.TryParse(item.Tag?.ToString(), out var value)
-            ? value
-            : 0;
-    }
 }
 
 public class SettingsWindowResult
@@ -210,7 +188,6 @@ public class SettingsWindowResult
     public bool ShowParticipantPhoto { get; set; } = true;
     public bool ShowMiniSchedule { get; set; } = true;
     public bool ShowNotesPanel { get; set; }
-    public int AutoRefreshHours { get; set; }
     public List<string> VisibleQuickActions { get; set; } = QuickActionKeys.CreateDefaults().ToList();
     public bool AutoPrefillOnEmptyClipboard { get; set; }
     public string DefaultEntryInitials { get; set; } = string.Empty;

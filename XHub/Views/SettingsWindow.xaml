@@ -315,8 +315,6 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="10" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
                 <Border Grid.Column="0" Style="{StaticResource TileCardStyle}">
@@ -354,25 +352,6 @@
                 </Border>
 
                 <Border Grid.Column="2" Style="{StaticResource TileCardStyle}">
-                    <StackPanel>
-                        <TextBlock Text="INDEX"
-                                   Style="{StaticResource SectionEyebrowStyle}"
-                                   Margin="0,0,0,10" />
-                        <TextBlock Text="Auto-Aktualisierung"
-                                   Style="{StaticResource FieldLabelStyle}"
-                                   Margin="0,0,0,8" />
-                        <ComboBox x:Name="AutoRefreshComboBox"
-                                  HorizontalAlignment="Stretch"
-                                  Style="{StaticResource SettingsComboBoxStyle}">
-                            <ComboBoxItem Content="Aus" Tag="0" />
-                            <ComboBoxItem Content="Alle 2 Stunden" Tag="2" />
-                            <ComboBoxItem Content="Alle 4 Stunden" Tag="4" />
-                            <ComboBoxItem Content="Alle 8 Stunden" Tag="8" />
-                        </ComboBox>
-                    </StackPanel>
-                </Border>
-
-                <Border Grid.Column="4" Style="{StaticResource TileCardStyle}">
                     <StackPanel>
                         <TextBlock Text="EINTRÄGE"
                                    Style="{StaticResource SectionEyebrowStyle}"

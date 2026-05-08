@@ -49,7 +49,7 @@ XHub ist ein lokales Einzelplatz-Werkzeug fuer die Arbeit mit Teilnehmenden. Der
 ## Konfigurationsrealitaet
 - Der produktiv wichtigste Pflichtpfad ist aktuell `LvBasePath`.
 - Weitere Pfade beeinflussen Tags, Zusatzbestande und Matchinglogik.
-- `AutoRefreshHours` steuert optional den Index-Refresh.
+- Der Index aktualisiert sich fix alle vier Stunden plus kleinem Jitter im Hintergrund; der manuelle Refresh bleibt fuer Sofortbedarf.
 - Archivsuche speichert nur den lokalen Aktiv-Zustand; der Archivindex selbst bleibt pro Session im Speicher.
 - Die App arbeitet nicht sinnvoll, wenn kein TN-Basispfad konfiguriert ist.
 
